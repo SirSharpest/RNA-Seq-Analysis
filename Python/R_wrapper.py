@@ -8,23 +8,75 @@ from rpy2.robjects.packages import importr
 import pandas as pd
 
 
-def write_all_compare_results(dds, treats):
+def write_all_compare_results(dds, treats, r, shrink=False, quiet=True, remove_pvals=False):
     writer = pd.ExcelWriter(
-        '../Data/significantly_different_expressions_no_adaptors.xlsx')
+        '../Data/significantly_different_expressions_shrink:{0}_onlyDiff:{1}.xlsx'.format(shrink,
+                                                                                          remove_pvals))
 
     for i, j in combos(treats, 2):
-        r_res = r.lfcShrink(dds, contrast=robjects.StrVector(
-            ["treatmentID", i, j]))
+        if not quiet:
+            print("Working on {0} | {1}".format(i, j))
+        if shrink:
+            r_res = r.lfcShrink(dds, contrast=robjects.StrVector(
+                ["treatmentID", i, j]))
+        else:
+            r_res = r.results(dds, contrast=robjects.StrVector(
+                ["treatmentID", i, j]))
+
         r_res = r['as.data.frame'](r_res)
-        with localconverter(ro.default_converter + pandas2ri.converter):
-            df = ro.conversion.rpy2py(r_res)
-            df = df.sort_values(by=['padj'])
-            conv = {k: str(k) for k in list(df.columns)}
-            df = df.rename(index=str, columns=conv)
-            df.to_excel(writer, sheet_name="{0} | {1}".format(i, j))
+        df = R_to_pandas(r_res, r)
+        df = df.sort_values(by=['padj'])
+        if remove_pvals:
+            df = df[df['padj'] < 0.01]
+        conv = {k: str(k) for k in list(df.columns)}
+        df = df.rename(index=str, columns=conv)
+        df.to_excel(writer, sheet_name="{0} | {1}".format(i, j))
 
     writer.save()
     writer.close()
+
+
+def R_to_pandas(Robj, r):
+    with localconverter(ro.default_converter + pandas2ri.converter):
+        df = ro.conversion.rpy2py(r['as.data.frame'](Robj))
+    return df
+
+
+def write_compare_to_col0(dds, treats, r, shrink=False, quiet=True, remove_pvals=False):
+    writer = pd.ExcelWriter(
+        '../Data/diff_from_col0:{0}_onlyDiff:{1}.xlsx'.format(shrink,
+                                                              remove_pvals))
+
+    treats.remove("col_w_05h")
+    ctrls = ["col_w_05h" for i in treats]
+
+    for i, j in zip(treats, ctrls):
+        if not quiet:
+            print("Working on {0} | {1}".format(i, j))
+        if shrink:
+            r_res = r.lfcShrink(dds, contrast=robjects.StrVector(
+                ["treatmentID", i, j]))
+        else:
+            r_res = r.results(dds, contrast=robjects.StrVector(
+                ["treatmentID", i, j]))
+
+        r_res = r['as.data.frame'](r_res)
+        df = R_to_pandas(r_res)
+        df = df.sort_values(by=['padj'])
+        if remove_pvals:
+            df = df[df['padj'] < 0.01]
+        conv = {k: str(k) for k in list(df.columns)}
+        df = df.rename(index=str, columns=conv)
+        df.to_excel(writer, sheet_name="{0} | {1}".format(i, j))
+    writer.save()
+    writer.close()
+
+
+def get_transformed_count_data(dds, r, vst=False):
+    if vst:
+        return r.vst(r.assay(dds), blind=False)
+    else:
+        return r.rlog(r.assay(dds), blind=False)
 
 
 def main():
@@ -33,7 +85,6 @@ def main():
     r.source("./prep_data.R")
     libs = [importr(im)
             for im in ['stringr', 'gProfileR', 'DESeq2', 'pheatmap']]
-
     base = importr('base')
     dollar = base.__dict__["$"]
     data_loc = "../../arabidopsis_thaliana/seedling_data/htseq-count_universal_removal"
@@ -41,6 +92,9 @@ def main():
     dds = r['DESeq'](dds_setup)
     res = r['results'](dds)
     treats = list(set(list(r['as.vector'](dollar(dds, 'treatmentID')))))
+    # write_all_compare_results(dds, treats, r, quiet=False, remove_pvals=True)
+    # write_compare_to_col0(dds, treats, r, quiet=False)
+    counts = R_to_pandas(get_transformed_count_data(dds, r, vst=True), r)
 
 
 if __name__ == '__main__':

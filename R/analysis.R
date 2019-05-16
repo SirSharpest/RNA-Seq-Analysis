@@ -11,5 +11,5 @@ source('./prep_data.R')
 data.loc <- "../../arabidopsis_thaliana/seedling_data/htseq-count_universal_removal"
 dds.setup <- get_DESeq2(data.loc)
 
-dds <- DESeq(dds.setup)
-res <- results(dds)
+#dds <- DESeq(dds.setup)
+#res <- results(dds)

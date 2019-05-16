@@ -1,0 +1,261 @@
+#+TITLE: RNA-seq Report
+#+OPTIONS: toc:nil H:4 ^:nil
+#+LaTeX_CLASS: article
+#+LaTeX_CLASS_OPTIONS: [a4paper]
+#+LaTeX_HEADER: \usepackage[margin=0.8in]{geometry}
+#+LaTeX_HEADER: \usepackage{amssymb,amsmath}
+#+LaTeX_HEADER: \usepackage{fancyhdr}
+#+LaTeX_HEADER: \pagestyle{fancy}
+#+LaTeX_HEADER: \usepackage{lastpage}
+#+LaTeX_HEADER: \usepackage{float}
+#+LaTeX_HEADER: \restylefloat{figure}
+#+LaTeX_HEADER: \usepackage{hyperref}
+#+LaTeX_HEADER: \usepackage{tabularx}
+#+LaTeX_HEADER: \hypersetup{urlcolor=blue}
+#+LaTex_HEADER: \usepackage{titlesec}
+#+LaTex_HEADER: \setcounter{secnumdepth}{4}
+#+LaTeX_HEADER: \usepackage{minted}
+#+LaTeX_HEADER: \setminted{frame=single,framesep=10pt}
+#+LaTeX_HEADER: \chead{}
+#+LaTeX_HEADER: \rhead{\today}
+#+LaTeX_HEADER: \cfoot{}
+#+LaTeX_HEADER: \rfoot{\thepage\ of \pageref{LastPage}}
+#+LaTeX_HEADER: \usepackage[parfill]{parskip}
+#+LaTeX_HEADER:\usepackage{subfig}
+#+LaTex_HEADER: \usepackage[sort&compress, numbers]{natbib}
+#+LaTeX_HEADER: \hypersetup{colorlinks=true,linkcolor=black, citecolor=black}
+#+LATEX_HEADER_EXTRA:  \usepackage{framed}
+#+LATEX_HEADER_EXTRA: \usepackage{mathtools, cases}
+#+LATEX: \maketitle
+#+LATEX: \clearpage
+#+LATEX: \tableofcontents
+#+LATEX: \clearpage
+
+
+* Data setup
+
+** Helper funcs for pprinting
+
+#+BEGIN_SRC ipython :session
+  import tabulate
+  import IPython
+
+  class OrgFormatter(IPython.core.formatters.BaseFormatter):
+      format_type = IPython.core.formatters.Unicode('text/org')
+      print_method = IPython.core.formatters.ObjectName('_repr_org_')
+
+  def pd_dataframe_to_org(df):
+      return tabulate.tabulate(df, headers='keys', tablefmt='orgtbl', showindex='always')
+
+  ip = get_ipython()
+  ip.display_formatter.formatters['text/org'] = OrgFormatter()
+
+  f = ip.display_formatter.formatters['text/org']
+  f.for_type_by_name('pandas.core.frame', 'DataFrame', pd_dataframe_to_org)
+
+  print('Lets go!')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [21]:
+# output
+Lets go!
+
+:END:
+
+
+** Load up counts and DE
+#+BEGIN_SRC ipython :session
+  import pandas as pd
+  import warnings
+  warnings.filterwarnings('ignore')
+
+  counts = pd.read_csv(
+      "/Users/hughesn/Transcripts/RNA-Seq/Analysis/Data/norml_count_data.csv",
+      index_col=0)
+  xl = pd.ExcelFile(
+      "/Users/hughesn/Transcripts/RNA-Seq/Analysis/Data/diff_from_col0:False_onlyDiff:False.xlsx")
+  sheet_names = xl.sheet_names
+  dfs = []
+  for s in sheet_names:
+      d = xl.parse(s)
+      d['sample'] = s.split("|")[0].replace(" ", "")
+      dfs.append(d)
+
+  DE = pd.concat(dfs)
+  DE = DE.rename_axis('gene').sort_values(by=['gene', 'log2FoldChange'],
+                                          ascending=[False, False])
+  print("Loaded data")
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [61]:
+# output
+Loaded data
+
+:END:
+
+\clearpage
+* Inspect Samples
+
+** Creating a distance map of samples using normalised counts
+
+
+*** Samples separated
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "distancemap" :filename "obipy-resources/distancemap.png" :caption "Distance map between samples" :attr_html ":width 850px" :attr_latex ":width 15cm"))
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy.spatial.distance import pdist, squareform
+
+distances = pdist(counts.T.values, metric='euclidean')
+dist_matrix = squareform(distances)
+dist_df = pd.DataFrame(dist_matrix, columns = counts.columns, index=counts.columns)
+
+sns.clustermap(dist_df)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [8]:
+
+
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+#+attr_html: :width 850px
+#+attr_latex: :width 15cm
+#+caption: Distance map between samples
+#+name: distancemap
+[[file:obipy-resources/distancemap.png]]
+:END:
+
+*** Samples together
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "distancemappooled" :filename "obipy-resources/distancemap_together.png" :caption "Distance map between samples, pooled together" :attr_html ":width 850px" :attr_latex ":width 15cm"))
+def collapse_counts(counts):
+    u_cols = list(set([l.rsplit("_", 1)[0] for l in list(counts.columns)]))
+    cols = list(counts.columns)
+    ss = []
+    for uc in u_cols:
+        cs = [c for c in cols if c.startswith(uc)]
+        ss.append(counts[cs].sum(axis=1).rename(uc))
+    dc = pd.concat(ss, axis=1)
+    return dc
+collapsed_counts = collapse_counts(counts)
+distances = pdist(collapsed_counts.T.values, metric='euclidean')
+dist_matrix = squareform(distances)
+dist_df = pd.DataFrame(dist_matrix, columns = collapsed_counts.columns, index=collapsed_counts.columns)
+sns.clustermap(dist_df)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [51]:
+
+
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+#+attr_html: :width 850px
+#+attr_latex: :width 15cm
+#+caption: Distance map between samples, pooled together
+#+name: distancemappooled
+[[file:obipy-resources/distancemap_together.png]]
+:END:
+
+* Simple Analysis
+
+** Largest/Lowest expression sum
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "largest" :filename "obipy-resources/large.png" :caption "Largest and least DE genes" :attr_html ":width 850px" :attr_latex ":width 15cm"))
+
+#DE.sum(axis=1).sort_values(by=['log2FoldChange'], ascending=[False]).head(3)
+
+locs = DE[['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange', ascending=False).head(20).index.values
+top = DE.loc[locs]
+top = top.pivot(columns='sample', values='log2FoldChange')
+
+locs = DE[['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange', ascending=True).head(20).index.values
+bot = DE.loc[locs]
+bot = bot.pivot(columns='sample', values='log2FoldChange')
+
+both = pd.concat([top,bot])
+both['col_w_05h'] = 0
+
+sns.clustermap(both, cmap='bwr')
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [88]:
+
+
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+#+attr_html: :width 850px
+#+attr_latex: :width 15cm
+#+caption: Largest and least DE genes
+#+name: largest
+[[file:obipy-resources/large.png]]
+:END:
+
+
+
+** PCA on count data
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "pca" :filename "obipy-resources/pca.png" :caption "PCA of sample counts" :attr_html ":width 850px" :attr_latex ":width 15cm"))
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+sns.set()
+
+cols = list(counts.columns)
+
+counts_geno = [c.split("_")[0] for c in cols]
+counts_treat = [c.split("_")[1] for c in cols]
+counts_time = [c.split("_")[2] for c in cols]
+
+x = StandardScaler().fit_transform(counts.T.values)
+
+pca = PCA(n_components=2)
+principalComponents = pca.fit_transform(x)
+principalDf = pd.DataFrame(data=principalComponents, columns=[
+                           'principal component 1', 'principal component 2'])
+
+principalDf['genotype'] = counts_geno
+principalDf['treatment'] = counts_treat
+principalDf['time'] = counts_time
+
+g = sns.FacetGrid(principalDf, col='time', row='genotype', hue='treatment')
+
+g = g.map(plt.scatter, 'principal component 1',
+          'principal component 2').add_legend()
+
+print("Explained varience from PC1 & 2 respectively:")
+print(pca.explained_variance_ratio_)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [19]:
+# output
+Explained varience from PC1 & 2 respectively:
+[0.21077632 0.14325373]
+
+# text/plain
+: <Figure size 483.925x648 with 6 Axes>
+
+# image/png
+#+attr_html: :width 850px
+#+attr_latex: :width 15cm
+#+caption: PCA of sample counts
+#+name: pca
+[[file:obipy-resources/pca.png]]
+:END:
