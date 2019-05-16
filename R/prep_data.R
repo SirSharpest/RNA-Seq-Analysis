@@ -33,9 +33,6 @@ get_DESeq2 <- function(data_location){
     data <- read_raw_data(data_location)
     data <- add_gene_names_to_df(data)
     data <- aggregate(. ~name, data=data, sum, na.rm=TRUE)
-    ## rownames(data) <- data$name
-    data$name <- NULL
-
     treats <- get_exp_table(data)
     data <- data[rowSums(cpm(data)) >= 5,]
     dds <- DESeqDataSetFromMatrix(data, treats,
