@@ -29,12 +29,12 @@ get_data_and_normalise_edgeR <- function(data_location){
 }
 
 
-get_DESeq2 <- function(data_location){
+get_DESeq2 <- function(data_location, design){
     data <- read_raw_data(data_location)
     treats <- get_exp_table(data)
     data <- data[rowSums(cpm(data)) >= 5,]
     dds <- DESeqDataSetFromMatrix(data, treats,
-                                  design = ~ treatmentID  )
+                                  design = design)
     return(dds)
 }
 

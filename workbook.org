@@ -36,7 +36,7 @@
 
 ** Helper funcs for pprinting
 
-#+BEGIN_SRC ipython :session
+#+BEGIN_SRC ipython :session :exports results
   import tabulate
   import IPython
 
@@ -58,7 +58,7 @@
 
 #+RESULTS:
 :RESULTS:
-# Out [21]:
+# Out [540]:
 # output
 Lets go!
 
@@ -66,7 +66,7 @@ Lets go!
 
 
 ** Load up counts and DE
-#+BEGIN_SRC ipython :session
+#+BEGIN_SRC ipython :session :exports results
   import pandas as pd
   import warnings
   warnings.filterwarnings('ignore')
@@ -91,13 +91,59 @@ Lets go!
 
 #+RESULTS:
 :RESULTS:
-# Out [61]:
+# Out [541]:
 # output
 Loaded data
 
 :END:
 
 \clearpage
+** Extracting gene names example
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  from gprofiler import GProfiler
+
+  def get_gene_names(geneList):
+
+      gp = GProfiler(return_dataframe=True)
+      df = gp.convert(organism='athaliana',
+                 query=geneList)[['incoming', 'name', 'description']]
+      df['description'] = df.apply(lambda x: x['description'].split('[')[0].split(';')[0], axis=1)
+      return df
+
+  get_gene_names(list(DE.sample(20).index))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [542]:
+# text/org
+|    | incoming   | name      | description                                                            |
+|----+------------+-----------+------------------------------------------------------------------------|
+|  0 | AT1G73850  | AT1G73850 | Protein of unknown function (DUF1666)                                  |
+|  1 | AT2G35210  | AGD10     | RPA                                                                    |
+|  2 | AT5G23360  | AT5G23360 | GEM-like protein 7                                                     |
+|  3 | AT3G04480  | AT3G04480 | Endoribonuclease                                                       |
+|  4 | AT5G65165  | SDH2-3    | Succinate dehydrogenase                                                |
+|  5 | AT2G08635  | AT2G08635 | None                                                                   |
+|  6 | AT4G38810  | AT4G38810 | Calcium-binding EF-hand family protein                                 |
+|  7 | AT3G63530  | BB        | BB2                                                                    |
+|  8 | AT2G33000  | AT2G33000 | Ubiquitin-associated (UBA)/TS-N domain-containing protein-like protein |
+|  9 | AT5G10336  | AT5G10336 | unknown protein                                                        |
+| 10 | AT3G21620  | AT3G21620 | CSC1-like protein At3g21620                                            |
+| 11 | AT3G17225  | AT3G17225 | Plant invertase/pectin methylesterase inhibitor superfamily protein    |
+| 12 | AT2G30910  | ARPC1A    | Actin-related protein 2/3 complex subunit 1A                           |
+| 13 | AT5G50520  | AT5G50520 | Major facilitator superfamily protein                                  |
+| 14 | AT5G19590  | AT5G19590 | At5g19590                                                              |
+| 15 | AT3G19190  | ATG2      | Autophagy-related protein 2                                            |
+| 16 | AT5G01675  | AT5G01675 | None                                                                   |
+| 17 | AT1G27040  | NPF4.5    | Protein NRT1/ PTR FAMILY 4.5                                           |
+| 18 | AT3G49490  | AT3G49490 | Uncharacterized protein T9C5.90                                        |
+| 19 | AT1G02890  | AT1G02890 | AAA-type ATPase family protein                                         |
+:END:
+
+\clearpage
+
 * Inspect Samples
 
 ** Creating a distance map of samples using normalised counts
@@ -105,7 +151,7 @@ Loaded data
 
 *** Samples separated
 
-#+BEGIN_SRC ipython :session :ipyfile '((:name "distancemap" :filename "obipy-resources/distancemap.png" :caption "Distance map between samples" :attr_html ":width 850px" :attr_latex ":width 15cm"))
+#+BEGIN_SRC ipython :session :ipyfile '((:name "distancemap" :filename "obipy-resources/distancemap.png" :caption "Distance map between samples" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
 import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import pdist, squareform
@@ -119,7 +165,7 @@ sns.clustermap(dist_df)
 
 #+RESULTS:
 :RESULTS:
-# Out [8]:
+# Out [543]:
 
 
 # text/plain
@@ -127,7 +173,6 @@ sns.clustermap(dist_df)
 
 # image/png
 #+attr_html: :width 850px
-#+attr_latex: :width 15cm
 #+caption: Distance map between samples
 #+name: distancemap
 [[file:obipy-resources/distancemap.png]]
@@ -135,7 +180,9 @@ sns.clustermap(dist_df)
 
 *** Samples together
 
-#+BEGIN_SRC ipython :session :ipyfile '((:name "distancemappooled" :filename "obipy-resources/distancemap_together.png" :caption "Distance map between samples, pooled together" :attr_html ":width 850px" :attr_latex ":width 15cm"))
+#+BEGIN_SRC ipython :session :ipyfile '((:name "distancemappooled" :filename "obipy-resources/distancemap_together.png" :caption "Distance map between samples, pooled together " :attr_html ":width 850px" :attr_latex ":width 15cm")) :exports results
+import matplotlib.patches as mpatches
+
 def collapse_counts(counts):
     u_cols = list(set([l.rsplit("_", 1)[0] for l in list(counts.columns)]))
     cols = list(counts.columns)
@@ -145,20 +192,26 @@ def collapse_counts(counts):
         ss.append(counts[cs].sum(axis=1).rename(uc))
     dc = pd.concat(ss, axis=1)
     return dc
+
+
 collapsed_counts = collapse_counts(counts)
+lut = dict(zip(list(set([c[:3] for c in collapsed_counts.columns])), "rbg"))
+row_colors = [lut[c[:3]] for c in collapsed_counts.columns]
+#legend_TN = [mpatches.Patch(color=c, label=l) for (list(set([c[:3] for c in collapsed_counts.columns]))]
+
 distances = pdist(collapsed_counts.T.values, metric='euclidean')
 dist_matrix = squareform(distances)
 dist_df = pd.DataFrame(dist_matrix, columns = collapsed_counts.columns, index=collapsed_counts.columns)
-sns.clustermap(dist_df)
+sns.clustermap(dist_df, row_colors=row_colors)
 #+END_SRC
 
 #+RESULTS:
 :RESULTS:
-# Out [51]:
+# Out [551]:
 
 
 # text/plain
-: <Figure size 720x720 with 4 Axes>
+: <Figure size 720x720 with 5 Axes>
 
 # image/png
 #+attr_html: :width 850px
@@ -172,28 +225,33 @@ sns.clustermap(dist_df)
 
 ** Largest/Lowest expression sum
 
-#+BEGIN_SRC ipython :session :ipyfile '((:name "largest" :filename "obipy-resources/large.png" :caption "Largest and least DE genes" :attr_html ":width 850px" :attr_latex ":width 15cm"))
+#+BEGIN_SRC ipython :session :ipyfile '((:name "largest" :filename "obipy-resources/large.png" :caption "Largest and least DE genes, values given are log2 fold changes /i.e a change of -1 is equivalent to $2^{-1}$ or 0.5 the amount of control" :attr_html ":width 850px" :attr_latex ":width 15cm"))  :exports results
 
-#DE.sum(axis=1).sort_values(by=['log2FoldChange'], ascending=[False]).head(3)
 
-locs = DE[['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange', ascending=False).head(20).index.values
-top = DE.loc[locs]
-top = top.pivot(columns='sample', values='log2FoldChange')
+  locs = DE[['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange',
+                                                                    ascending=False).head(30).index.values
+  top = DE.loc[locs]
+  top = top.pivot(columns='sample', values='log2FoldChange')
 
-locs = DE[['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange', ascending=True).head(20).index.values
-bot = DE.loc[locs]
-bot = bot.pivot(columns='sample', values='log2FoldChange')
+  locs = DE[['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange',
+                                                                    ascending=True).head(30).index.values
+  bot = DE.loc[locs]
+  bot = bot.pivot(columns='sample', values='log2FoldChange')
 
-both = pd.concat([top,bot])
-both['col_w_05h'] = 0
+  both = pd.concat([top,bot])
+  both['col_w_05h'] = 0
 
-sns.clustermap(both, cmap='bwr')
+  both['gene name'] = list(get_gene_names(list(both.index.values))['description'])
+  both = both.set_index('gene name')
+
+  sns.clustermap(both, cmap='bwr', vmin=-10, vmax=10)
+
 
 #+END_SRC
 
 #+RESULTS:
 :RESULTS:
-# Out [88]:
+# Out [545]:
 
 
 # text/plain
@@ -202,16 +260,106 @@ sns.clustermap(both, cmap='bwr')
 # image/png
 #+attr_html: :width 850px
 #+attr_latex: :width 15cm
-#+caption: Largest and least DE genes
+#+caption: Largest and least DE genes, values given are log2 fold changes /i.e a change of -1 is equivalent to $2^{-1}$ or 0.5 the amount of control
 #+name: largest
 [[file:obipy-resources/large.png]]
 :END:
 
+** Largest/Lowest TF expression
 
+#+BEGIN_SRC ipython :session :exports results
+  tfs = get_gene_names(list(DE.index.values))
+  s_tfs = tfs[tfs['description'].str.contains('transcription factor')]
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [546]:
+:END:
+
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "tfs" :filename "obipy-resources/tfs.png" :caption "Largest and least DE TFs, values given are log2 fold changes /i.e a change of -1 is equivalent to $2^{-1}$ or 0.5 the amount of control" :attr_html ":width 850px" :attr_latex ":width 15cm")) :exports results
+
+
+  locs = DE.loc[s_tfs['incoming']][['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange',
+                                                                    ascending=False).head(10).index.values
+  top = DE.loc[locs]
+  top = top.pivot(columns='sample', values='log2FoldChange')
+
+  locs = DE.loc[s_tfs['incoming']][['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange',
+                                                                    ascending=True).head(10).index.values
+  bot = DE.loc[locs]
+  bot = bot.pivot(columns='sample', values='log2FoldChange')
+
+  both = pd.concat([top,bot])
+  both['col_w_05h'] = 0
+
+  both['gene name'] = list(get_gene_names(list(both.index.values))['description'])
+  both = both.set_index('gene name')
+
+  sns.clustermap(both, cmap='bwr', vmin=-10, vmax=10)
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [547]:
+
+
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+#+attr_html: :width 850px
+#+attr_latex: :width 15cm
+#+caption: Largest and least DE TFs, values given are log2 fold changes /i.e a change of -1 is equivalent to $2^{-1}$ or 0.5 the amount of control
+#+name: tfs
+[[file:obipy-resources/tfs.png]]
+:END:
+
+
+
+** Largest/Lowest deviation in log2foldchanges
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "largest" :filename "obipy-resources/deviation.png" :caption "Largest and least std DE genes, values given are log2 fold changes /i.e a change of -1 is equivalent to $2^{-1}$ or 0.5 the amount of control" :attr_html ":width 850px" :attr_latex ":width 15cm")) :exports results
+
+
+  locs = DE[['log2FoldChange']].groupby(['gene']).apply(lambda x: np.std(x)).sort_values(by='log2FoldChange',
+                                                                    ascending=False).head(30).index.values
+  top = DE.loc[locs]
+  top = top.pivot(columns='sample', values='log2FoldChange')
+
+  both = pd.concat([top])
+  both['col_w_05h'] = 0
+
+  both['gene name'] = list(get_gene_names(list(both.index.values))['description'])
+  both = both.set_index('gene name')
+
+  sns.clustermap(both, cmap='bwr', vmin=-10, vmax=10)
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [548]:
+
+
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+#+attr_html: :width 850px
+#+attr_latex: :width 15cm
+#+caption: Largest and least std DE genes, values given are log2 fold changes /i.e a change of -1 is equivalent to $2^{-1}$ or 0.5 the amount of control
+#+name: largest
+[[file:obipy-resources/deviation.png]]
+:END:
 
 ** PCA on count data
 
-#+BEGIN_SRC ipython :session :ipyfile '((:name "pca" :filename "obipy-resources/pca.png" :caption "PCA of sample counts" :attr_html ":width 850px" :attr_latex ":width 15cm"))
+#+BEGIN_SRC ipython :session :ipyfile '((:name "pca" :filename "obipy-resources/pca.png" :caption "PCA of sample counts" :attr_html ":width 850px" :attr_latex ":width 15cm")) :exports results
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 sns.set()
@@ -222,7 +370,7 @@ counts_geno = [c.split("_")[0] for c in cols]
 counts_treat = [c.split("_")[1] for c in cols]
 counts_time = [c.split("_")[2] for c in cols]
 
-x = StandardScaler().fit_transform(counts.T.values)
+x = (counts.T.values)
 
 pca = PCA(n_components=2)
 principalComponents = pca.fit_transform(x)
@@ -244,10 +392,10 @@ print(pca.explained_variance_ratio_)
 
 #+RESULTS:
 :RESULTS:
-# Out [19]:
+# Out [549]:
 # output
 Explained varience from PC1 & 2 respectively:
-[0.21077632 0.14325373]
+[0.54031803 0.14242627]
 
 # text/plain
 : <Figure size 483.925x648 with 6 Axes>
@@ -258,4 +406,57 @@ Explained varience from PC1 & 2 respectively:
 #+caption: PCA of sample counts
 #+name: pca
 [[file:obipy-resources/pca.png]]
+:END:
+
+\clearpage
+
+** PCA on expression data
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "pca_both" :filename "obipy-resources/pca_minmax.png" :caption "PCA of sample min, max expression" :attr_html ":width 850px" :attr_latex ":width 15cm")) :exports results
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+sns.set()
+
+cols = list(both.columns)
+
+counts_geno = [c.split("_")[0] for c in cols]
+counts_treat = [c.split("_")[1] for c in cols]
+counts_time = [c.split("_")[2] for c in cols]
+
+x = (both.T.values)
+
+pca = PCA(n_components=2)
+principalComponents = pca.fit_transform(x)
+principalDf = pd.DataFrame(data=principalComponents, columns=[
+                           'principal component 1', 'principal component 2'])
+
+principalDf['genotype'] = counts_geno
+principalDf['treatment'] = counts_treat
+principalDf['time'] = counts_time
+
+g = sns.FacetGrid(principalDf, col='time', row='genotype', hue='treatment')
+
+g = g.map(plt.scatter, 'principal component 1',
+          'principal component 2').add_legend()
+
+print("Explained varience from PC1 & 2 respectively:")
+print(pca.explained_variance_ratio_)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [550]:
+# output
+Explained varience from PC1 & 2 respectively:
+[0.77401765 0.14661658]
+
+# text/plain
+: <Figure size 483.925x648 with 6 Axes>
+
+# image/png
+#+attr_html: :width 850px
+#+attr_latex: :width 15cm
+#+caption: PCA of sample min, max expression
+#+name: pca_both
+[[file:obipy-resources/pca_minmax.png]]
 :END:
