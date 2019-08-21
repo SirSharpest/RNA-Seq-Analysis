@@ -1,0 +1,16 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{}DE.sum(axis=1).sort\PYGZus{}values(by=[\PYGZsq{}log2FoldChange\PYGZsq{}], ascending=[False]).head(3)}
+
+\PYG{n}{locs} \PYG{o}{=} \PYG{n}{DE}\PYG{p}{[[}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{]]}\PYG{o}{.}\PYG{n}{groupby}\PYG{p}{([}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{])}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{()}\PYG{o}{.}\PYG{n}{sort\PYGZus{}values}\PYG{p}{(}\PYG{n}{by}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{,} \PYG{n}{ascending}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}\PYG{o}{.}\PYG{n}{head}\PYG{p}{(}\PYG{l+m+mi}{20}\PYG{p}{)}\PYG{o}{.}\PYG{n}{index}\PYG{o}{.}\PYG{n}{values}
+\PYG{n}{top} \PYG{o}{=} \PYG{n}{DE}\PYG{o}{.}\PYG{n}{loc}\PYG{p}{[}\PYG{n}{locs}\PYG{p}{]}
+\PYG{n}{top} \PYG{o}{=} \PYG{n}{top}\PYG{o}{.}\PYG{n}{pivot}\PYG{p}{(}\PYG{n}{columns}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{,} \PYG{n}{values}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{)}
+
+\PYG{n}{locs} \PYG{o}{=} \PYG{n}{DE}\PYG{p}{[[}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{]]}\PYG{o}{.}\PYG{n}{groupby}\PYG{p}{([}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{])}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{()}\PYG{o}{.}\PYG{n}{sort\PYGZus{}values}\PYG{p}{(}\PYG{n}{by}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{,} \PYG{n}{ascending}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}\PYG{o}{.}\PYG{n}{head}\PYG{p}{(}\PYG{l+m+mi}{20}\PYG{p}{)}\PYG{o}{.}\PYG{n}{index}\PYG{o}{.}\PYG{n}{values}
+\PYG{n}{bot} \PYG{o}{=} \PYG{n}{DE}\PYG{o}{.}\PYG{n}{loc}\PYG{p}{[}\PYG{n}{locs}\PYG{p}{]}
+\PYG{n}{bot} \PYG{o}{=} \PYG{n}{bot}\PYG{o}{.}\PYG{n}{pivot}\PYG{p}{(}\PYG{n}{columns}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{,} \PYG{n}{values}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{)}
+
+\PYG{n}{both} \PYG{o}{=} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{concat}\PYG{p}{([}\PYG{n}{top}\PYG{p}{,}\PYG{n}{bot}\PYG{p}{])}
+\PYG{n}{both}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}col\PYGZus{}w\PYGZus{}05h\PYGZsq{}}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}
+
+\PYG{n}{sns}\PYG{o}{.}\PYG{n}{clustermap}\PYG{p}{(}\PYG{n}{both}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}bwr\PYGZsq{}}\PYG{p}{)}
+\end{Verbatim}

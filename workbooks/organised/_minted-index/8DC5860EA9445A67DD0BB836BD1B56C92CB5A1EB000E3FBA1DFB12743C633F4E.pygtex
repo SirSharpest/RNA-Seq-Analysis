@@ -1,0 +1,23 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{DE\PYGZus{}cross\PYGZus{}time\PYGZus{}pairings} \PYG{o}{=} \PYG{n}{read\PYGZus{}xl}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}/Users/hughesn/PHD/Transcripts/Data/cross\PYGZus{}time\PYGZus{}pairings.xlsx\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{n} \PYG{o}{=} \PYG{l+m+mi}{5}
+\PYG{n}{df} \PYG{o}{=} \PYG{n}{DE\PYGZus{}cross\PYGZus{}time\PYGZus{}pairings}
+\PYG{n}{s} \PYG{o}{=} \PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{df}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{unique}\PYG{p}{())[}\PYG{l+m+mi}{0}\PYG{p}{]}
+\PYG{c+c1}{\PYGZsh{}tdf =  get\PYGZus{}linedata(df[df[\PYGZsq{}sample\PYGZsq{}] == s], include\PYGZus{}small=True, include\PYGZus{}large=False)}
+\PYG{c+c1}{\PYGZsh{}tdf.head(10)}
+
+\PYG{n}{df} \PYG{o}{=} \PYG{n}{df}\PYG{p}{[}\PYG{n}{df}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{]} \PYG{o}{==} \PYG{n}{s}\PYG{p}{]}
+\PYG{n}{top} \PYG{o}{=} \PYG{n}{df}\PYG{o}{.}\PYG{n}{groupby}\PYG{p}{(}
+    \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{])}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{()}\PYG{o}{.}\PYG{n}{reset\PYGZus{}index}\PYG{p}{()}\PYG{o}{.}\PYG{n}{set\PYGZus{}index}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{locs} \PYG{o}{=} \PYG{n}{get\PYGZus{}locs}\PYG{p}{(}\PYG{n}{top}\PYG{p}{,} \PYG{n}{n}\PYG{p}{,} \PYG{n}{include\PYGZus{}large}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{,}
+                \PYG{n}{include\PYGZus{}small}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+\PYG{n}{top}\PYG{o}{=}\PYG{n}{top}\PYG{o}{.}\PYG{n}{loc}\PYG{p}{[}\PYG{n}{locs}\PYG{p}{]}
+\PYG{n}{bot} \PYG{o}{=} \PYG{n}{df}\PYG{o}{.}\PYG{n}{groupby}\PYG{p}{(}
+    \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{])}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{()}\PYG{o}{.}\PYG{n}{reset\PYGZus{}index}\PYG{p}{()}\PYG{o}{.}\PYG{n}{set\PYGZus{}index}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{locs} \PYG{o}{=} \PYG{n}{get\PYGZus{}locs}\PYG{p}{(}\PYG{n}{bot}\PYG{p}{,} \PYG{n}{n}\PYG{p}{,} \PYG{n}{include\PYGZus{}large}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{,}
+                \PYG{n}{include\PYGZus{}small}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+\PYG{n}{bot}\PYG{o}{=}\PYG{n}{bot}\PYG{o}{.}\PYG{n}{loc}\PYG{p}{[}\PYG{n}{locs}\PYG{p}{]}
+\PYG{n}{top\PYGZus{}and\PYGZus{}bot} \PYG{o}{=} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{concat}\PYG{p}{([}\PYG{n}{top}\PYG{p}{,} \PYG{n}{bot}\PYG{p}{])}
+\PYG{n}{filter\PYGZus{}cols} \PYG{o}{=} \PYG{p}{[}\PYG{n}{c} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{counts} \PYG{k}{if} \PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{startswith}\PYG{p}{(}\PYG{n}{s}\PYG{p}{)} \PYG{o+ow}{or} \PYG{n}{c}\PYG{o}{.}\PYG{n}{startswith}\PYG{p}{(}\PYG{n}{s}\PYG{o}{.}\PYG{n}{replace}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}05h\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}6h\PYGZsq{}}\PYG{p}{)))]}
+\PYG{n}{pd}\PYG{o}{.}\PYG{n}{merge}\PYG{p}{(}\PYG{n}{top\PYGZus{}and\PYGZus{}bot}\PYG{p}{,} \PYG{n}{counts}\PYG{p}{[}\PYG{n}{filter\PYGZus{}cols}\PYG{p}{],} \PYG{n}{left\PYGZus{}index}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{,} \PYG{n}{right\PYGZus{}index}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+\end{Verbatim}

@@ -1,0 +1,1344 @@
+* 05hr c/w
+
+These treatments are comparing the X axis to their water treatments, not to each other, selection is done with the 10 most upregulated genes from each 3 genotypes, and pooled together for reference across genotypes.
+ The second heatmap is the same, only it is downregulated top 10 for each
+
+#+BEGIN_SRC ipython :session
+  DE_pairings_05hr = read_xl(f'{usr}/PHD/Transcripts/Data/pairings_05hr.xlsx')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [47]:
+:END:
+
+
+** Clustermap of largest/smallest DE genes
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+  size_of_plot = 25
+  top, bot = get_two_clustermaps_data(DE_pairings_05hr, size_of_plot)
+  gt = sns.clustermap(top.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [48]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/52ea12a3a09db52f40f68aed02b6a1e01f1b7510.png]]
+:END:
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  top
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [49]:
+# text/org
+| gene      |    cer_c_05h |   col_c_05h |   lym_c_05h | gene name                                                               |
+|-----------+--------------+-------------+-------------+-------------------------------------------------------------------------|
+| AT1G05675 |  0.00893468  |   6.57562   |    6.90205  | Glycosyltransferase (Fragment)                                          |
+| AT1G05767 |  0.00156277  |   9.08372   |    9.09077  | None                                                                    |
+| AT1G06135 |  0.00237129  |   6.73454   |    7.68988  | Transmembrane protein                                                   |
+| AT1G07160 |  0.00192329  |   7.72379   |    7.1869   | PP2C-type phosphatase AP2C2                                             |
+| AT1G11050 |  0.386889    |   3.01648   |    2.92607  | Probable receptor-like protein kinase At1g11050                         |
+| AT1G19020 |  0.317565    |   3.91422   |    4.48659  | CDP-diacylglycerol-glycerol-3-phosphate 3-phosphatidyltransferase       |
+| AT1G21326 |  0.000630418 |   6.97101   |    6.73914  | F16F4.1 protein                                                         |
+| AT1G42980 |  0.00111285  |   6.03702   |    7.50656  | Formin-like protein 12                                                  |
+| AT1G50280 |  0.196393    |  -0.388256  |   -0.376579 | BTB/POZ domain-containing protein At1g50280                             |
+| AT1G53080 |  0.00196619  |   7.4858    |    5.37267  | Lectin-like protein At1g53080                                           |
+| AT1G56240 |  0.00334292  |   7.35966   |    7.13746  | F-box protein PP2-B13                                                   |
+| AT1G56242 |  0.0158472   |   7.79839   |    7.10416  | other RNA                                                               |
+| AT1G56250 |  0.00327997  |   6.75366   |    7.0003   | F-box protein VBF                                                       |
+| AT1G63350 |  0.171491    |   1.7416    |    1.64759  | Disease resistance protein (CC-NBS-LRR class) family                    |
+| AT1G66500 |  0.34432     |   2.59918   |    2.29259  | Polyadenylation and cleavage factor homolog 1                           |
+| AT1G71520 | -0.000381972 |   7.07642   |    5.61138  | Ethylene-responsive transcription factor ERF020                         |
+| AT1G79680 |  0.00545018  |   7.65734   |    6.86287  | Wall-associated receptor kinase-like 10                                 |
+| AT2G23270 | -0.000456369 |   6.65713   |    7.97412  | At2g23270                                                               |
+| AT2G25297 |  0.000649582 |   8.2495    |    6.09435  | None                                                                    |
+| AT2G29100 | -0.00109021  |   5.67374   |    7.47033  | Glutamate receptor                                                      |
+| AT2G29110 | -0.00103965  |   8.17433   |    6.75335  | Glutamate receptor                                                      |
+| AT2G31345 |  0.000672878 |   8.13632   |    7.70065  | Transmembrane protein                                                   |
+| AT2G32030 |  0.360668    |   5.9818    |    5.83628  | Acyl-CoA N-acyltransferases (NAT) superfamily protein                   |
+| AT2G36430 |  0.527436    |   1.25286   |    1.01045  | Transmembrane protein, putative (DUF247)                                |
+| AT2G36440 | -0.000525888 |   6.31355   |    7.02035  | Uncharacterized protein At2g36440                                       |
+| AT2G36690 |  0.152988    |   3.88175   |    3.37702  | 2-oxoglutarate (2OG) and Fe(II)-dependent oxygenase superfamily protein |
+| AT2G36800 |  0.198698    |   0.906537  |    0.698726 | Glycosyltransferase (Fragment)                                          |
+| AT2G37430 |  0.00434456  |   7.29045   |    7.59681  | ZAT11                                                                   |
+| AT2G41010 |  0.273738    |   2.23082   |    2.31605  | Calmodulin-binding protein 25                                           |
+| AT3G01165 |  0.005025    |   8.62556   |    7.83296  | None                                                                    |
+| AT3G02840 |  0.000596146 |   7.51038   |    7.20897  | ARM repeat superfamily protein                                          |
+| AT3G04135 |  0.000980951 |   5.57737   |    7.16314  | None                                                                    |
+| AT3G13433 | -0.00010119  |   7.14669   |    7.29593  | Transmembrane protein                                                   |
+| AT3G23170 |  0.21665     |   2.1412    |    2.01655  | At3g23170                                                               |
+| AT3G44260 |  0.396441    |   4.00305   |    3.59981  | Probable CCR4-associated factor 1 homolog 9                             |
+| AT3G56790 | -0.00300532  |   7.9763    |    5.20384  | RNA splicing factor-like protein                                        |
+| AT3G56880 |  0.164487    |   2.85295   |    2.6552   | VQ motif-containing protein                                             |
+| AT3G60690 |  0.775347    |   1.38615   |    1.54601  | AT3g60690/T4C21_100                                                     |
+| AT4G01360 |  0.233189    |   2.97734   |    2.33281  | BPS1-like protein                                                       |
+| AT4G04480 |  0           |   7.79414   |    7.89893  | F-box protein with a domain protein                                     |
+| AT4G11470 |  0.00102285  |   8.1234    |    8.05746  | cysteine-rich RLK (RECEPTOR-like protein kinase) 31                     |
+| AT4G18197 |  0.500189    |   3.90951   |    4.02679  | Probable purine permease 7                                              |
+| AT4G22030 | -9.05787e-05 |  10.2178    |    9.9661   | F-box family protein with a domain of unknown function (DUF295)         |
+| AT4G22710 |  0.319379    |   4.32235   |    4.55066  | Cytochrome P450 - like protein                                          |
+| AT4G23190 |  0.20262     |   3.87874   |    3.80667  | Cysteine-rich receptor-like protein kinase 11                           |
+| AT4G28460 | -0.00111522  |  10.54      |    8.4825   | PAMP-induced secreted peptide 1                                         |
+| AT4G31510 |  0.178274    |   1.10968   |    1.20901  | Major centromere autoantigen B-like protein                             |
+| AT4G31550 |  0.204438    |   3.93376   |    3.97634  | Probable WRKY transcription factor 11                                   |
+| AT4G31950 |  0.00206106  |   8.8365    |    8.77984  | CYP82C3                                                                 |
+| AT5G05300 |  0.00347348  |   7.05948   |    6.38294  | Gb                                                                      |
+| AT5G11140 |  0.00159735  |  10.6716    |    9.14866  | Phospholipase-like protein (PEARLI 4) family protein                    |
+| AT5G22250 |  0.477879    |   4.06867   |    3.86216  | Probable CCR4-associated factor 1 homolog 11                            |
+| AT5G24110 | -0.00275784  |   7.95399   |    7.82602  | Probable WRKY transcription factor 30                                   |
+| AT5G47850 |  0.000699677 |   7.54891   |    6.62614  | Serine/threonine-protein kinase-like protein CCR4                       |
+| AT5G53030 |  0.231112    |   0.16589   |    0.213254 | Uncharacterized protein At5g53030                                       |
+| AT5G56960 |  0.00187238  |   5.03033   |    7.05902  | basic helix-loop-helix (bHLH) DNA-binding family protein                |
+| AT5G59320 |  0.825844    |   0.0554799 |    0.233408 | Non-specific lipid-transfer protein 3                                   |
+| AT5G61600 |  0.49286     |   4.37116   |    4.52404  | Ethylene-responsive transcription factor ERF104                         |
+| AT5G62470 |  0.49083     |   3.56957   |    3.3404   | Transcription factor MYB96                                              |
+:END:
+
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  gb = sns.clustermap(bot.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [50]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/fa4ff083d0156a22b6f6a933b0946dde7945a413.png]]
+:END:
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  bot
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [51]:
+# text/org
+| gene      |    cer_c_05h |   col_c_05h |   lym_c_05h | gene name                                                        |
+|-----------+--------------+-------------+-------------+------------------------------------------------------------------|
+| AT1G06980 |  0.000315936 | -3.2104     |  -0.312184  | 6,7-dimethyl-8-ribityllumazine synthase                          |
+| AT1G13420 | -0.14831     | -0.0749792  |   0.074351  | Cytosolic sulfotransferase 8                                     |
+| AT1G17870 | -0.327935    |  0.0368003  |   0.112953  | Probable zinc metallopeptidase EGY3, chloroplastic               |
+| AT1G19620 | -0.00197848  | -2.90875    |  -0.325521  | unknown protein                                                  |
+| AT1G19960 | -0.0971831   | -0.462333   |  -0.0360913 | Putative uncharacterized protein At1g19960                       |
+| AT1G20090 | -0.094578    | -0.0247719  |  -0.102039  | ROP2                                                             |
+| AT1G25440 | -0.00210658  | -1.75927    |  -2.17107   | Zinc finger protein CONSTANS-LIKE 16                             |
+| AT1G31173 | -0.00112787  | -3.17885    |  -6.19698   | MIR167D                                                          |
+| AT1G31580 | -0.115377    | -0.0141985  |   0.0471392 | Protein ECS1                                                     |
+| AT1G31690 | -0.385742    | -0.0551541  |  -0.0693514 | Amine oxidase                                                    |
+| AT1G49200 | -0.0226826   | -2.53606    |  -3.32721   | RING-H2 finger protein ATL75                                     |
+| AT1G49205 | -0.00178242  | -2.54305    |  -3.4567    | None                                                             |
+| AT1G49310 | -0.3828      | -0.0514857  |   0.148966  | At1g49310                                                        |
+| AT1G61410 | -6.04729e-05 | -3.00609    |   0.414391  | At1g61410                                                        |
+| AT1G61840 | -0.0020137   | -2.8442     |  -1.32039   | Cysteine/Histidine-rich C1 domain family protein                 |
+| AT1G64405 | -0.000518164 | -1.29054    |  -2.30748   | At1g64405                                                        |
+| AT1G66440 |  0.00236645  | -0.373072   |  -2.45838   | Cysteine/Histidine-rich C1 domain family protein                 |
+| AT1G76952 | -0.00147565  | -2.86763    |  -0.323457  | inflorescence deficient in abscission (IDA)-like 5               |
+| AT1G78170 |  0.00081395  | -2.09165    |  -2.20898   | E3 ubiquitin-protein ligase                                      |
+| AT1G79110 |  0.000895167 | -2.09566    |  -2.21404   | Probable BOI-related E3 ubiquitin-protein ligase 2               |
+| AT1G80640 | -0.0816591   | -0.222041   |  -0.374296  | Probable receptor-like protein kinase At1g80640                  |
+| AT2G02630 |  0.00036728  | -3.42429    |  -2.37269   | Cysteine/Histidine-rich C1 domain family protein                 |
+| AT2G02635 |  0.00356061  | -2.44874    |  -2.1314    | None                                                             |
+| AT2G21210 |  0.0703424   | -2.39519    |  -1.99695   | SAUR-like auxin-responsive protein family                        |
+| AT2G35260 | -0.112381    | -0.462688   |  -0.519026  | At2g35260/T4C15.7                                                |
+| AT2G36090 | -0.00501625  | -2.9855     |  -3.56255   | Probable F-box protein At2g36090                                 |
+| AT2G42140 |  0.000387734 | -1.81626    |  -2.68845   | VQ motif-containing protein 17                                   |
+| AT2G46660 | -0.000504258 | -2.69187    |  -0.887519  | Cytochrome P450 78A6                                             |
+| AT3G04530 |  0.000107497 | -1.98803    |  -2.30324   | Phosphoenolpyruvate carboxylase kinase 2                         |
+| AT3G09275 | -0.00235654  | -2.59531    |  -2.18687   | None                                                             |
+| AT3G09440 | -0.128454    | -0.171898   |  -0.610093  | Heat shock protein 70 (Hsp 70) family protein                    |
+| AT3G10340 | -0.0835017   |  0.0187905  |   0.0760892 | Phenylalanine ammonia-lyase 4                                    |
+| AT3G13020 | -0.176255    |  2.51085    |   2.71483   | HAT transposon superfamily protein                               |
+| AT3G17580 |  0.000230976 | -1.19223    |  -2.45071   | SsrA-binding protein                                             |
+| AT3G22886 | -0.000937517 | -2.44359    |  -0.352305  | MIR167A                                                          |
+| AT3G44550 | -0.594108    |  0.0237715  |   0.0277066 | Probable fatty acyl-CoA reductase 5                              |
+| AT3G49900 | -0.52576     | -0.178546   |  -0.901363  | Phototropic-responsive NPH3 family protein                       |
+| AT3G51410 | -0.00200373  | -0.911465   |  -3.06101   | At3g51410                                                        |
+| AT3G59940 |  0.000947629 | -2.46243    |  -1.88608   | F-box/kelch-repeat protein SKIP20                                |
+| AT3G60220 |  0.000931231 | -2.68999    |  -0.132722  | TL4                                                              |
+| AT3G61090 | -7.45221e-05 | -3.54414    |  -0.0661773 | At3g61090                                                        |
+| AT3G61950 | -0.000675847 | -2.35888    |  -2.55317   | Transcription factor bHLH67                                      |
+| AT4G08570 | -0.00137365  | -0.0515511  |  -2.33577   | Heavy metal-associated isoprenylated plant protein 24            |
+| AT4G19700 |  0.00125746  | -2.43682    |  -2.56709   | E3 ubiquitin-protein ligase BOI                                  |
+| AT4G26950 |  0.00617477  | -0.0229631  |  -2.16394   | At4g26950                                                        |
+| AT4G34760 | -0.000627353 | -2.53243    |  -1.98384   | Auxin-responsive protein SAUR50                                  |
+| AT4G38840 | -0.00080247  | -2.47423    |  -2.16376   | At4g38840                                                        |
+| AT4G38850 |  0.00126655  | -0.279149   |  -2.57686   | Auxin-responsive protein SAUR15                                  |
+| AT4G38860 |  0.00396271  | -2.47386    |  -1.95429   | At4g38860                                                        |
+| AT5G02500 | -0.188462    | -0.200285   |  -0.278032  | Probable mediator of RNA polymerase II transcription subunit 37e |
+| AT5G04050 | -0.117954    | -0.00443125 |  -0.173624  | None                                                             |
+| AT5G05250 | -0.0859244   | -1.03795    |  -0.617995  | AT5g05250/K18I23_5                                               |
+| AT5G05270 | -0.0924189   | -0.113116   |  -0.23888   | Probable chalcone--flavonone isomerase 3                         |
+| AT5G05670 | -0.0800855   |  0.00895061 |   0.0349911 | AT5G05670 protein                                                |
+| AT5G13740 | -0.479596    | -0.165518   |  -0.0662237 | Protein ZINC INDUCED FACILITATOR 1                               |
+| AT5G22780 | -0.209173    |  0.0257206  |   0.1515    | AP-2 complex subunit alpha-2                                     |
+| AT5G24530 | -0.771808    |  0.0491592  |   0.390553  | Protein DOWNY MILDEW RESISTANCE 6                                |
+| AT5G26010 | -0.10106     |  0.0359675  |  -0.0176281 | Probable protein phosphatase 2C 72                               |
+| AT5G35960 | -0.000650677 | -0.191062   |  -2.18721   | Protein kinase family protein                                    |
+| AT5G40780 | -0.0751315   |  0.652566   |   0.860547  | Lysine histidine transporter 1                                   |
+| AT5G51850 | -0.000407335 |  0.0173237  |  -3.16649   | TRM24                                                            |
+| AT5G52900 | -0.00402107  | -1.92227    |  -2.27994   | Probable membrane-associated kinase regulator 6                  |
+| AT5G54145 | -0.00208488  | -2.11637    |  -2.31232   | At5g54141/$At5g54141                                             |
+| AT5G59780 | -2.95415e-05 | -2.44618    |  -2.09933   | Transcription factor MYB59                                       |
+| AT5G61590 | -0.00110157  | -2.73768    |  -2.43209   | Ethylene-responsive transcription factor ERF107                  |
+| AT5G66880 | -0.101025    |  0.143445   |  -0.0887112 | Serine/threonine-protein kinase SRK2I                            |
+:END:
+
+
+
+
+** Boxplots of differential changes
+
+    #+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "pairings_05hr_boxplots" :filename "obipy-resources/pairings_05hr_boxplots.png" :caption "Boxplots of differential expressions from 50 largest (left) and 50 lowe05hst (right) DE genes" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    %matplotlib inline
+
+    fig, ax = plt.subplots(1,2, sharex=True, sharey =True, figsize=(15,5))
+    top = DE_pairings_05hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    top_extracted = top.loc[get_locs(top, 50, include_small=False)]
+    sns.boxplot(data=top_extracted, x='sample', y='log2FoldChange', ax=ax[0])
+
+
+    bot = DE_pairings_05hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    bot_extracted = bot.loc[get_locs(bot, 50, include_large=False)]
+    sns.boxplot(data=bot_extracted, x='sample', y='log2FoldChange', ax=ax[1])
+
+
+    #+END_SRC
+
+    #+RESULTS:
+    :RESULTS:
+    # Out [52]:
+
+
+    # text/plain
+    : <Figure size 1080x360 with 2 Axes>
+
+    # image/png
+    #+attr_html: :width 850px
+    #+caption: Boxplots of differential expressions from 50 largest (left) and 50 lowe05hst (right) DE genes
+    #+name: pairings_05hr_boxplots
+    [[file:obipy-resources/pairings_05hr_boxplots.png]]
+    :END:
+
+
+\clearpage
+
+* 6hr c/w
+
+These treatments are comparing the X axis to their water treatments, not to each other, selection is done with the 10 most upregulated genes from each 3 genotypes, and pooled together for reference across genotypes.
+ The second heatmap is the same, only it is downregulated top 10 for each
+
+#+BEGIN_SRC ipython :session
+  DE_pairings_6hr = read_xl(f'{usr}/PHD/Transcripts/Data/pairings_6hr.xlsx')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [53]:
+:END:
+
+** Clustermap of largest/smallest DE genes
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+  top, bot = get_two_clustermaps_data(DE_pairings_6hr, 25)
+  gt = sns.clustermap(top.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [54]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/5a9a35854593758bab2621b6ad3a9b3594da2d1c.png]]
+:END:
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  top
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [55]:
+# text/org
+| gene      |     cer_c_6h |    col_c_6h |    lym_c_6h | gene name                                                                 |
+|-----------+--------------+-------------+-------------+---------------------------------------------------------------------------|
+| AT1G02920 |  4.956e-05   |  2.49449    |  2.26597    | Glutathione S-transferase F7                                              |
+| AT1G02930 | -7.22963e-05 |  2.58666    |  2.19736    | Glutathione S-transferase F6                                              |
+| AT1G08663 |  0.00421952  |  0.00437637 | -0.00674723 | None                                                                      |
+| AT1G16380 |  0.00467278  | -0.0816752  |  0.0653938  | Cation/H(+) antiporter 1                                                  |
+| AT1G18970 | -0.000213452 |  2.86316    |  2.23722    | Germin-like protein subfamily T member 1                                  |
+| AT1G21120 |  0.0002184   |  2.13913    |  2.38183    | O-methyltransferase family protein                                        |
+| AT1G26240 | -7.43672e-05 |  3.60049    |  4.44481    | Proline-rich extensin-like family protein                                 |
+| AT1G26380 |  0.000314561 |  3.50937    |  3.62568    | Berberine bridge enzyme-like 3                                            |
+| AT1G26390 | -0.000244805 |  3.47501    |  0.598637   | Berberine bridge enzyme-like 4                                            |
+| AT1G26420 |  5.99864e-05 |  2.75806    |  2.25522    | Berberine bridge enzyme-like 7                                            |
+| AT1G28570 |  0.00913303  | -0.0430658  |  0.0645773  | GDSL esterase/lipase At1g28570                                            |
+| AT1G29460 |  0.00808904  |  0.021524   |  0.0512523  | SAUR-like auxin-responsive protein family                                 |
+| AT1G29960 |  0.0136508   | -0.107611   | -0.145689   | Peptidase S24/S26A/S26B/S26C family protein                               |
+| AT1G31490 |  0.0105197   | -0.0367075  |  0.108269   | HXXXD-type acyl-transferase family protein                                |
+| AT1G63600 |  0.00689469  | -0.00621645 | -0.0117278  | Receptor-like protein kinase-related family protein                       |
+| AT1G66700 |  7.12184e-06 |  3.40873    |  2.81457    | Paraxanthine methyltransferase 1                                          |
+| AT1G67980 | -5.27256e-06 |  3.76495    |  1.87169    | Putative caffeoyl-CoA O-methyltransferase At1g67980                       |
+| AT1G69920 | -9.98085e-05 |  2.50891    |  2.51402    | Glutathione S-transferase U12                                             |
+| AT1G72852 |  0.00826322  |  0.203518   | -0.00964083 | Potential natural antisense gene, locus overlaps with AT1G72850           |
+| AT1G74930 |  0.0101411   | -0.0294794  |  0.0427114  | Ethylene-responsive transcription factor ERF018                           |
+| AT2G05914 |  0.0171099   |  0.0827773  | -0.0376694  | Potential natural antisense gene, locus overlaps with AT2G05915           |
+| AT2G15220 |  0.00269334  |  2.91898    |  2.79065    | At2g15220/F15A23.4                                                        |
+| AT2G25297 |  0.00104608  |  3.84049    |  2.21879    | None                                                                      |
+| AT2G29150 |  9.59632e-05 |  4.46845    |  2.83809    | Tropinone reductase homolog At2g29150                                     |
+| AT2G30750 |  6.61106e-05 |  3.62051    |  3.21831    | Cytochrome P450 71A12                                                     |
+| AT2G35980 |  0.00435733  |  0.504199   |  0.159604   | NDR1/HIN1-like protein 10                                                 |
+| AT2G43000 |  0.000120952 |  1.10818    |  2.32787    | Transcription factor JUNGBRUNNEN 1                                        |
+| AT2G43570 | -0.000110251 |  1.94081    |  2.23337    | CHI                                                                       |
+| AT3G13950 | -3.0432e-05  |  3.19584    |  0.165878   | AT3G13950 protein                                                         |
+| AT3G19615 |  0.000261642 |  2.5281     |  2.37951    | Beta-1,4-xylosidase                                                       |
+| AT3G21305 |  9.59244e-05 |  3.45482    |  1.06607    | None                                                                      |
+| AT3G49580 |  0.00561342  |  0.160499   |  0.053971   | LSU1                                                                      |
+| AT3G53150 |  0.00700147  |  0.389497   |  0.360159   | UDP-glucosyl transferase 73D1                                             |
+| AT3G54200 |  0.00467572  |  0.0515371  |  0.0349536  | Late embryogenesis abundant (LEA) hydroxyproline-rich glycoprotein family |
+| AT3G60270 | -0.000156181 |  2.85373    |  1.99023    | Cupredoxin superfamily protein                                            |
+| AT4G04700 |  0.0455861   |  0.0320945  | -0.168382   | Calcium-dependent protein kinase 27                                       |
+| AT4G10530 | -0.000108805 |  4.45945    |  1.92021    | Subtilase family protein                                                  |
+| AT4G12500 | -0.000228082 |  3.00897    |  2.09654    | pEARLI1-like lipid transfer protein 3                                     |
+| AT4G19370 |  5.28087e-05 |  2.53867    |  0.31638    | Chitin synthase, putative (DUF1218)                                       |
+| AT4G23030 |  0.0440471   |  0.112794   |  0.00356702 | Protein DETOXIFICATION 49                                                 |
+| AT4G31970 |  0.000222508 |  5.53636    |  6.93525    | Cytochrome P450 82C2                                                      |
+| AT4G37095 |  0.00552418  | -0.0993937  | -0.00176731 | unknown protein                                                           |
+| AT5G03860 |  0.00514605  |  0.0273616  | -0.0178313  | Malate synthase                                                           |
+| AT5G06730 |  0.00055951  |  2.67853    |  2.14532    | Peroxidase 54                                                             |
+| AT5G11210 | -0.000127495 |  3.50968    |  3.09579    | Glutamate receptor 2.5                                                    |
+| AT5G35490 |  0.0153947   | -0.0228948  |  0.0519844  | mto 1 responding up 1                                                     |
+| AT5G35525 |  0.00488355  |  0.0686101  |  0.0831995  | Protein PLANT CADMIUM RESISTANCE 3                                        |
+| AT5G39110 |  8.50824e-05 |  2.74372    |  3.00043    | Germin-like protein subfamily 1 member 14                                 |
+| AT5G39120 | -0.000104424 |  4.01959    |  4.38315    | Germin-like protein subfamily 1 member 15                                 |
+| AT5G39150 | -8.09123e-05 |  1.80213    |  4.48861    | Germin-like protein subfamily 1 member 17                                 |
+| AT5G39890 |  0.00590489  |  0.323962   |  0.195049   | Plant cysteine oxidase 2                                                  |
+| AT5G40000 |  0.00628497  | -0.0791759  |  0.0528754  | AAA-ATPase At5g40000                                                      |
+| AT5G44990 | -0.000105059 |  4.19897    |  0.312832   | Glutathione S-transferase family protein                                  |
+| AT5G54520 |  0.00710149  |  0.070907   |  0.016494   | Transducin/WD40 repeat-like superfamily protein                           |
+| AT5G56960 | -5.06603e-06 |  1.38257    |  3.28386    | basic helix-loop-helix (bHLH) DNA-binding family protein                  |
+| AT5G57345 |  0.00420978  |  0.177322   |  0.176793   | At5g57345                                                                 |
+| AT5G57540 |  0.00470175  |  0.0580137  | -0.048666   | Putative xyloglucan endotransglucosylase/hydrolase protein 13             |
+| AT5G65600 |  0.000205576 |  1.81817    |  2.42849    | L-type lectin-domain containing receptor kinase IX.2                      |
+:END:
+
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  gb = sns.clustermap(bot.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [56]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/4c1c9e797663c4b195f56f4964a064754e2dfee3.png]]
+:END:
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  bot
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [57]:
+# text/org
+| gene      |     cer_c_6h |    col_c_6h |    lym_c_6h | gene name                                                                                 |
+|-----------+--------------+-------------+-------------+-------------------------------------------------------------------------------------------|
+| AT1G13420 |  9.06555e-05 | -1.41823    | -0.820667   | Cytosolic sulfotransferase 8                                                              |
+| AT1G20770 | -0.00759603  |  0.0350278  |  0.121528   | At1g20770                                                                                 |
+| AT1G49860 |  9.88306e-05 | -1.79032    | -1.78761    | Glutathione S-transferase F14                                                             |
+| AT1G55990 | -3.22815e-05 | -1.79485    | -0.215851   | Glycine-rich protein                                                                      |
+| AT1G65570 | -0.000171597 | -0.25407    | -1.3913     | F5I14.10                                                                                  |
+| AT1G67856 | -0.0050584   | -0.228611   |  0.0658332  | RING/U-box superfamily protein                                                            |
+| AT1G78990 | -9.26476e-05 | -2.18412    | -0.536063   | HXXXD-type acyl-transferase family protein                                                |
+| AT2G01520 |  0.000536664 | -1.38769    | -1.03726    | MLP-like protein 328                                                                      |
+| AT2G05760 | -0.00720883  |  0.0238018  | -0.00512061 | Nucleobase-ascorbate transporter 1                                                        |
+| AT2G07638 | -0.0215611   |  0.0132227  |  0.0572107  | None                                                                                      |
+| AT2G07739 | -0.00726359  |  0.0304755  | -0.0138274  | Ycf1 protein                                                                              |
+| AT2G09340 | -0.0115119   |  0.0555915  | -0.0694685  | None                                                                                      |
+| AT2G19970 | -0.000211881 | -2.07101    | -1.94121    | At2g19970                                                                                 |
+| AT2G19990 | -1.53578e-05 | -1.62935    | -1.22451    | PR-1-like protein                                                                         |
+| AT2G27402 | -0.000718984 | -1.2092     | -1.03675    | At2g27402                                                                                 |
+| AT2G29720 | -0.00804433  |  0.213603   | -0.0509745  | FAD/NAD(P)-binding oxidoreductase family protein                                          |
+| AT2G37040 | -0.00490377  | -0.0959371  | -0.133422   | Phenylalanine ammonia-lyase 1                                                             |
+| AT2G38100 | -0.00508613  |  0.00560105 | -0.0125254  | proton-dependent oligopeptide transport (POT) family protein                              |
+| AT2G38210 | -0.0189151   | -0.310782   | -0.11573    | Pyridoxal 5'-phosphate synthase PDX1-like 4                                               |
+| AT2G39040 | -4.52948e-05 | -2.02658    | -2.09906    | Peroxidase 24                                                                             |
+| AT3G01840 | -0.143582    |  0.0600383  | -0.0243056  | Protein LYK2                                                                              |
+| AT3G02885 | -0.000311314 | -2.82663    | -2.22129    | Gibberellin-regulated protein 5                                                           |
+| AT3G14260 | -0.00586598  | -0.0105797  |  0.0701973  | Protein LURP-one-related 11                                                               |
+| AT3G15270 | -0.0717464   | -0.122205   | -0.0935992  | SPL5                                                                                      |
+| AT3G18900 | -0.000166756 | -1.69521    | -0.103876   | Ternary complex factor MIP1 leucine-zipper protein                                        |
+| AT3G28580 | -0.0129667   |  0.766622   |  1.3174     | AAA-ATPase At3g28580                                                                      |
+| AT3G28740 | -0.00040857  | -0.519014   | -1.37452    | Cytochrome P450 81D11                                                                     |
+| AT3G46270 | -0.000204056 | -3.14195    | -0.292378   | Receptor protein kinase-like protein                                                      |
+| AT3G48400 | -0.00552687  |  0.0592092  |  0.0120445  | Cysteine/Histidine-rich C1 domain family protein                                          |
+| AT3G49330 |  0.000150711 | -1.66602    | -0.0568086  | Plant invertase/pectin methylesterase inhibitor superfamily protein                       |
+| AT3G62740 |  0.00240045  | -0.482753   | -1.18895    | Beta-glucosidase 7                                                                        |
+| AT4G04540 | -0.0426056   |  0.0540724  |  0.0289514  | Putative cysteine-rich receptor-like protein kinase 39                                    |
+| AT4G08950 | -0.139356    |  0.389032   |  0.0340314  | Protein EXORDIUM                                                                          |
+| AT4G11190 |  7.30769e-05 | -1.42737    | -1.53854    | Dirigent protein 13                                                                       |
+| AT4G15290 | -9.23775e-05 | -0.33117    | -2.33806    | Glycosyltransferase (Fragment)                                                            |
+| AT4G16015 | -0.00468678  |  0.0281886  |  0.0524822  | Cysteine/Histidine-rich C1 domain family protein                                          |
+| AT4G19690 | -0.000192642 | -1.73413    | -0.152767   | Fe(2+) transport protein 1                                                                |
+| AT4G22880 | -6.72331e-05 | -2.04061    | -1.02763    | AT4G22880 protein                                                                         |
+| AT4G24265 |  1.35819e-05 | -0.235625   | -1.48487    | unknown protein                                                                           |
+| AT4G25220 | -0.000186362 | -0.22562    | -1.2254     | Putative glycerol-3-phosphate transporter 2                                               |
+| AT4G28250 |  3.70609e-06 | -1.68035    | -0.801688   | EXPB3                                                                                     |
+| AT4G33610 |  7.66466e-05 | -1.7142     | -0.146025   | At4g33610                                                                                 |
+| AT5G05300 | -0.00869039  |  0.00337846 |  0.0205706  | Gb                                                                                        |
+| AT5G13580 |  4.85555e-05 | -1.49453    | -0.775036   | ABC transporter G family member 6                                                         |
+| AT5G13900 |  9.65328e-05 | -1.55886    | -0.0700806  | Lipid transfer-like protein VAS                                                           |
+| AT5G14650 | -0.000398461 | -1.74474    | -1.25928    | Pectin lyase-like superfamily protein                                                     |
+| AT5G15180 |  0.00015035  | -1.89009    | -1.53507    | Peroxidase 56                                                                             |
+| AT5G17220 | -0.000105446 | -0.524166   | -0.986159   | Glutathione S-transferase F12                                                             |
+| AT5G24105 | -2.51795e-05 |  0.00365151 | -1.49988    | Arabinogalactan protein 41                                                                |
+| AT5G38930 | -0.00470097  |  0.0183421  | -0.114339   | Germin-like protein subfamily 1 member 10                                                 |
+| AT5G41820 | -0.00610108  | -0.0398202  | -0.0896063  | Geranylgeranyl transferase type-2 subunit alpha 2                                         |
+| AT5G42800 | -0.000108875 | -2.82511    | -0.518265   | Dihydroflavonol reductase                                                                 |
+| AT5G43290 |  1.28897e-05 | -0.72002    | -1.17867    | Probable WRKY transcription factor 49                                                     |
+| AT5G45240 | -0.0314374   |  0.128619   | -0.00867202 | Disease resistance protein (TIR-NBS-LRR class)                                            |
+| AT5G46890 |  4.23551e-05 | -2.49004    | -0.746737   | Bifunctional inhibitor/lipid-transfer protein/seed storage 2S albumin superfamily protein |
+| AT5G48000 |  6.5311e-05  | -1.4041     | -0.972066   | Cytochrome P450, family 708, subfamily A, polypeptide 2                                   |
+| AT5G48010 |  9.33774e-05 | -1.42574    | -1.01972    | Thalianol synthase                                                                        |
+| AT5G50800 |  1.5557e-06  | -0.0249659  | -2.33902    | Bidirectional sugar transporter SWEET                                                     |
+| AT5G52710 |  0.000246235 | -0.107855   | -2.35584    | Copper transport protein family                                                           |
+| AT5G57920 | -0.00618138  |  0.0287925  | -0.124408   | early nodulin-like protein 10                                                             |
+| AT5G58620 | -0.00630026  |  0.336247   |  0.171014   | Zinc finger CCCH domain-containing protein 66                                             |
+| AT5G60660 | -0.000167615 | -0.654489   | -0.961522   | PIP2F                                                                                     |
+| ATMG00660 | -0.00543698  |  0.0184692  | -0.0468381  | Uncharacterized mitochondrial protein AtMg00660                                           |
+:END:
+
+
+
+
+** Boxplots of differential changes
+
+    #+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "pairings_6hr_boxplots" :filename "obipy-resources/pairings_6hr_boxplots.png" :caption "Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    %matplotlib inline
+
+    fig, ax = plt.subplots(1,2, sharex=True, sharey =True, figsize=(15,5))
+    top = DE_pairings_6hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    top_extracted = top.loc[get_locs(top, 50, include_small=False)]
+    sns.boxplot(data=top_extracted, x='sample', y='log2FoldChange', ax=ax[0])
+
+
+    bot = DE_pairings_6hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    bot_extracted = bot.loc[get_locs(bot, 500, include_large=False)]
+    sns.boxplot(data=bot_extracted, x='sample', y='log2FoldChange', ax=ax[1])
+
+
+    #+END_SRC
+
+    #+RESULTS:
+    :RESULTS:
+    # Out [58]:
+
+
+    # text/plain
+    : <Figure size 1080x360 with 2 Axes>
+
+    # image/png
+    #+attr_html: :width 850px
+    #+caption: Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes
+    #+name: pairings_6hr_boxplots
+    [[file:obipy-resources/pairings_6hr_boxplots.png]]
+    :END:
+
+
+
+\clearpage
+* lym 05hr c/w
+
+These treatments are comparing the X axis to their lym counter part. e.g. cer_w is compared to lym_w and col_c is compared to lym_c.
+
+#+BEGIN_SRC ipython :session
+  DE_pairings_to_lym_05hr = read_xl(f'{usr}/PHD/Transcripts/Data/pairings_to_lym_05hr.xlsx')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [59]:
+:END:
+
+** Clustermap of largest/smallest DE genes
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+  top, bot = get_two_clustermaps_data(DE_pairings_to_lym_05hr, 5)
+  gt = sns.clustermap(top.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [60]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/68af6b149135f1ffdc695f76a23d914a9842e652.png]]
+:END:
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  top
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [61]:
+# text/org
+| gene      |   cer_c_05h |   cer_w_05h |    col_c_05h |    col_w_05h | gene name                                     |
+|-----------+-------------+-------------+--------------+--------------+-----------------------------------------------|
+| AT1G01580 |    0.927797 |  3.01653    | -0.00378893  |  0.00564039  | ferric reduction oxidase 2                    |
+| AT1G05867 |    2.96684  |  1.67177    |  2.60465     |  1.28893     | None                                          |
+| AT1G24280 |    2.91547  |  1.62332    |  2.09986     |  1.11792     | Glucose-6-phosphate 1-dehydrogenase           |
+| AT1G31173 |    5.74866  | -0.0272493  |  0.0602687   | -0.000165912 | MIR167D                                       |
+| AT1G53480 |    3.87345  |  3.23021    |  4.56819     |  3.73034     | Mto 1 responding down 1                       |
+| AT1G75945 |    4.7667   |  4.57281    | -0.00446997  | -0.00701536  | None                                          |
+| AT2G17120 |   -0.356764 |  2.56485    |  0.861042    |  2.3745      | LysM domain-containing GPI-anchored protein 2 |
+| AT3G18860 |    1.77959  |  1.73585    |  1.79144     |  1.60692     | AT3g18860/MCB22_3                             |
+| AT3G21620 |    5.41903  |  5.00278    |  0.00020351  |  0.0148633   | CSC1-like protein At3g21620                   |
+| AT3G28740 |   -0.451132 |  0.00471883 |  0.00553966  |  2.38573     | Cytochrome P450 81D11                         |
+| AT3G48120 |    0.755183 |  0.107992   |  0.943718    |  0.00416738  | At3g48120                                     |
+| AT4G12500 |    1.59671  |  3.04143    |  0.000524352 |  0.235614    | pEARLI1-like lipid transfer protein 3         |
+| AT4G22880 |    4.50756  |  1.12498    |  0.00588695  |  0.00560844  | AT4G22880 protein                             |
+| AT4G25220 |   -0.64532  |  1.291      |  0.00470425  |  1.37067     | Putative glycerol-3-phosphate transporter 2   |
+| AT5G42800 |    4.37776  |  0.595222   |  0.00631842  |  0.00417944  | Dihydroflavonol reductase                     |
+:END:
+
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  gb = sns.clustermap(bot.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [62]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/f9556ed33665712c40186b6d9fc2a56a9c97f61e.png]]
+:END:
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  bot
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [63]:
+# text/org
+| gene      |   cer_c_05h |   cer_w_05h |    col_c_05h |   col_w_05h | gene name                                                       |
+|-----------+-------------+-------------+--------------+-------------+-----------------------------------------------------------------|
+| AT1G62730 |   -3.25733  |  -0.0639644 | -3.61446     | -0.409654   | At1g62730                                                       |
+| AT1G62740 |   -2.71381  |  -0.771658  | -2.76356     | -0.872567   | Hsp70-Hsp90 organizing protein 2                                |
+| AT1G66800 |   -2.10786  |  -1.90101   |  0.0021134   |  0.0273842  | NAD(P)-binding Rossmann-fold superfamily protein                |
+| AT2G05914 |   -2.52477  |  -2.8757    | -1.69272     | -1.97508    | Potential natural antisense gene, locus overlaps with AT2G05915 |
+| AT2G05915 |   -3.32258  |  -2.85269   | -1.87077     | -1.552      | unknown protein                                                 |
+| AT2G23270 |   -8.10813  |   0.0158928 |  0.000182586 |  0.00773432 | At2g23270                                                       |
+| AT2G47920 |   -2.76838  |  -0.252699  | -2.97669     | -0.0216259  | Protein NETWORKED 3C                                            |
+| AT3G08700 |   -4.85618  |  -0.203244  | -4.94345     | -0.146505   | Probable ubiquitin-conjugating enzyme E2 12                     |
+| AT3G30720 |   -0.700171 |  -1.41971   | -2.54312     | -2.26491    | Protein QQS                                                     |
+| AT4G04335 |   -0.612589 |  -0.887493  | -0.928062    | -0.927047   | None                                                            |
+| AT4G22030 |   -9.15372  |   0.0194823 |  0.0017636   |  0          | F-box family protein with a domain of unknown function (DUF295) |
+| AT4G28460 |   -8.90795  |   0.0245379 |  0.000218674 | -0.00835151 | PAMP-induced secreted peptide 1                                 |
+| AT5G07130 |   -2.60889  |  -2.96222   | -0.00363301  | -0.00549834 | Laccase-13                                                      |
+| AT5G11140 |   -8.98961  |  -0.0450597 |  0.0169368   | -0.00750234 | Phospholipase-like protein (PEARLI 4) family protein            |
+| AT5G20620 |   -0.483054 |  -0.858438  | -1.18019     | -1.01999    | Polyubiquitin 4                                                 |
+| AT5G24110 |   -8.44419  |   0.0258449 | -0.00137166  | -0.0050904  | Probable WRKY transcription factor 30                           |
+| AT5G47990 |   -2.47471  |  -2.1853    |  0.00102251  |  0.0127949  | THAD1                                                           |
+:END:
+
+** Boxplots of differential changes
+
+    #+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "pairings_05hr_lym_boxplots" :filename "obipy-resources/pairings_05hr_lym_boxplots.png" :caption "Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    %matplotlib inline
+
+    fig, ax = plt.subplots(1,2, sharex=True, sharey =True, figsize=(15,5))
+    top = DE_pairings_to_lym_05hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    top_extracted = top.loc[get_locs(top, 50, include_small=False)]
+    sns.boxplot(data=top_extracted, x='sample', y='log2FoldChange', ax=ax[0])
+
+
+    bot = DE_pairings_to_lym_05hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    bot_extracted = bot.loc[get_locs(bot, 50, include_large=False)]
+    sns.boxplot(data=bot_extracted, x='sample', y='log2FoldChange', ax=ax[1])
+
+
+    #+END_SRC
+
+    #+RESULTS:
+    :RESULTS:
+    # Out [64]:
+
+
+    # text/plain
+    : <Figure size 1080x360 with 2 Axes>
+
+    # image/png
+    #+attr_html: :width 850px
+    #+caption: Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes
+    #+name: pairings_05hr_lym_boxplots
+    [[file:obipy-resources/pairings_05hr_lym_boxplots.png]]
+    :END:
+
+
+\clearpage
+* lym 6hr c/w
+
+These treatments are comparing the X axis to their lym counter part. e.g. cer_w is compared to lym_w and col_c is compared to lym_c.
+#+BEGIN_SRC ipython :session
+  DE_pairings_to_lym_6hr = read_xl(f'{usr}/PHD/Transcripts/Data/pairings_to_lym_6hr.xlsx')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [65]:
+:END:
+
+
+** Clustermap of largest/smallest DE genes
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+  top, bot = get_two_clustermaps_data(DE_pairings_to_lym_6hr, 25)
+  gt = sns.clustermap(top.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [66]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/75e7de9705fa4a4308f7fb5b627bd547217fec61.png]]
+:END:
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  top
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [67]:
+# text/org
+| gene      |   cer_c_6h |   cer_w_6h |     col_c_6h |     col_w_6h | gene name                                                                |
+|-----------+------------+------------+--------------+--------------+--------------------------------------------------------------------------|
+| AT1G01580 |  0.265538  |  2.43529   | -0.0134848   |  0.000266402 | ferric reduction oxidase 2                                               |
+| AT1G05562 | -0.23282   | -0.119374  |  0.0083761   |  0.441658    | Potential natural antisense gene, locus overlaps with AT1G05560          |
+| AT1G05867 |  1.81801   |  1.32592   |  0.84561     |  0.644058    | None                                                                     |
+| AT1G08650 | -0.339874  |  0.0471269 |  0.00139571  |  0.627517    | Phosphoenolpyruvate carboxylase kinase 1                                 |
+| AT1G24147 |  0.356146  |  2.15645   |  0.00122775  |  0.000996686 | Transmembrane protein                                                    |
+| AT1G24280 |  1.8153    |  1.72072   |  1.18318     |  1.2381      | Glucose-6-phosphate 1-dehydrogenase                                      |
+| AT1G32510 |  2.30361   | -0.0436418 |  0.0241369   | -0.00666043  | NAC011                                                                   |
+| AT1G45163 |  0.838653  | -0.0205672 |  0.657192    |  0.00122885  | unknown protein                                                          |
+| AT1G45165 |  0.503265  |  0.0346636 |  0.652551    | -0.000553874 | At1g45165                                                                |
+| AT1G49860 |  2.05775   |  0.0327742 |  0.000856933 |  0.0014014   | Glutathione S-transferase F14                                            |
+| AT1G51700 |  0.263339  |  0.23231   |  0.000610537 |  0.47405     | Dof zinc finger protein DOF1.7                                           |
+| AT1G53480 |  2.13443   |  2.81077   |  3.46707     |  3.4449      | Mto 1 responding down 1                                                  |
+| AT1G53490 |  0.605604  |  0.7753    |  1.93432     |  1.43818     | E3 ubiquitin-protein ligase CCNB1IP1 homolog                             |
+| AT1G56150 |  1.97823   |  0.449817  |  0.00858026  |  0.0278288   | Auxin-responsive protein SAUR71                                          |
+| AT1G56650 |  0.541056  |  1.6369    | -0.00551482  |  0.000388034 | Transcription factor MYB75                                               |
+| AT1G61800 |  1.95935   |  1.41486   | -0.00214094  | -0.000158039 | glucose-6-phosphate/phosphate translocator 2                             |
+| AT1G64110 |  2.00061   |  0.688005  |  0.0178664   |  0.000734109 | p-loop containing nucleoside triphosphate hydrolases superfamily protein |
+| AT1G68840 | -0.483692  | -0.539192  |  0.724756    |  0.0422114   | TEM2                                                                     |
+| AT1G69530 | -0.359718  | -0.180244  |  0.468465    |  0.544709    | Expansin                                                                 |
+| AT1G73010 | -0.22036   | -0.201325  |  0.00406708  |  0.793724    | Inorganic pyrophosphatase 1                                              |
+| AT1G75945 |  3.28769   |  2.08848   | -0.0750018   | -0.160872    | None                                                                     |
+| AT1G76960 |  0.503304  |  1.65842   | -0.00412885  | -0.00554483  | F22K20.6 protein                                                         |
+| AT1G79110 |  0.645681  |  0.544698  |  0.506675    |  0.880542    | Probable BOI-related E3 ubiquitin-protein ligase 2                       |
+| AT2G17120 |  1.39554   |  1.99613   |  1.8056      |  2.18457     | LysM domain-containing GPI-anchored protein 2                            |
+| AT2G17850 |  1.09006   |  1.85213   | -2.09158     | -0.00437457  | Rhodanese/Cell cycle control phosphatase superfamily protein             |
+| AT2G19970 |  2.10962   |  0.173878  |  0.00153109  |  0.00401189  | At2g19970                                                                |
+| AT2G20670 | -2.0612    | -2.00191   |  0.988052    |  0.00472478  | Expressed protein                                                        |
+| AT2G24850 |  0.622732  |  2.28638   | -0.00618479  | -0.0120888   | Probable aminotransferase TAT3                                           |
+| AT2G33790 |  1.98454   |  0.533702  | -0.0102444   | -0.000694328 | Non-classical arabinogalactan protein 30                                 |
+| AT2G36800 | -0.212717  | -0.0366492 |  0.663442    |  0.797034    | Glycosyltransferase (Fragment)                                           |
+| AT2G39980 | -0.518248  | -0.330112  |  0.668997    |  0.00676105  | At2g39980/T28M21.14                                                      |
+| AT3G02030 |  0.0376385 | -0.145536  |  0.537838    |  1.02145     | Transferase                                                              |
+| AT3G02040 | -0.524661  | -1.14136   |  0.117367    |  0.823306    | Glycerophosphodiester phosphodiesterase GDPD1, chloroplastic             |
+| AT3G02885 |  2.55293   |  0.29424   | -0.00158501  |  0.00505744  | Gibberellin-regulated protein 5                                          |
+| AT3G07610 |  0.918947  |  1.08539   |  0.0209842   |  0.546285    | Transcription factor jumonji (JmjC) domain-containing protein            |
+| AT3G08690 |  0.409444  |  1.14231   |  0.778169    |  0.817438    | Ubiquitin-conjugating enzyme E2 11                                       |
+| AT3G09275 | -0.414133  | -0.771378  |  0.942042    |  0.255069    | None                                                                     |
+| AT3G18860 |  1.68638   |  1.71184   |  1.90364     |  1.64174     | AT3g18860/MCB22_3                                                        |
+| AT3G21620 |  5.49281   |  4.01802   |  0.000229694 | -0.0189683   | CSC1-like protein At3g21620                                              |
+| AT3G22231 |  4.29378   |  2.0807    |  0.000634847 | -0.00662471  | Cysteine-rich and transmembrane domain-containing protein PCC1           |
+| AT3G28580 | -0.245696  |  1.78259   | -0.00361422  |  5.48356e-05 | AAA-ATPase At3g28580                                                     |
+| AT3G28740 |  0.0965771 | -0.177175  |  0.774041    |  0.0463688   | Cytochrome P450 81D11                                                    |
+| AT3G29030 |  0.0602244 |  0.0567001 |  0.00429109  |  0.5358      | Expansin                                                                 |
+| AT3G29590 |  2.02934   |  0.81162   | -0.00137778  |  0.00404867  | Malonyl-CoA:anthocyanidin 5-O-glucoside-6''-O-malonyltransferase         |
+| AT3G44260 | -0.610296  | -0.0769835 |  0.0509086   |  0.557646    | Probable CCR4-associated factor 1 homolog 9                              |
+| AT3G45960 |  3.47691   |  0.0168601 |  0.0353783   |  0.00783635  | Expansin-like A3                                                         |
+| AT3G47420 | -0.372151  | -0.124267  |  1.07222     |  1.49742     | Putative glycerol-3-phosphate transporter 1                              |
+| AT3G54160 |  1.92892   |  0.0207161 |  0.0932034   | -0.00634025  | RNI-like superfamily protein                                             |
+| AT3G57260 |  0.138099  |  1.68492   | -0.00169744  | -0.00637819  | Beta-1,3-glucanase 2                                                     |
+| AT3G59940 | -0.389813  | -0.727245  |  0.933464    |  0.472482    | F-box/kelch-repeat protein SKIP20                                        |
+| AT4G01080 |  2.01332   |  1.13995   |  0.0104227   |  0.00365152  | Mannan O-acetyltransferase 4                                             |
+| AT4G06175 |  2.80322   |  0.305467  | -0.00109173  |  3.23473e-05 | None                                                                     |
+| AT4G08555 |  0.323447  | -0.0767858 |  0.699957    |  0.00411227  | At4g08555                                                                |
+| AT4G11890 |  0.116206  |  1.75092   |  0.0034015   | -0.00146844  | Protein kinase superfamily protein                                       |
+| AT4G12490 |  0.0161937 |  2.13864   |  0.00392383  |  0.00534554  | pEARLI1-like lipid transfer protein 2                                    |
+| AT4G12495 |  0.0309393 |  2.07853   |  0.00404906  |  0.00284319  | Transmembrane protein                                                    |
+| AT4G12500 | -0.284656  |  1.65859   |  0.0359025   |  0.000530587 | pEARLI1-like lipid transfer protein 3                                    |
+| AT4G14090 |  1.25833   |  1.63966   | -0.00205242  |  0.0060362   | UDP-glycosyltransferase 75C1                                             |
+| AT4G19690 |  4.34839   |  0.679109  | -0.0087742   |  0.000295912 | Fe(2+) transport protein 1                                               |
+| AT4G20240 |  1.89957   |  0.262049  | -0.0906711   | -0.015965    | cytochrome P450, family 71, subfamily A, polypeptide 27                  |
+| AT4G22880 |  5.9116    |  0.779074  | -0.00609377  | -0.00130936  | AT4G22880 protein                                                        |
+| AT4G23140 |  1.30398   |  1.65825   |  0.00361287  | -0.00358306  | cysteine-rich RLK (RECEPTOR-like protein kinase) 6                       |
+| AT4G27280 |  0.0568323 | -0.0214473 |  0.507739    |  0.571907    | Calcium-binding protein KRP1                                             |
+| AT4G37610 | -1.40463   | -1.60618   |  0.846049    |  0.0106242   | BTB/POZ and TAZ domain-containing protein 5                              |
+| AT5G07990 |  1.55516   |  1.70322   |  0.000567256 |  0.00162166  | TT7                                                                      |
+| AT5G17220 |  3.59042   |  1.44115   |  0.000302241 | -0.00219097  | Glutathione S-transferase F12                                            |
+| AT5G19600 |  0.347219  | -0.112176  |  0.695242    | -0.00426924  | Probable sulfate transporter 3.5                                         |
+| AT5G20150 | -0.975805  | -1.24327   |  0.134665    |  1.0524      | SPX domain-containing protein 1                                          |
+| AT5G21940 | -0.88004   | -1.11441   |  0.872378    |  0.045652    | At5g21940                                                                |
+| AT5G24660 |  0.442438  |  0.375215  |  0.00508746  |  0.527337    | Protein RESPONSE TO LOW SULFUR 2                                         |
+| AT5G42800 |  5.16998   |  0.614305  | -0.012577    | -0.00095303  | Dihydroflavonol reductase                                                |
+| AT5G44575 |  0.270312  |  1.69358   | -0.00332951  |  0.00421994  | At5g44575                                                                |
+| AT5G44578 |  0.514205  |  1.67249   |  0.00534092  | -0.00172738  | unknown protein                                                          |
+| AT5G50800 |  2.07154   | -0.0460629 |  0.0129965   | -0.0213864   | Bidirectional sugar transporter SWEET                                    |
+| AT5G52710 |  2.77995   | -0.0569704 |  0.0230155   | -0.0172695   | Copper transport protein family                                          |
+| AT5G53210 |  0.655746  |  0.0221153 |  0.928035    |  0.00333467  | SPCH                                                                     |
+| AT5G54060 |  2.68115   |  0.469779  | -0.0117165   | -0.00170745  | Glycosyltransferase (Fragment)                                           |
+| AT5G54610 |  0.143938  |  1.92923   |  0.000301473 | -0.00119386  | Ankyrin repeat-containing protein BDA1                                   |
+| AT5G56550 | -0.930747  | -0.99521   |  0.996667    |  0.145915    | Emb                                                                      |
+| AT5G60680 | -0.470905  | -0.538333  |  0.946323    |  0.300018    | Emb                                                                      |
+| AT5G61600 | -0.199289  | -0.106873  |  0.890552    |  0.693716    | Ethylene-responsive transcription factor ERF104                          |
+:END:
+
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  gb = sns.clustermap(bot.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [68]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/d07c120cb3296e04d7ab6270710ee922e4bb528d.png]]
+:END:
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  bot
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [69]:
+# text/org
+| gene      |   cer_c_6h |    cer_w_6h |     col_c_6h |     col_w_6h | gene name                                                          |
+|-----------+------------+-------------+--------------+--------------+--------------------------------------------------------------------|
+| AT1G05147 | -1.57087   | -1.62309    |  0.00612245  | -0.00500155  | None                                                               |
+| AT1G12010 | -2.13351   | -1.67862    | -0.000522444 | -0.00399498  | 1-aminocyclopropane-1-carboxylate oxidase 3                        |
+| AT1G13520 | -3.33802   | -0.0272298  |  0.00169277  | -0.00340154  | At1g13520                                                          |
+| AT1G14540 | -5.73842   | -0.95748    |  0.000689146 |  0.000779374 | Peroxidase                                                         |
+| AT1G14550 | -5.69357   | -0.0700701  |  0.00110869  |  0.00523937  | Peroxidase 5                                                       |
+| AT1G18970 | -3.11141   | -0.0793247  |  7.34396e-05 | -0.00745373  | Germin-like protein subfamily T member 1                           |
+| AT1G21100 | -1.56808   | -1.62372    |  0.00265953  | -0.0042966   | Indole glucosinolate O-methyltransferase 1                         |
+| AT1G23390 | -1.53755   | -1.69403    |  0.017551    |  0.00105973  | F-box/Kelch repeat-containing F-box family protein                 |
+| AT1G26240 | -5.19704   | -0.0140108  |  0.00297997  |  0.00831771  | Proline-rich extensin-like family protein                          |
+| AT1G26380 | -4.78199   | -0.927699   |  0.00385376  |  0.00557304  | Berberine bridge enzyme-like 3                                     |
+| AT1G26390 | -6.39275   | -0.179399   |  0.00405959  | -0.00172191  | Berberine bridge enzyme-like 4                                     |
+| AT1G26410 | -4.12669   |  0.0259608  |  0.000763462 |  0.00405045  | Berberine bridge enzyme-like 6                                     |
+| AT1G33055 |  0.0116033 |  0.154514   | -1.41894     | -1.7281      | Uncharacterized protein unannotated coding sequence from BAC F9L11 |
+| AT1G35140 |  0.0216269 |  0.213395   | -0.00144094  | -1.09622     | Protein EXORDIUM-like 1                                            |
+| AT1G50040 | -0.233111  | -0.104101   | -0.00205244  | -0.849786    | F2J10.8 protein                                                    |
+| AT1G53080 | -3.84351   | -0.0460042  |  0.00308519  |  0.00133106  | Lectin-like protein At1g53080                                      |
+| AT1G62730 | -0.329344  |  0.0358146  | -0.823436    | -0.00164096  | At1g62730                                                          |
+| AT1G62740 | -1.308     | -0.527233   | -1.23166     | -0.637233    | Hsp70-Hsp90 organizing protein 2                                   |
+| AT1G64590 | -0.36541   | -1.96596    | -0.00756918  |  0.00164234  | At1g64590/F1N19_15                                                 |
+| AT1G66700 | -3.90245   | -0.208745   |  0.00137037  | -0.00281526  | Paraxanthine methyltransferase 1                                   |
+| AT1G66800 | -0.649935  | -2.37502    | -0.00360428  | -0.000485711 | NAD(P)-binding Rossmann-fold superfamily protein                   |
+| AT1G67270 | -3.5176    | -0.0921441  | -0.0146179   |  0.00139016  | Zinc-finger domain of monoamine-oxidase A repressor R1 protein     |
+| AT1G67980 | -5.76105   | -0.738638   |  0.00867747  | -0.00984984  | Putative caffeoyl-CoA O-methyltransferase At1g67980                |
+| AT1G76650 |  0.206218  |  0.428762   | -0.301367    | -1.5112      | CML38                                                              |
+| AT1G80440 | -1.8693    | -1.91855    |  0.0478833   |  0.00066701  | F-box/kelch-repeat protein At1g80440                               |
+| AT2G05914 | -2.45932   | -3.54045    | -1.58399     | -1.91027     | Potential natural antisense gene, locus overlaps with AT2G05915    |
+| AT2G05915 | -2.22056   | -3.39267    | -0.894739    | -1.80042     | unknown protein                                                    |
+| AT2G15220 | -3.34358   | -1.16507    | -0.000747652 | -0.00217684  | At2g15220/F15A23.4                                                 |
+| AT2G17850 |  1.09006   |  1.85213    | -2.09158     | -0.00437457  | Rhodanese/Cell cycle control phosphatase superfamily protein       |
+| AT2G20670 | -2.0612    | -2.00191    |  0.988052    |  0.00472478  | Expressed protein                                                  |
+| AT2G25297 | -3.23899   | -0.328027   |  0.00218043  | -0.0103589   | None                                                               |
+| AT2G29150 | -3.96313   | -0.0199778  |  0.00419643  | -8.42016e-05 | Tropinone reductase homolog At2g29150                              |
+| AT2G30750 | -5.39597   | -0.952528   |  0.00526177  |  0.00228058  | Cytochrome P450 71A12                                              |
+| AT2G47920 | -0.545537  | -0.627774   | -1.1807      | -0.0837289   | Protein NETWORKED 3C                                               |
+| AT3G02550 |  0.131817  |  0.412505   | -1.30955     | -1.29859     | LOB domain-containing protein 41                                   |
+| AT3G06435 |  0.611315  |  1.39065    | -1.71592     | -1.16498     | At3g06435                                                          |
+| AT3G06436 |  0.714752  |  1.21993    | -1.16212     | -0.109418    | None                                                               |
+| AT3G08700 | -1.23384   | -0.880382   | -1.1495      | -0.293963    | Probable ubiquitin-conjugating enzyme E2 12                        |
+| AT3G10040 |  0.599268  |  0.995397   | -1.34956     | -2.205       | Sequence-specific DNA binding transcription factor                 |
+| AT3G15635 | -1.60403   | -1.62811    | -0.000289725 | -0.00261783  | None                                                               |
+| AT3G19615 | -3.25353   | -0.0997206  | -0.00048254  |  5.78413e-05 | Beta-1,4-xylosidase                                                |
+| AT3G19680 | -0.188263  | -0.00273222 | -0.037415    | -0.777351    | Uncharacterized protein At3g19680                                  |
+| AT3G27220 |  0.762515  |  1.34093    | -1.00252     | -0.345495    | Kelch repeat-containing protein At3g27220                          |
+| AT3G30720 | -1.20203   | -1.49701    | -2.03764     | -2.49854     | Protein QQS                                                        |
+| AT3G49580 | -1.39022   | -1.64334    |  0.0035161   |  0.000629973 | LSU1                                                               |
+| AT3G60140 | -4.92355   | -0.242032   |  0.00259034  | -0.00119401  | Beta-glucosidase 30                                                |
+| AT4G02890 | -0.671236  | -0.879229   | -0.721226    | -0.813393    | Polyubiquitin 14                                                   |
+| AT4G04223 | -1.88189   | -1.55083    | -0.00404375  | -0.704525    | other RNA                                                          |
+| AT4G04335 | -0.582107  | -0.800776   | -0.867402    | -0.873964    | None                                                               |
+| AT4G04990 | -5.65257   | -3.75659    | -0.00232058  | -0.00224412  | AT4g04990 protein                                                  |
+| AT4G05050 | -0.55612   | -0.598049   | -0.500152    | -0.667822    | Polyubiquitin                                                      |
+| AT4G05320 | -0.930702  | -0.861228   | -0.637827    | -0.83074     | Polyubiquitin 10                                                   |
+| AT4G05775 |  0.537125  |  1.17943    | -1.45021     | -1.50816     | None                                                               |
+| AT4G08780 | -2.32693   | -1.65501    |  0.00113563  | -0.00262946  | Peroxidase 38                                                      |
+| AT4G08815 | -2.09289   | -1.66249    |  0.000151272 |  0.000416293 | None                                                               |
+| AT4G10265 |  0.296372  |  0.419566   | -1.33463     | -1.07547     | At4g10262                                                          |
+| AT4G10270 |  0.466552  |  0.961928   | -1.21437     | -1.25259     | At4g10270                                                          |
+| AT4G10530 | -3.8688    | -0.0602774  |  0.00407696  | -0.0102663   | Subtilase family protein                                           |
+| AT4G15990 | -1.1995    | -2.0023     |  0.00428221  |  0.00351676  | Uncharacterized protein AT4g15990                                  |
+| AT4G19920 | -0.783932  | -2.00754    |  0.000442576 | -0.000961141 | Toll-Interleukin-Resistance (TIR) domain family protein            |
+| AT4G24110 |  0.611187  |  1.24762    | -1.15071     | -1.78188     | NADP-specific glutamate dehydrogenase                              |
+| AT4G25810 | -0.235847  |  0.519847   | -0.0267727   | -0.623901    | Probable xyloglucan endotransglucosylase/hydrolase protein 23      |
+| AT4G31970 | -7.04013   | -0.0342645  |  0.00514488  |  0.00749117  | Cytochrome P450 82C2                                               |
+| AT4G33070 |  0.80329   |  1.55321    | -1.37282     | -0.0620966   | Pyruvate decarboxylase 1                                           |
+| AT4G35770 | -2.38675   | -2.22252    | -0.000784776 | -0.0103655   | SEN1                                                               |
+| AT4G37290 | -3.92419   |  0.0189886  |  0.00127282  |  0.00665377  | unknown protein                                                    |
+| AT5G07130 | -2.52585   | -3.38946    | -0.346124    |  0.00171741  | Laccase-13                                                         |
+| AT5G15120 |  0.624997  |  1.1473     | -1.25493     | -1.31553     | Plant cysteine oxidase 1                                           |
+| AT5G20620 | -0.896173  | -0.755113   | -0.888634    | -0.934079    | Polyubiquitin 4                                                    |
+| AT5G23350 | -1.2016    | -1.626      |  0.0125717   |  0.00551903  | GEM-like protein 6                                                 |
+| AT5G23840 | -0.26003   | -1.82115    |  0.00161096  | -0.0245467   | MD-2-related lipid recognition domain-containing protein           |
+| AT5G39110 | -4.55166   | -1.25614    | -0.00160605  |  0.000967537 | Germin-like protein subfamily 1 member 14                          |
+| AT5G39120 | -4.20312   |  0.108445   |  0.00251368  |  0.014211    | Germin-like protein subfamily 1 member 15                          |
+| AT5G39890 |  1.22689   |  1.06626    | -1.08901     | -1.28759     | Plant cysteine oxidase 2                                           |
+| AT5G46295 | -3.94342   | -0.232884   |  0.00268564  | -0.000661982 | Transmembrane protein                                              |
+| AT5G47990 | -0.348382  | -1.92302    | -0.00919825  | -0.00271743  | THAD1                                                              |
+| AT5G49730 | -1.11802   | -1.74844    |  0.00168499  |  0.000572037 | Ferric reduction oxidase 6                                         |
+| AT5G51270 | -0.152977  | -1.8891     | -0.000121767 | -0.00447423  | U-box domain-containing protein kinase family protein              |
+| AT5G54470 |  0.101554  | -0.0105956  | -1.68553     | -0.00426739  | BBX29                                                              |
+| AT5G63160 | -2.58807   | -1.90642    | -0.00432302  | -0.00826455  | BTB/POZ and TAZ domain-containing protein 1                        |
+| AT5G66985 |  0.642771  |  0.876734   | -1.23089     | -0.0253515   | At5g66985                                                          |
+:END:
+
+
+** Boxplots of differential changes
+
+    #+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "pairings_6hr_lym_boxplots" :filename "obipy-resources/pairings_6hr_lym_boxplots.png" :caption "Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    %matplotlib inline
+
+    fig, ax = plt.subplots(1,2, sharex=True, sharey =True, figsize=(15,5))
+    top = DE_pairings_6hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    top_extracted = top.loc[get_locs(top, 50, include_small=False)]
+    sns.boxplot(data=top_extracted, x='sample', y='log2FoldChange', ax=ax[0])
+
+
+    bot = DE_pairings_6hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    bot_extracted = bot.loc[get_locs(bot, 50, include_large=False)]
+    sns.boxplot(data=bot_extracted, x='sample', y='log2FoldChange', ax=ax[1])
+
+
+    #+END_SRC
+
+    #+RESULTS:
+    :RESULTS:
+    # Out [70]:
+
+
+    # text/plain
+    : <Figure size 1080x360 with 2 Axes>
+
+    # image/png
+    #+attr_html: :width 850px
+    #+caption: Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes
+    #+name: pairings_6hr_lym_boxplots
+    [[file:obipy-resources/pairings_6hr_lym_boxplots.png]]
+    :END:
+
+
+\clearpage
+* all genotypes across time
+
+Here these figures show the change for each treatment from it's 30min (05hr) to their 6hr counterpart.
+
+#+BEGIN_SRC ipython :session
+  DE_cross_time_pairings = read_xl(f'{usr}/PHD/Transcripts/Data/cross_time_pairings.xlsx')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [71]:
+:END:
+
+
+** Clustermap of largest/smallest DE genes
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+  top, bot = get_two_clustermaps_data(DE_cross_time_pairings, 25)
+  gt = sns.clustermap(top.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [72]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/beb3df752569694b4082cfc212f53bfc60e39802.png]]
+:END:
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  top
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [73]:
+# text/org
+| gene      |     cer_c_6h |     cer_w_6h |   col_c_6h |     col_w_6h |   lym_c_6h |    lym_w_6h | gene name                                                            |
+|-----------+--------------+--------------+------------+--------------+------------+-------------+----------------------------------------------------------------------|
+| AT1G03850 |  1.38926     |  0.735956    |  1.11439   |  0.0320717   |  1.71162   |  0.354113   | Glutaredoxin family protein                                          |
+| AT1G04770 |  1.05908     |  1.22307     |  1.69706   | -0.00681842  |  1.97311   |  0.479349   | Protein SULFUR DEFICIENCY-INDUCED 2                                  |
+| AT1G05560 |  0.413218    |  0.925634    |  1.1031    |  1.50316     |  1.01678   |  1.2646     | UDP-glucosyltransferase 75B1                                         |
+| AT1G05562 |  0.388962    |  1.00075     |  0.81255   |  1.5777      |  0.932614  |  1.08226    | Potential natural antisense gene, locus overlaps with AT1G05560      |
+| AT1G06160 |  0.00246996  |  0.0227016   |  2.28419   |  0.301198    |  2.84134   |  0.429338   | Ethylene-responsive transcription factor ERF094                      |
+| AT1G06980 |  0.0294207   |  0.0399044   |  3.5452    |  0.000552876 |  0.704986  |  0.022073   | 6,7-dimethyl-8-ribityllumazine synthase                              |
+| AT1G10585 |  0.433824    |  1.00684     |  1.21368   |  0.258704    |  1.81604   |  1.28804    | Transcription factor bHLH167                                         |
+| AT1G12740 |  1.18777     |  0.140889    | -0.0759523 |  0.0770483   |  0.208367  |  0.345759   | Cytochrome P450, family 87, subfamily A, polypeptide 2               |
+| AT1G13245 |  0.0684023   |  0.0632047   |  2.84557   |  0.835528    |  1.47898   |  0.850327   | At1g13245                                                            |
+| AT1G14860 |  0.49175     |  1.01277     |  0.276527  |  0.118403    |  0.201791  |  0.356167   | Nudix hydrolase 18, mitochondrial                                    |
+| AT1G18350 |  0.0328392   | -0.0150336   |  0.198993  |  0.065007    |  2.87613   |  0.875448   | MKK7                                                                 |
+| AT1G19620 |  0.0530932   |  0.0229593   |  3.06276   | -0.0333328   |  0.360107  |  0.0308265  | unknown protein                                                      |
+| AT1G23052 |  0.455399    |  0.0144443   |  3.15399   |  0.152663    |  0.406051  |  0.276443   | None                                                                 |
+| AT1G23390 |  1.13611     |  0.714682    |  2.69743   |  1.80246     |  2.4545    |  2.11807    | F-box/Kelch repeat-containing F-box family protein                   |
+| AT1G26390 | -0.0135578   |  0.00161186  |  1.99848   | -0.039604    |  3.16721   |  0.00133306 | Berberine bridge enzyme-like 4                                       |
+| AT1G26800 |  0.930127    |  0.591443    |  2.63846   |  0.542997    |  2.44157   |  1.70746    | E3 ubiquitin-protein ligase MPSR1                                    |
+| AT1G31173 |  0.0139765   | -0.00043779  |  3.28846   | -0.043577    |  6.87794   |  0.105809   | MIR167D                                                              |
+| AT1G49130 |  1.39398     |  0.0547904   |  1.91239   |  1.18475     |  1.61724   |  1.19133    | B-box type zinc finger protein with CCT domain-containing protein    |
+| AT1G49200 |  0.987098    |  0.0458262   |  3.97399   |  0.772236    |  4.20861   |  0.991139   | RING-H2 finger protein ATL75                                         |
+| AT1G49205 |  0.253514    |  0.0654313   |  4.252     |  1.18486     |  4.46302   |  0.185123   | None                                                                 |
+| AT1G49310 |  1.29303     |  0.017745    |  0.03177   | -0.0265248   |  0.0323654 |  0.0283561  | At1g49310                                                            |
+| AT1G49500 |  1.48917     |  0.778099    |  1.37059   |  0.813168    |  1.46752   |  1.43432    | At1g49500/F13F21_6                                                   |
+| AT1G49640 |  0.0849337   |  0.106878    |  2.86686   |  0.236768    |  1.90204   |  0.160104   | Probable carboxylesterase 3                                          |
+| AT1G52342 |  0.0385584   |  0.538964    |  0.478502  |  0.161346    |  0.843369  |  2.2434     | Putative uncharacterized protein                                     |
+| AT1G68190 |  0.455311    |  1.15125     |  0.30066   |  0.075555    |  0.620373  |  1.40924    | B-box zinc finger family protein                                     |
+| AT1G69490 | -0.0446486   |  0.0384023   |  2.06739   |  0.672257    |  0.874696  |  1.61403    | NAP                                                                  |
+| AT1G71030 |  0.724194    |  0.0123642   |  1.82912   |  2.6498      |  1.26043   |  2.09671    | At1g71030/F23N20_2                                                   |
+| AT1G73830 |  0.996345    |  0.750874    |  2.10194   |  0.877105    |  2.46929   |  1.62769    | Transcription factor BEE 3                                           |
+| AT1G75380 |  1.06467     |  1.04874     |  1.23928   |  0.20493     |  1.17532   |  1.00129    | Bifunctional nuclease 1                                              |
+| AT1G80440 |  1.23835     |  1.06885     |  2.52565   |  2.01958     |  2.49577   |  2.91705    | F-box/kelch-repeat protein At1g80440                                 |
+| AT2G05070 |  1.14202     |  0.509099    |  0.078545  |  0.342325    |  0.320514  |  0.667058   | Chlorophyll a-b binding protein 2.2, chloroplastic                   |
+| AT2G05100 |  1.17507     |  0.588801    |  0.174089  |  0.14865     |  0.250942  |  0.480003   | photosystem II light harvesting complex gene 2.1                     |
+| AT2G20670 |  0.152435    |  0.631439    |  2.66891   |  2.28262     |  1.59127   |  2.29484    | Expressed protein                                                    |
+| AT2G25900 |  0.0993798   |  1.23561     |  0.820886  |  0.61028     |  0.0446706 |  0.995928   | Zinc finger CCCH domain-containing protein 23                        |
+| AT2G27830 |  0.0654508   |  0.466908    | -0.520546  |  1.06302     | -1.26543   |  1.63375    | Expressed protein                                                    |
+| AT2G29300 |  1.91636     |  0.116147    |  0.909031  |  0.000715312 |  1.42893   |  0.0900465  | NAD(P)-binding Rossmann-fold superfamily protein                     |
+| AT2G29460 |  0.0191687   |  1.02589     |  0.793983  |  0.513134    |  1.2596    |  1.58614    | Glutathione S-transferase U4                                         |
+| AT2G30750 | -0.00417857  | -0.00495212  |  3.16133   |  0.0433873   |  3.42763   |  0.206335   | Cytochrome P450 71A12                                                |
+| AT2G36750 |  0.13356     |  0.496012    |  1.60357   |  1.45319     |  3.0624    |  1.39302    | UDP-glycosyltransferase 73C1                                         |
+| AT2G36800 |  0.00926727  |  1.0309      |  0.806129  |  1.9669      |  0.236542  |  1.1498     | Glycosyltransferase (Fragment)                                       |
+| AT2G37750 |  0.969029    |  1.14072     |  1.70391   |  0.044768    |  1.98638   |  1.24342    | Expressed protein                                                    |
+| AT2G39380 |  1.15897     |  0.243813    | -1.33913   |  0.268517    | -0.124042  |  0.17754    | Exocyst subunit Exo70 family protein                                 |
+| AT2G39400 |  0.416317    |  0.581706    | -0.82437   |  0.443286    | -0.532221  |  1.57936    | Alpha/beta-Hydrolases superfamily protein                            |
+| AT3G02040 | -0.556009    | -0.803486    |  0.644491  |  1.58176     | -0.19269   | -0.0416792  | Glycerophosphodiester phosphodiesterase GDPD1, chloroplastic         |
+| AT3G04060 |  0.00292222  |  0.0215771   |  0.580251  |  0.0224993   |  0.338069  |  1.63587    | NAC domain-containing protein 46                                     |
+| AT3G04530 |  0.0934097   |  0.210195    |  2.00562   |  0.0787853   |  3.61561   |  0.939369   | Phosphoenolpyruvate carboxylase kinase 2                             |
+| AT3G04685 |  0.386395    |  1.24423     |  1.55949   |  0.255984    |  0.760232  |  0.0712309  | None                                                                 |
+| AT3G06390 |  1.47222     |  0.362403    | -0.256486  | -0.021042    |  0.0177879 |  0.489815   | CASP-like protein 1D2                                                |
+| AT3G07350 |  0.0721898   |  0.30885     |  1.89528   |  1.82333     |  1.16807   |  1.49448    | F21O3.6 protein                                                      |
+| AT3G08860 |  0.480164    |  1.52246     |  0.269586  |  0.0116631   |  0.388823  |  1.17216    | Alanine--glyoxylate aminotransferase 2 homolog 3, mitochondrial      |
+| AT3G09275 |  1.12876     |  0.746403    |  4.29317   |  1.39865     |  3.28358   |  1.21037    | None                                                                 |
+| AT3G09415 |  1.15064     |  1.03445     |  0.0267187 |  0.119232    | -0.0804321 |  0.089331   | None                                                                 |
+| AT3G15450 |  1.03687     |  1.48958     |  0.501557  |  0.0642759   |  1.0515    |  1.52418    | AT3g15450/MJK13_11                                                   |
+| AT3G15500 | -0.00074855  |  0.0523677   |  2.15058   |  1.41615     |  0.879842  |  1.3984     | NAC3                                                                 |
+| AT3G18773 |  0.0348841   |  0.0085592   |  2.04077   |  1.63241     |  0.416067  |  1.58183    | RING-H2 finger protein ATL77                                         |
+| AT3G21500 |  0.0564114   |  0.0456016   |  0.133283  |  0.017052    |  3.21375   |  0.0580272  | 1-deoxy-D-xylulose 5-phosphate synthase 1                            |
+| AT3G26510 |  0.000816748 |  0.0452865   |  2.32707   |  1.61949     |  1.40685   |  1.27282    | Octicosapeptide/Phox/Bem1p family protein                            |
+| AT3G26512 |  0.0132985   |  0.0353256   |  2.29974   |  1.65924     |  1.72362   |  1.19681    | None                                                                 |
+| AT3G28740 |  2.60709     |  4.25397     |  2.3867    |  3.37829     |  1.25526   |  5.084      | Cytochrome P450 81D11                                                |
+| AT3G29035 |  1.57362     |  0.945074    |  1.30669   |  0.768348    |  1.03506   |  1.75779    | NAC domain-containing protein 59                                     |
+| AT3G47420 | -1.50697     | -1.17881     |  1.65203   |  1.54148     |  0.0772408 | -0.775197   | Putative glycerol-3-phosphate transporter 1                          |
+| AT3G48360 |  1.43644     |  1.15649     |  0.474331  |  0.626644    |  0.768862  |  1.17738    | BTB/POZ and TAZ domain-containing protein 2                          |
+| AT3G49790 |  0.135422    |  0.216708    |  0.155095  |  0.389992    |  0.116694  |  1.63743    | At3g49790                                                            |
+| AT3G50310 |  0.0691382   |  0.160397    |  3.42123   |  0.0460974   |  3.35719   |  0.091952   | MKKK20                                                               |
+| AT3G50770 |  0.0519309   | -0.019146    |  1.72479   |  1.42212     |  0.858292  |  1.42581    | Probable calcium-binding protein CML41                               |
+| AT3G53150 |  1.58592     | -0.000147762 | -0.0524943 |  0.022729    | -0.0685967 |  0.0242104  | UDP-glucosyl transferase 73D1                                        |
+| AT3G59940 |  1.06419     |  0.969801    |  4.02533   |  1.27922     |  2.92047   |  1.14996    | F-box/kelch-repeat protein SKIP20                                    |
+| AT3G60140 | -0.0151218   |  0.0268673   |  3.76862   |  0.0554408   |  5.44865   |  0.242466   | Beta-glucosidase 30                                                  |
+| AT3G62950 |  0.0378661   |  0.0343968   |  4.48917   |  0.095595    |  0.830458  |  0.403051   | Glutaredoxin-C11                                                     |
+| AT3G63210 |  1.59696     |  1.2564      |  1.39764   |  0.73242     |  1.66535   |  1.17749    | Protein MARD1                                                        |
+| AT4G08555 | -0.190242    | -0.0222866   | -2.34568   |  1.72007     | -4.44439   |  0.420745   | At4g08555                                                            |
+| AT4G12500 |  0.224588    |  0.029061    |  4.23952   |  0.0102156   |  3.43277   |  0.9901     | pEARLI1-like lipid transfer protein 3                                |
+| AT4G15660 |  0.0631508   |  0.0691569   |  2.98388   |  1.47989     |  1.53434   |  0.77992    | Monothiol glutaredoxin-S8                                            |
+| AT4G15670 |  0.300925    |  0.0207581   |  2.02228   |  1.77038     |  1.12408   |  1.20167    | Monothiol glutaredoxin-S7                                            |
+| AT4G15680 |  0.380275    |  0.10453     |  2.16372   |  1.51484     |  1.96735   |  0.876141   | Monothiol glutaredoxin-S4                                            |
+| AT4G15690 |  0.94959     |  0.0257734   |  1.52399   |  1.49374     |  0.694211  |  1.25328    | Monothiol glutaredoxin-S5                                            |
+| AT4G15765 |  1.18389     |  0.0234651   |  0.241851  |  0.0531795   |  0.357872  |  0.244407   | FAD/NAD(P)-binding oxidoreductase family protein                     |
+| AT4G18630 |  0.110712    |  0.00177774  |  1.05724   |  1.80996     |  0.150503  |  0.0507635  | Uncharacterized protein At4g18630/F28A21_40                          |
+| AT4G19170 |  0.0759198   |  0.04171     |  2.41256   |  1.22117     |  1.61784   |  1.54598    | Probable carotenoid cleavage dioxygenase 4, chloroplastic            |
+| AT4G19700 | -0.0886102   | -0.0630215   |  2.92355   |  0.0211871   |  2.71428   | -0.0426638  | E3 ubiquitin-protein ligase BOI                                      |
+| AT4G20450 |  0.0454526   |  0.00474583  |  0.140622  |  0.00112377  | -0.019423  |  1.53875    | Probable LRR receptor-like serine/threonine-protein kinase At4g20450 |
+| AT4G21990 |  0.788526    |  1.06071     |  0.705096  |  1.02215     |  0.915621  |  1.07295    | 5'-adenylylsulfate reductase 3, chloroplastic                        |
+| AT4G23700 |  0.322015    |  0.797532    |  1.18922   |  0.0458442   |  1.63559   |  1.76268    | Cation/H(+) antiporter 17                                            |
+| AT4G25220 |  0.0252709   | -0.00893559  | -1.38667   | -0.0312999   | -1.01403   |  1.84802    | Putative glycerol-3-phosphate transporter 2                          |
+| AT4G31970 |  0.025132    |  0           |  5.69798   |  0.00684202  |  6.88759   |  0.0275751  | Cytochrome P450 82C2                                                 |
+| AT4G34135 | -0.0840303   |  0.0265266   |  0.759695  |  1.45482     |  0.544967  |  0.819114   | UDP-glucosyl transferase 73B2                                        |
+| AT4G34250 |  1.20735     |  0.168863    |  1.4129    |  0.0509559   |  0.658219  |  0.554335   | 3-ketoacyl-CoA synthase 16                                           |
+| AT4G35720 |  0.0164758   |  0.0414955   |  3.68457   |  0.201543    |  1.40231   |  0.0966743  | DUF241 domain protein, putative (DUF241)                             |
+| AT4G36040 |  0.285431    |  0.38231     |  2.34086   |  1.1746      |  2.09115   |  1.59484    | At4g36040                                                            |
+| AT4G37990 |  0.0359532   |  0.0388621   |  0.228074  |  0.272828    |  4.26807   |  0.245371   | Cinnamyl alcohol dehydrogenase 8                                     |
+| AT4G38850 | -0.0393783   | -0.00896711  |  0.0996547 | -0.106719    |  3.8893    | -0.0479883  | Auxin-responsive protein SAUR15                                      |
+| AT5G00855 |  0.0164819   |  0.0537079   |  0.143818  |  0.141641    |  3.65752   |  0.00870306 | None                                                                 |
+| AT5G06980 |  0.930808    |  1.31918     |  0.0707946 |  0.074441    |  0.404033  |  0.617522   | unknown protein                                                      |
+| AT5G10990 |  0.579777    |  0.0265981   |  0.668724  |  0.030518    |  3.94236   |  0.0852426  | At5g10990                                                            |
+| AT5G22920 |  1.60905     |  1.44508     |  0.74071   |  0.164183    |  1.46598   |  1.63446    | E3 ubiquitin-protein ligase RZFP34                                   |
+| AT5G25130 |  1.39073     |  0.119904    |  0.196733  |  0.00838264  |  0.339129  |  0.226474   | Cytochrome P450 71B12                                                |
+| AT5G25280 |  0.243009    |  0.0291201   |  2.84467   |  0.977576    |  2.62003   |  0.849764   | AT5g25280/F18G18_20                                                  |
+| AT5G26290 |  0.841253    |  1.00882     | -0.063839  |  0.0312998   |  0.984636  |  0.290765   | TRAF-like family protein                                             |
+| AT5G39120 |  0.0054049   |  0.0703556   |  3.98686   | -0.00539812  |  4.07454   |  0.00831133 | Germin-like protein subfamily 1 member 15                            |
+| AT5G39130 |  0.0126127   |  0.0304824   |  3.4883    | -0.0110587   |  1.47682   | -0.0065836  | Germin-like protein subfamily 1 member 16                            |
+| AT5G39610 |  0.277444    |  0.740002    |  2.02708   |  0.633264    |  1.62727   |  1.56969    | NAC domain-containing protein 92                                     |
+| AT5G43540 |  0.0332622   | -0.00333862  |  1.60684   |  0.0160477   |  2.95759   |  0.133047   | C2H2 and C2HC zinc fingers superfamily protein                       |
+| AT5G44260 |  0.740388    |  0.192349    |  1.78498   |  1.19188     |  1.9699    |  1.84684    | Zinc finger CCCH domain-containing protein 61                        |
+| AT5G45820 |  1.976       |  1.82637     |  1.80459   |  0.124983    |  0.836874  |  1.3218     | CBL-interacting serine/threonine-protein kinase 20                   |
+| AT5G45830 |  0.198316    |  0.215055    |  0.295949  |  0.201634    |  3.18721   |  0.777364   | delay of germination 1                                               |
+| AT5G49360 |  1.34403     |  1.09472     |  0.118198  | -0.0293375   |  0.337928  |  0.744066   | Beta-D-xylosidase 1                                                  |
+| AT5G52900 |  0.0893949   |  0.00582752  |  3.0471    |  0.748934    |  2.74757   |  0.118708   | Probable membrane-associated kinase regulator 6                      |
+| AT5G53980 |  0.475419    |  0.0860896   |  2.5215    |  1.64736     |  2.88505   |  0.820739   | Homeobox-leucine zipper protein ATHB-52                              |
+| AT5G57660 |  1.4987      |  0.916936    |  1.14611   |  0.819935    |  1.39278   |  1.19347    | Zinc finger protein CONSTANS-LIKE 5                                  |
+| AT5G59220 |  0.0202128   |  1.08436     | -0.113852  |  0.0553742   | -0.0492827 | -0.00586624 | Probable protein phosphatase 2C 78                                   |
+| AT5G59780 |  0.0209103   |  0.00514419  |  2.88521   |  0.0131941   |  2.67704   |  0.152757   | Transcription factor MYB59                                           |
+| AT5G61590 |  0.451567    |  0.178245    |  3.48195   |  0.168297    |  3.09832   |  0.737577   | Ethylene-responsive transcription factor ERF107                      |
+:END:
+
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  gb = sns.clustermap(bot.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [74]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/e1c74406296c3b8a56105ff9c5ed484f1f599ed7.png]]
+:END:
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  bot
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [75]:
+# text/org
+| gene      |     cer_c_6h |    cer_w_6h |   col_c_6h |    col_w_6h |    lym_c_6h |   lym_w_6h | gene name                                                                                |
+|-----------+--------------+-------------+------------+-------------+-------------+------------+------------------------------------------------------------------------------------------|
+| AT1G05767 | -0.131221    |  0.0334292  |  -9.1417   |  0          |  -9.44474   |  0         | None                                                                                     |
+| AT1G06135 | -0.120274    |  0          |  -6.85214  | -0.0188751  |  -8.02924   |  0         | Transmembrane protein                                                                    |
+| AT1G07135 | -2.24544     | -0.951839   |  -5.61576  | -0.984608   |  -5.52467   | -1.37907   | At1g07135                                                                                |
+| AT1G07160 | -0.264175    | -0.0010963  |  -8.45272  | -0.159339   |  -8.38795   | -0.0438174 | PP2C-type phosphatase AP2C2                                                              |
+| AT1G09950 | -2.34915     | -1.57688    |  -5.34701  | -2.78152    |  -4.57916   | -1.86987   | At1g09950                                                                                |
+| AT1G12610 | -5.00747     | -2.8787     |  -6.78102  | -6.91874    |  -7.27127   | -5.00418   | Dehydration-responsive element-binding protein 1F                                        |
+| AT1G14540 | -2.89502     | -0.407181   |  -4.56608  |  0.00241023 |  -4.92331   | -0.112505  | Peroxidase                                                                               |
+| AT1G15010 | -1.7376      | -2.05528    |  -3.16298  | -0.554411   |  -3.22936   | -0.134466  | Mediator of RNA polymerase II transcription subunit                                      |
+| AT1G17345 | -0.312913    | -1.80323    |   0.243988 | -0.0455167  |   0.163458  | -0.201671  | Auxin-responsive protein SAUR77                                                          |
+| AT1G18300 | -1.93989     | -1.62098    |  -4.55968  | -1.17499    |  -4.5911    | -0.667534  | Nudix hydrolase 4                                                                        |
+| AT1G20310 | -1.30842     | -0.0831904  |  -8.39919  | -0.0648718  |  -6.56573   |  0.0317942 | Syringolide-induced protein                                                              |
+| AT1G27730 | -2.23589     | -1.10252    |  -5.10695  | -0.294588   |  -5.21002   | -0.854413  | Zinc finger protein ZAT10                                                                |
+| AT1G33055 | -0.000810339 | -0.0154475  |  -2.15222  | -3.10392    |  -0.267653  | -1.03591   | Uncharacterized protein unannotated coding sequence from BAC F9L11                       |
+| AT1G33760 | -1.75486     | -0.910781   |  -4.43209  | -2.88909    |  -4.94529   | -1.15473   | Ethylene-responsive transcription factor ERF022                                          |
+| AT1G35140 | -1.7375      | -0.933701   |  -5.05985  | -3.05073    |  -4.65205   | -1.38493   | Protein EXORDIUM-like 1                                                                  |
+| AT1G43000 | -0.781076    | -0.0995261  |  -8.42032  |  0.0392258  |  -7.55239   | -1.32167   | PLATZ transcription factor family protein                                                |
+| AT1G43800 | -1.96003     | -2.34598    |  -2.22853  | -1.81907    |  -2.62515   | -3.18352   | Stearoyl-                                                                                |
+| AT1G47130 | -0.215106    | -0.0607207  |  -5.92014  | -0.0385085  |  -8.43442   | -0.144643  | None                                                                                     |
+| AT1G55430 | -0.582111    | -1.74325    |  -1.95957  | -1.81612    |  -1.27926   | -0.0443272 | Cysteine/Histidine-rich C1 domain family protein                                         |
+| AT1G56240 | -1.72051     | -0.0990209  |  -8.05145  | -0.149415   |  -8.39011   | -0.100802  | F-box protein PP2-B13                                                                    |
+| AT1G56242 | -0.802021    | -0.00293639 |  -7.97256  | -0.0365258  |  -8.64022   | -0.205246  | other RNA                                                                                |
+| AT1G56250 | -3.37139     | -0.0507228  |  -8.39725  | -0.115112   |  -7.69363   | -0.0964437 | F-box protein VBF                                                                        |
+| AT1G63030 | -4.09911     | -0.992102   |  -5.64752  | -4.20864    |  -6.17599   | -2.67556   | Dehydration-responsive element-binding protein 1E                                        |
+| AT1G66090 | -1.60555     | -0.135117   |  -6.86201  | -0.324025   |  -7.38427   | -1.78461   | Disease resistance protein (TIR-NBS class)                                               |
+| AT1G72540 | -0.0511969   | -1.59265    |  -1.49675  | -0.0415312  |  -1.43385   | -0.352027  | Putative receptor-like protein kinase At1g72540                                          |
+| AT1G73010 | -1.46593     | -1.6423     |  -1.18193  |  0.711766   |  -1.87748   | -0.879309  | Inorganic pyrophosphatase 1                                                              |
+| AT1G76650 | -1.46113     | -0.59485    |  -4.25121  | -3.24354    |  -3.39952   | -1.20674   | CML38                                                                                    |
+| AT1G77640 | -1.24714     | -2.92898    |  -3.29079  | -1.45327    |  -2.8383    | -1.83868   | Ethylene-responsive transcription factor ERF013                                          |
+| AT2G17660 | -2.54253     | -0.226289   |  -5.44864  | -4.49545    |  -3.50637   | -1.046     | At2g17660                                                                                |
+| AT2G17845 | -0.31046     | -0.230546   |  -4.01346  | -4.83504    |  -3.23005   | -3.47902   | NAD(P)-binding Rossmann-fold superfamily protein                                         |
+| AT2G17850 | -0.762908    | -1.05679    |  -4.68448  | -3.93859    |  -2.32643   | -3.76101   | Rhodanese/Cell cycle control phosphatase superfamily protein                             |
+| AT2G21200 |  0.119127    |  0.0140999  |  -0.102829 | -3.56975    |   1.52344   | -0.191833  | At2g21200                                                                                |
+| AT2G22760 | -1.55059     | -0.0737552  |  -7.12523  | -0.490295   |  -7.19557   | -0.376071  | Uncharacterized protein At2g22760 (Fragment)                                             |
+| AT2G25460 | -2.60721     | -3.20012    |  -5.07223  | -2.34301    |  -5.41635   | -1.33195   | CONTAINS InterPro DOMAIN/s: C2 calcium-dependent membrane targeting (InterPro:IPR000008) |
+| AT2G26400 | -1.91194     | -1.48305    |  -1.83636  | -0.030103   |  -2.06658   | -2.24961   | acireductone dioxygenase 3                                                               |
+| AT2G29110 | -0.025719    | -0.0354131  |  -7.02538  | -0.0199806  |  -6.46903   | -0.138044  | Glutamate receptor                                                                       |
+| AT2G31345 | -0.0261995   | -0.0249383  |  -8.82703  |  0.0190216  |  -7.97938   |  0.0277433 | Transmembrane protein                                                                    |
+| AT2G34600 | -2.14154     | -0.787817   |  -2.58479  | -1.96543    |  -1.5903    | -1.6744    | Protein TIFY 5B                                                                          |
+| AT2G35290 | -2.3177      | -0.0722224  |  -2.47513  | -1.66998    |  -1.80411   | -1.68675   | At2g35290                                                                                |
+| AT2G36440 |  0           | -0.00146419 |  -7.36923  | -0.0183288  |  -7.33671   |  0.130565  | Uncharacterized protein At2g36440                                                        |
+| AT2G37430 | -1.40793     | -0.0484521  |  -7.49643  | -0.0675307  |  -8.15927   | -0.263368  | ZAT11                                                                                    |
+| AT2G44840 | -2.31768     | -1.28108    |  -6.80366  | -0.0767919  |  -7.65875   | -1.20029   | Ethylene-responsive transcription factor 13                                              |
+| AT2G46400 | -2.51447     | -1.79201    |  -5.73995  | -1.26039    |  -5.79294   | -1.71659   | Probable WRKY transcription factor 46                                                    |
+| AT2G47520 | -0.604806    | -0.881384   |  -4.01626  | -2.2069     |  -2.80491   | -2.24381   | Ethylene-responsive transcription factor ERF071                                          |
+| AT3G01055 | -1.19886     | -0.183933   |  -6.41978  | -0.582986   |  -7.80493   | -0.512532  | None                                                                                     |
+| AT3G01165 | -1.75902     | -0.282712   |  -9.27442  | -0.00996791 |  -8.32328   | -0.0541064 | None                                                                                     |
+| AT3G02840 | -0.333485    | -0.103235   |  -8.45014  | -0.336227   |  -9.05894   | -0.359589  | ARM repeat superfamily protein                                                           |
+| AT3G06435 | -0.00791533  | -0.0684112  |  -2.31893  | -3.51549    |  -0.176069  | -1.76157   | At3g06435                                                                                |
+| AT3G06436 | -0.0298105   | -0.0555049  |  -1.69647  | -2.34982    |  -0.357944  | -1.86961   | None                                                                                     |
+| AT3G10040 |  0.0568406   |  0.0563251  |  -2.09916  | -3.76502    |  -0.285153  | -1.04781   | Sequence-specific DNA binding transcription factor                                       |
+| AT3G14260 | -2.26044     | -0.0349616  |  -0.178845 |  0.00601058 |   0.0127085 | -0.0525859 | Protein LURP-one-related 11                                                              |
+| AT3G16860 | -2.20979     | -1.4295     |  -3.13451  | -2.32599    |  -3.85719   | -1.51066   | COBRA-like protein 8                                                                     |
+| AT3G21150 | -0.316924    | -0.0145792  |  -6.8125   | -0.0366141  |  -7.49146   | -0.475475  | B-box zinc finger protein 32                                                             |
+| AT3G27220 | -0.0909242   | -0.501585   |  -1.75426  | -2.62113    |  -0.733802  | -1.95118   | Kelch repeat-containing protein At3g27220                                                |
+| AT3G29000 | -1.57076     | -0.191746   |  -7.30764  | -0.020447   |  -6.8332    | -0.469843  | Probable calcium-binding protein CML45                                                   |
+| AT3G45960 | -2.08478     | -2.84037    |  -5.05602  | -0.728454   |  -8.05484   | -2.57457   | Expansin-like A3                                                                         |
+| AT3G47720 | -0.0202986   | -0.00674602 |  -3.05648  | -3.97859    |  -0.957408  | -2.79075   | Probable inactive poly                                                                   |
+| AT3G48520 | -2.53982     | -2.33525    |  -2.38797  | -3.61556    |  -1.97295   | -2.36675   | CYP94B3                                                                                  |
+| AT3G56790 | -0.000390123 | -0.105644   |  -8.05951  |  0.0725291  |  -7.99565   | -0.0916867 | RNA splicing factor-like protein                                                         |
+| AT4G01360 | -2.79733     | -0.902955   |  -5.88313  | -3.15754    |  -4.50768   | -2.43205   | BPS1-like protein                                                                        |
+| AT4G04480 |  0.0832397   |  0          |  -7.88243  |  0          |  -8.24819   |  0         | F-box protein with a domain protein                                                      |
+| AT4G05775 | -0.0188596   | -0.0291996  |  -2.22961  | -3.29526    |  -0.260435  | -1.3221    | None                                                                                     |
+| AT4G08040 | -0.490898    | -0.605692   |  -3.0356   | -2.55037    |  -1.68729   | -1.96469   | 1-aminocyclopropane-1-carboxylate synthase 11                                            |
+| AT4G08985 | -5.31255     | -3.53629    |  -8.0185   | -4.32632    |  -7.5748    | -4.84115   | None                                                                                     |
+| AT4G10265 |  0.0924162   |  0.0650159  |  -2.21601  | -2.86452    |  -0.108844  | -0.604047  | At4g10262                                                                                |
+| AT4G21840 | -2.20349     | -0.785653   |  -3.29048  | -1.19698    |  -2.50268   | -1.65373   | MSRB8                                                                                    |
+| AT4G22030 | -0.0161654   | -0.0115561  |  -8.11585  |  0          |  -7.03238   |  0         | F-box family protein with a domain of unknown function (DUF295)                          |
+| AT4G24110 | -0.241401    | -0.0888118  |  -4.04646  | -3.68591    |  -2.76444   | -1.48434   | NADP-specific glutamate dehydrogenase                                                    |
+| AT4G24570 | -2.3828      | -1.46625    |  -6.06616  | -1.01442    |  -6.87497   | -1.63194   | DIC2                                                                                     |
+| AT4G27652 | -2.02696     | -1.6986     |  -2.54029  | -0.700608   |  -2.89759   | -1.30719   | At4g27652                                                                                |
+| AT4G27654 | -6.26622     | -3.71037    |  -7.92796  | -4.9031     |  -7.68114   | -4.52447   | At4g27654                                                                                |
+| AT4G29780 | -2.31501     | -1.96174    |  -6.36144  | -0.89414    |  -6.59436   | -1.55332   | Nuclease                                                                                 |
+| AT4G31950 | -0.095676    |  0.00823225 |  -9.84324  | -0.00352272 | -10.0663    | -0.0216446 | CYP82C3                                                                                  |
+| AT4G33070 | -1.42573     | -1.49719    |  -3.73558  | -3.82909    |  -2.39907   | -3.20531   | Pyruvate decarboxylase 1                                                                 |
+| AT4G33560 | -0.721302    | -0.666798   |  -1.64427  | -1.94182    |  -1.03609   | -1.77793   | At4g33560                                                                                |
+| AT5G02200 | -0.161875    | -0.268325   |  -2.59416  | -0.795523   |  -1.6851    | -2.60969   | Protein FAR-RED-ELONGATED HYPOCOTYL 1-LIKE                                               |
+| AT5G05300 | -1.148       |  0.0245958  |  -6.75565  |  0.00917287 |  -7.40462   | -0.0823586 | Gb                                                                                       |
+| AT5G10040 | -1.23241     | -1.60107    |  -3.74562  | -3.85759    |  -1.64716   | -3.70768   | At5g10040                                                                                |
+| AT5G11140 | -0.136151    | -0.0116309  |  -7.67926  |  0.0845706  |  -9.1037    | -0.0364596 | Phospholipase-like protein (PEARLI 4) family protein                                     |
+| AT5G15120 | -0.0840484   | -0.163887   |  -2.59628  | -3.26334    |  -1.25272   | -1.53051   | Plant cysteine oxidase 1                                                                 |
+| AT5G17350 | -2.67389     | -1.87667    |  -5.74493  | -1.48953    |  -4.97885   | -1.3327    | Uncharacterized protein At5g17350                                                        |
+| AT5G20150 | -1.2761      | -1.6311     |   0.88117  |  1.2489     |  -0.445263  | -0.610701  | SPX domain-containing protein 1                                                          |
+| AT5G24110 | -0.0416349   | -0.57146    |  -7.79825  | -0.118043   |  -8.51506   | -0.112671  | Probable WRKY transcription factor 30                                                    |
+| AT5G39890 | -0.214771    | -0.539333   |  -2.97013  | -3.70325    |  -1.63539   | -2.08617   | Plant cysteine oxidase 2                                                                 |
+| AT5G42380 | -3.15032     | -0.585206   |  -7.47516  | -0.152636   |  -7.4884    | -0.361152  | Calcium-binding protein CML37                                                            |
+| AT5G46500 | -0.613513    | -1.83163    |  -3.68489  | -1.67886    |  -4.15509   | -1.9397    | Protein VARIATION IN COMPOUND TRIGGERED ROOT growth protein                              |
+| AT5G47850 | -0.0048455   | -0.00938611 |  -9.22619  |  0.00844845 |  -7.10715   | -0.0790617 | Serine/threonine-protein kinase-like protein CCR4                                        |
+| AT5G52020 | -2.68309     | -3.37151    |  -3.55615  | -3.20815    |  -2.67236   | -1.48473   | Ethylene-responsive transcription factor ERF025                                          |
+| AT5G52710 | -1.13267     | -1.73556    |  -5.24241  | -0.736045   |  -7.00402   | -0.109046  | Copper transport protein family                                                          |
+| AT5G57010 | -1.96161     | -1.80542    |  -4.62157  | -0.0615569  |  -4.01027   | -1.22528   | IQ domain-containing protein IQM5                                                        |
+| AT5G66640 | -2.08912     | -1.80585    |  -4.2288   | -0.0698819  |  -5.19871   | -0.870108  | DA1-related protein 3                                                                    |
+:END:
+
+
+** Boxplots of differential changes
+
+   #+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "pairings_timings_boxplots" :filename "obipy-resources/pairings_timingsr_boxplots.png" :caption "Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+   import matplotlib.pyplot as plt
+   import seaborn as sns
+   import numpy as np
+   %matplotlib inline
+
+   fig, ax = plt.subplots(1,2, sharex=True, sharey =True, figsize=(15,5))
+   top = DE_cross_time_pairings.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+   top_extracted = top.loc[get_locs(top, 50, include_small=False)]
+   sns.boxplot(data=top_extracted, x='sample', y='log2FoldChange', ax=ax[0])
+
+
+   bot = DE_cross_time_pairings.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+   bot_extracted = bot.loc[get_locs(bot, 50, include_large=False)]
+   sns.boxplot(data=bot_extracted, x='sample', y='log2FoldChange', ax=ax[1])
+
+
+   #+END_SRC
+
+   #+RESULTS:
+   :RESULTS:
+   # Out [76]:
+
+
+   # text/plain
+   : <Figure size 1080x360 with 2 Axes>
+
+   # image/png
+   #+attr_html: :width 850px
+   #+caption: Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes
+   #+name: pairings_timings_boxplots
+   [[file:obipy-resources/pairings_timingsr_boxplots.png]]
+   :END:
+
+** Lineplots of changes between samples for genes of interest
+
+These lineplots are looking at the rate of change between the each sample's most up/down regulated genes (top 5 for each genotype/sample).
+
+#+BEGIN_SRC ipython :session
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  #DE_cross_time_pairings = read_xl(f'{usr}/PHD/Transcripts/Data/cross_time_pairings.xlsx')
+
+  def generate_plots_method_2(df):
+      for s in df['sample'].unique():
+          tdf = get_linedata(df[df['sample'] == s], include_small=False, include_large=True)
+          fig, axes = plt.subplots(
+              2, len(tdf['variable'].unique()), figsize=(20,8), sharex=True)
+          j = -1
+          for v in tdf['variable'].unique():
+              i = 0
+              j = j+1
+
+              sns.lineplot(data=tdf[tdf['variable']==v], x='time', y='value', err_style="bars",
+                           hue='geno', style="treatment", ax=axes[i, j], legend=False)
+              axes[i, j].set_title(v)
+
+          tdf = get_linedata(df[df['sample'] == s], include_small=True, include_large=False)
+          j = -1
+          for  v in tdf['variable'].unique():
+              i = 1
+              j = j+1
+              if j+1 == len(tdf['variable'].unique()):
+                  sns.lineplot(data=tdf[tdf['variable']==v], x='time', y='value', err_style="bars",
+                               hue='geno', style="treatment", ax=axes[i, j])
+              else:
+                  sns.lineplot(data=tdf[tdf['variable']==v], x='time', y='value', err_style="bars",
+                               hue='geno', style="treatment", ax=axes[i, j], legend=False)
+              axes[i, j].set_title(v)
+
+          fig.suptitle("Largest upreg (top row) and downreg (bottom row) DE genes for sample {0}".format(s))
+          #fig.tight_layout()
+
+  sns.set(font_scale=1.3)
+  generate_plots_method_2(DE_cross_time_pairings)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [82]:
+# text/plain
+: <Figure size 1440x576 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/873435427cdec8b07a20a33228f0ca9d8dbbe4e2.png]]
+
+# text/plain
+: <Figure size 1440x576 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/651a06c41cc9a3ac01dd9f5a11d0237dc6f8dccb.png]]
+
+# text/plain
+: <Figure size 1440x576 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/0f6ac29b689837072d8c4424667898db18cd663f.png]]
+
+# text/plain
+: <Figure size 1440x576 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/0b6a47f04f704986c20f8bda349b5836d91b2322.png]]
+
+# text/plain
+: <Figure size 1440x576 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/4ca34d7145c6743080ba24662f3535bbbddbc573.png]]
+
+# text/plain
+: <Figure size 1440x576 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/a8c9717225067bb68b07ed8bf936739fd9f08c77/e91b67a69674d49a7b4d92dc946b1e33b092cbbb.png]]
+:END:
+
+
+** Checking up and down data's largest
+
+#+BEGIN_SRC ipython :session :display text/org
+  DE_cross_time_pairings = read_xl(f'{usr}/PHD/Transcripts/Data/cross_time_pairings.xlsx')
+  n = 5
+  df = DE_cross_time_pairings
+  s = list(df['sample'].unique())[0]
+  #tdf =  get_linedata(df[df['sample'] == s], include_small=True, include_large=False)
+  #tdf.head(10)
+
+  df = df[df['sample'] == s]
+  top = df.groupby(
+      ['sample', 'gene']).mean().reset_index().set_index('gene')
+  locs = get_locs(top, n, include_large=True,
+                  include_small=False)
+  top=top.loc[locs]
+  bot = df.groupby(
+      ['sample', 'gene']).mean().reset_index().set_index('gene')
+  locs = get_locs(bot, n, include_large=False,
+                  include_small=True)
+  bot=bot.loc[locs]
+  top_and_bot = pd.concat([top, bot])
+  filter_cols = [c for c in counts if (c.startswith(s) or c.startswith(s.replace('05h', '6h')))]
+  pd.merge(top_and_bot, counts[filter_cols], left_index=True, right_index=True)
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [78]:
+# text/org
+|           | sample   |   baseMean |   log2FoldChange |    lfcSE |      pvalue |        padj |   lym_w_6h_b66 |   lym_w_6h_c67 |   lym_w_6h_d68 |
+|-----------+----------+------------+------------------+----------+-------------+-------------+----------------+----------------+----------------|
+| AT3G28740 | lym_w_6h |    95.1592 |          5.084   | 0.534128 | 1.50119e-22 | 4.69549e-19 |        8.34247 |        8.3406  |        7.75996 |
+| AT1G80440 | lym_w_6h |   237.604  |          2.91705 | 0.3396   | 1.21574e-21 | 2.41988e-18 |        8.58618 |        8.82619 |        9.61285 |
+| AT2G20670 | lym_w_6h |   380.386  |          2.29484 | 0.292421 | 5.8821e-19  | 6.77835e-16 |        9.19396 |        9.40305 |       10.0649  |
+| AT1G52342 | lym_w_6h |    43.0187 |          2.2434  | 0.471054 | 4.93342e-10 | 8.78189e-08 |        7.09109 |        6.96464 |        7.5735  |
+| AT1G23390 | lym_w_6h |   616.255  |          2.11807 | 0.259596 | 1.31644e-19 | 1.69549e-16 |        9.73834 |       10.0032  |       10.8531  |
+| AT1G12610 | lym_w_6h |    36.561  |         -5.00418 | 1.29088  | 8.1225e-08  | 8.08373e-06 |        5.60783 |        5.89464 |        5.60783 |
+| AT4G08985 | lym_w_6h |    78.7074 |         -4.84115 | 0.892018 | 9.75441e-10 | 1.64287e-07 |        5.83125 |        5.89464 |        5.60783 |
+| AT4G27654 | lym_w_6h |    32.1774 |         -4.52447 | 0.805012 | 3.37624e-10 | 6.26465e-08 |        5.83125 |        5.95881 |        5.60783 |
+| AT2G17850 | lym_w_6h |    67.3761 |         -3.76101 | 0.373148 | 2.45685e-25 | 1.79309e-21 |        5.99404 |        6.30472 |        6.20555 |
+| AT5G10040 | lym_w_6h |    22.0374 |         -3.70768 | 0.701042 | 2.9827e-10  | 5.67881e-08 |        5.83125 |        5.89464 |        5.99526 |
+:END:

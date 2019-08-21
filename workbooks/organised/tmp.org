@@ -1,0 +1,516 @@
+#+TITLE: RNA-seq Report
+#+OPTIONS:  H:4 ^:nil
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/setup/theme-bigblow.setup
+
+
+#+HTML_HEAD: <style> #content{max-width:1800px;}</style>
+#+HTML_HEAD: <style> p{max-width:800px;}</style>
+#+HTML_HEAD: <style> li{max-width:800px;}</style>
+
+
+#+INCLUDE: "./setup.org"
+
+
+
+*** Percentage based differences
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "percentdiff5" :filename "obipy-resources/percentdiff5.png" :caption "GO as a percentage of total terms found at 05hr" :attr_html ":width 850px" :attr_latex ":width 15cm")) :async t :exports results
+
+  percent_diff = data_pivot.fillna(0)
+  percent_diff = (100. * data_pivot.fillna(0) / data_pivot.fillna(0).sum()).round(2).reset_index().melt(id_vars=['GO'])
+  sns.set(font_scale=1)
+  fig, ax = plt.subplots(1,2, figsize=(15,10), dpi=200)
+
+  sns.barplot(data=percent_diff.reset_index().sort_values(by='GO').iloc[:len(percent_diff)//2], x='value', y='GO', hue='geno', ax=ax[0])
+  sns.barplot(data=percent_diff.reset_index().sort_values(by='GO').iloc[len(percent_diff)//2:].sort_values(by='GO'), x='value', y='GO', hue='geno', ax=ax[1])
+  fig.tight_layout()
+
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [84]:
+  # text/plain
+  : <Figure size 3000x2000 with 2 Axes>
+
+  # image/png
+  #+attr_html: :width 850px
+  #+attr_latex: :width 15cm
+  #+caption: GO as a percentage of total terms found at 05hr
+  #+name: percentdiff5
+  [[file:obipy-resources/percentdiff5.png]]
+  :END:
+
+
+
+
+*** Absolute differences
+
+    #+BEGIN_SRC ipython :session :ipyfile '((:name "absdiff5" :filename "obipy-resources/absdiff5.png" :caption "Difference in Col and Lym, positive values are where col has a stronger associated GO term, notice right :async t plot colour is inversed and referes to only col GO terms" :attr_html ":width 850px" :attr_latex ":width 15cm")) :exports results
+
+fig, ax = plt.subplots(1,2, figsize=(15,10), dpi=200)
+differences = differences.rename(columns={0:'value'}).sort_values(by='value')
+differences['col_specific'] = differences['value'].apply(lambda x: True if x > 0 else False)
+sns.barplot(data=differences.reset_index().iloc[:len(differences)//2], x='value', y='GO', hue='col_specific', ax=ax[0])
+sns.barplot(data=differences.reset_index().iloc[len(differences)//2:], x='value', y='GO', hue='col_specific', ax=ax[1])
+plt.tight_layout()
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [29]:
+# text/plain
+: <Figure size 3000x2000 with 2 Axes>
+
+# image/png
+#+attr_html: :width 850px
+#+attr_latex: :width 15cm
+#+caption: Difference in Col and Lym, positive values are where col has a stronger associated GO term, notice right plot colour is inversed and referes to only col GO terms
+#+name: absdiff5
+[[file:obipy-resources/absdiff5.png]]
+:END:
+
+
+*** Side by side
+ #+BEGIN_SRC ipython :session :ipyfile '((:name "6hr GO terms" :filename "obipy-resources/05hr GO terms.png" :caption "05hr GO terms" :attr_html ":width 250px" :attr_latex ":width 15cm")) :exports results :async t
+
+   sns.set(font_scale=1.0)
+   fig, ax = plt.subplots(2,2, figsize=(15,20), dpi=200, sharex=True)
+
+   def add_mid_space(s):
+       A = s.split(' ')
+       if len(A) == 1:
+           return s
+       try:
+           A[-2] = "\n{0}".format(A[-2])
+       except Exception as e:
+           try:
+               A[-1] = "\n{0}".format(A[-1])
+           except Exception as ee:
+               pass
+       return ("".join(A))
+
+   melted['GO'] = melted['GO'].apply(add_mid_space)
+   sns.set(font_scale=0.5)
+   sns.barplot(data=melted.iloc[:len(melted)//4], x='value', y='GO', hue='geno', ax=ax[0,0])
+   sns.barplot(data=melted.iloc[len(melted)//4:len(melted)//2], x='value', y='GO', hue='geno', ax=ax[0,1])
+   sns.barplot(data=melted.iloc[len(melted)//2:len(melted)-len(melted)//4], x='value', y='GO', hue='geno', ax=ax[1,0])
+   sns.barplot(data=melted.iloc[len(melted)-len(melted)//4:], x='value', y='GO', hue='geno', ax=ax[1,1])
+   fig.tight_layout()
+ #+END_SRC
+
+ #+RESULTS:
+ :RESULTS:
+ # Out [30]:
+ # text/plain
+ : <Figure size 3000x4000 with 4 Axes>
+
+ # image/png
+ #+attr_html: :width 250px
+ #+attr_latex: :width 15cm
+ #+caption: 05hr GO terms
+ #+name: 6hr GO terms
+ [[file:obipy-resources/05hr GO terms.png]]
+ :END:
+
+
+
+** Chitin-water 6hr treats
+
+#+BEGIN_SRC ipython :session :async t
+  from goatools.base import download_go_basic_obo
+  from goatools.base import download_ncbi_associations
+  from goatools.obo_parser import GODag
+  from goatools.anno.genetogo_reader import Gene2GoReader
+  import mygene
+  from goatools.goea.go_enrichment_ns import GOEnrichmentStudyNS
+
+
+  DE_pairings_6hr = read_xl('{0}/PHD/Transcripts/Data/pairings_6hr.xlsx'.format(expanduser('~/'), unique=False))
+
+  all_genes = list(set(DE_pairings_6hr.index.values))
+  genes_in_col_c_6hr = list(set(
+      DE_pairings_6hr[
+          DE_pairings_6hr['sample'].str.contains('col')].index.values))
+
+  genes_in_col_c_6hr_DE = list(set(
+      DE_pairings_6hr[
+          (DE_pairings_6hr['sample'].str.contains('col')) & (DE_pairings_6hr['padj'] < 0.01)].index.values))
+
+  genes_in_lym_c_6hr_DE = list(set(
+      DE_pairings_6hr[
+          (DE_pairings_6hr['sample'].str.contains('lym')) & (DE_pairings_6hr['padj'] < 0.01)].index.values))
+
+  genes_in_cer_c_6hr_DE = list(set(
+      DE_pairings_6hr[
+          (DE_pairings_6hr['sample'].str.contains('cer')) & (DE_pairings_6hr['padj'] < 0.01)].index.values))
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [31]:
+:END:
+
+
+#+BEGIN_SRC ipython :session :async t
+  obo_fname = download_go_basic_obo()
+  fin_gene2go = download_ncbi_associations()
+  obodag = GODag("go-basic.obo")
+
+  # Read NCBI's gene2go. Store annotations in a list of namedtuples
+  objanno = Gene2GoReader(fin_gene2go, taxids=[3702])
+  ns2assoc = objanno.get_ns2assc()
+  mg = mygene.MyGeneInfo()
+  gof_6hr = mg.getgenes(genes_in_col_c_6hr, fields='_id')
+  genes_in_study_6hr = [int(g['_id']) for g in gof_6hr if g['_id'].isdigit()]
+
+
+  goeaobj_6hr = GOEnrichmentStudyNS(
+      genes_in_study_6hr,  # List of genes found
+      ns2assoc,  # geneid/GO associations
+      obodag,  # Ontologies
+      propagate_counts=False,
+      Alpha=0.01,  # default significance cut-off
+      methods=['fdr_bh'])  # defult multipletest correction method
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [32]:
+# output
+  EXISTS: go-basic.obo
+  EXISTS: gene2go
+go-basic.obo: fmt(1.2) rel(2019-06-10) 47,442 GO Terms
+HMS:0:00:02.650426 192,328 annotations READ: gene2go
+1 taxids stored: 3702
+querying 1-1000...done.
+querying 1001-2000...done.
+querying 2001-3000...done.
+querying 3001-4000...done.
+querying 4001-5000...done.
+querying 5001-6000...done.
+querying 6001-7000...done.
+querying 7001-8000...done.
+querying 8001-9000...done.
+querying 9001-10000...done.
+querying 10001-11000...done.
+querying 11001-12000...done.
+querying 12001-13000...done.
+querying 13001-14000...done.
+querying 14001-15000...done.
+querying 15001-16000...done.
+querying 16001-17000...done.
+querying 17001-18000...done.
+querying 18001-19000...done.
+querying 19001-20000...done.
+querying 20001-21000...done.
+querying 21001-22000...done.
+querying 22001-23000...done.
+querying 23001-23248...done.
+
+Load BP Gene Ontology Analysis ...
+ 67% 14,465 of 21,729 population items found in association
+
+Load CC Gene Ontology Analysis ...
+ 94% 20,339 of 21,729 population items found in association
+
+Load MF Gene Ontology Analysis ...
+ 67% 14,562 of 21,729 population items found in association
+
+:END:
+
+
+#+BEGIN_SRC ipython :session :exports none :async t
+  print('+++ Doing Col +++')
+  col_6hr = get_GO_terms(genes_in_col_c_6hr_DE, 'col', goeaobj_6hr)
+  print('+++ Doing Lym +++')
+  lym_6hr = get_GO_terms(genes_in_lym_c_6hr_DE, 'lym', goeaobj_6hr)
+  print('+++ Doing Cerk +++')
+  cer_6hr = get_GO_terms(genes_in_cer_c_6hr_DE, 'cer', goeaobj_6hr, drop_insig=False)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [33]:
+# output
++++ Doing Col +++
+querying 1-1000...done.
+querying 1001-1452...done.
+
+Run BP Gene Ontology Analysis: current study set of 1425 IDs ...
+ 80%  1,135 of  1,414 study items found in association
+ 99%  1,414 of  1,425 study items found in population(21729)
+Calculating 3,705 uncorrected p-values using fisher
+   3,705 GO terms are associated with 14,331 of 21,729 population items
+   1,077 GO terms are associated with  1,135 of  1,414 study items
+  METHOD fdr_bh:
+      57 GO terms found significant (< 0.05=alpha) ( 56 enriched +   1 purified): statsmodels fdr_bh
+     671 study items associated with significant GO IDs (enriched)
+      49 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 1425 IDs ...
+ 96%  1,356 of  1,414 study items found in association
+ 99%  1,414 of  1,425 study items found in population(21729)
+Calculating 765 uncorrected p-values using fisher
+     765 GO terms are associated with 20,119 of 21,729 population items
+     222 GO terms are associated with  1,356 of  1,414 study items
+  METHOD fdr_bh:
+      36 GO terms found significant (< 0.05=alpha) ( 35 enriched +   1 purified): statsmodels fdr_bh
+   1,115 study items associated with significant GO IDs (enriched)
+     346 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 1425 IDs ...
+ 80%  1,134 of  1,414 study items found in association
+ 99%  1,414 of  1,425 study items found in population(21729)
+Calculating 2,550 uncorrected p-values using fisher
+   2,550 GO terms are associated with 14,370 of 21,729 population items
+     775 GO terms are associated with  1,134 of  1,414 study items
+  METHOD fdr_bh:
+      25 GO terms found significant (< 0.05=alpha) ( 23 enriched +   2 purified): statsmodels fdr_bh
+     334 study items associated with significant GO IDs (enriched)
+      64 study items associated with significant GO IDs (purified)
++++ Doing Lym +++
+querying 1-737...done.
+
+Run BP Gene Ontology Analysis: current study set of 714 IDs ...
+ 81%    581 of    714 study items found in association
+100%    714 of    714 study items found in population(21729)
+Calculating 3,705 uncorrected p-values using fisher
+   3,705 GO terms are associated with 14,331 of 21,729 population items
+     759 GO terms are associated with    581 of    714 study items
+  METHOD fdr_bh:
+      37 GO terms found significant (< 0.05=alpha) ( 37 enriched +   0 purified): statsmodels fdr_bh
+     301 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 714 IDs ...
+ 96%    687 of    714 study items found in association
+100%    714 of    714 study items found in population(21729)
+Calculating 765 uncorrected p-values using fisher
+     765 GO terms are associated with 20,119 of 21,729 population items
+     146 GO terms are associated with    687 of    714 study items
+  METHOD fdr_bh:
+      24 GO terms found significant (< 0.05=alpha) ( 23 enriched +   1 purified): statsmodels fdr_bh
+     514 study items associated with significant GO IDs (enriched)
+     165 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 714 IDs ...
+ 79%    566 of    714 study items found in association
+100%    714 of    714 study items found in population(21729)
+Calculating 2,550 uncorrected p-values using fisher
+   2,550 GO terms are associated with 14,370 of 21,729 population items
+     525 GO terms are associated with    566 of    714 study items
+  METHOD fdr_bh:
+      21 GO terms found significant (< 0.05=alpha) ( 19 enriched +   2 purified): statsmodels fdr_bh
+     149 study items associated with significant GO IDs (enriched)
+      32 study items associated with significant GO IDs (purified)
++++ Doing Cerk +++
+
+Run BP Gene Ontology Analysis: current study set of 0 IDs ...
+
+Run CC Gene Ontology Analysis: current study set of 0 IDs ...
+
+Run MF Gene Ontology Analysis: current study set of 0 IDs ...
+
+:END:
+
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results :async t
+data_6hr = pd.concat([col_6hr, lym_6hr, cer_6hr]).sort_values(by='GO')
+data_6hr.to_csv('6hr_GO.csv')
+data_6hr.sample(25)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [34]:
+# text/org
+|    | GO                                                  |   count | defence   | geno   |
+|----+-----------------------------------------------------+---------+-----------+--------|
+| 70 | response to salt stress                             |      71 | False     | col    |
+| 62 | regulation of transcription, DNA-templated          |      49 | False     | col    |
+| 38 | glucosinolate biosynthetic process                  |       9 | False     | col    |
+|  8 | response to wounding                                |      18 | True      | lym    |
+|  3 | induced systemic resistance                         |       9 | True      | col    |
+|  5 | response to fungus                                  |      16 | True      | col    |
+| 80 | tubulin complex                                     |       6 | False     | col    |
+| 40 | nucleus                                             |     165 | False     | lym    |
+|  9 | DNA binding                                         |      22 | False     | lym    |
+| 25 | chloroplast thylakoid membrane                      |      40 | False     | lym    |
+| 17 | chloroplast envelope                                |      66 | False     | lym    |
+| 23 | chloroplast rRNA processing                         |       7 | False     | col    |
+| 43 | hydrogen peroxide catabolic process                 |      13 | False     | col    |
+| 35 | hydrogen peroxide catabolic process                 |      13 | False     | lym    |
+| 15 | chlorophyll biosynthetic process                    |       9 | False     | lym    |
+|  0 | defense response by callose deposition in cell wall |       8 | True      | col    |
+| 41 | nutrient reservoir activity                         |      10 | False     | lym    |
+| 37 | magnesium chelatase complex                         |       3 | False     | lym    |
+| 43 | peroxidase activity                                 |      22 | False     | lym    |
+|  4 | induced systemic resistance                         |       8 | True      | lym    |
+|  2 | defense response to fungus                          |      32 | True      | col    |
+| 20 | chloroplast organization                            |      24 | False     | lym    |
+| 16 | cellular response to hypoxia                        |      12 | False     | col    |
+| 37 | galactolipase activity                              |       5 | False     | col    |
+| 67 | response to endoplasmic reticulum stress            |       9 | False     | col    |
+:END:
+
+#+BEGIN_SRC ipython :session :async t
+  sns.set(font_scale=2)
+  fig, ax = plt.subplots(1,2, figsize=(20,10))
+
+  N=len(data_6hr[data_6hr['defence'] == True])
+
+  sns.barplot(data=data_6hr[data_6hr['defence'] == True].iloc[:N//2].sort_values(by='geno'), y='GO', x='count', hue='geno', ax=ax[0])
+  sns.barplot(data=data_6hr[data_6hr['defence'] == True].iloc[N//2:].sort_values(by='geno'), y='GO', x='count', hue='geno', ax=ax[1])
+  #fig.suptitle('05hr chitin/water treatments')
+  fig.tight_layout()
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [35]:
+# text/plain
+: <Figure size 1440x720 with 2 Axes>
+
+# image/png
+[[file:obipy-resources/e7be5d7ac8292307f0c5a887cd54725e7be978c8/5f696732ac337f651d5e41e7b35cf77fd29f8fbe.png]]
+:END:
+
+#+BEGIN_SRC ipython :session :display text/org :exports results :async t
+data_6hr_pivot = data_6hr.pivot('GO', columns='geno', values='count')
+differences = pd.DataFrame(data_6hr_pivot.fillna(0).apply(lambda x: x['col'] - x['lym'], axis=1))
+melted_6hr = data_6hr_pivot.reset_index().melt(id_vars=['GO']).fillna(0)
+melted_6hr = melted_6hr.sort_values(by=['GO', 'geno' ]).reset_index()
+melted_6hr.head(10)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [36]:
+# text/org
+|    |   index | GO                                        | geno   |   value |
+|----+---------+-------------------------------------------+--------+---------|
+|  0 |       0 | DNA binding                               | col    |      51 |
+|  1 |      95 | DNA binding                               | lym    |      22 |
+|  2 |       1 | DNA-binding transcription factor activity | col    |      45 |
+|  3 |      96 | DNA-binding transcription factor activity | lym    |       0 |
+|  4 |       2 | FAD binding                               | col    |      15 |
+|  5 |      97 | FAD binding                               | lym    |       0 |
+|  6 |       3 | anchored component of membrane            | col    |      28 |
+|  7 |      98 | anchored component of membrane            | lym    |       0 |
+|  8 |       4 | apoplast                                  | col    |      93 |
+|  9 |      99 | apoplast                                  | lym    |      55 |
+:END:
+
+
+
+
+*** Percentage based differences
+
+    #+BEGIN_SRC ipython :session :ipyfile '((:name "percentdiff" :filename "obipy-resources/percentdiff.png" :caption "GO as a percentage of total terms found" :attr_html ":width 850px" :attr_latex ":width 15cm")) :async t :exports results
+
+percent_diff = data_6hr_pivot.fillna(0)
+percent_diff = (100. * data_6hr_pivot.fillna(0) / data_6hr_pivot.fillna(0).sum()).round(2).reset_index().melt(id_vars=['GO'])
+
+fig, ax = plt.subplots(1,2, figsize=(10,8), dpi=200)
+
+sns.barplot(data=percent_diff.reset_index().sort_values(by='GO').iloc[:len(percent_diff)//2], x='value', y='GO', hue='geno', ax=ax[0])
+sns.barplot(data=percent_diff.reset_index().sort_values(by='GO').iloc[len(percent_diff)//2:].sort_values(by='GO'), x='value', y='GO', hue='geno', ax=ax[1])
+fig.tight_layout()
+
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [37]:
+# text/plain
+: <Figure size 2000x1600 with 2 Axes>
+
+# image/png
+#+attr_html: :width 850px
+#+attr_latex: :width 15cm
+#+caption: GO as a percentage of total terms found
+#+name: percentdiff
+[[file:obipy-resources/percentdiff.png]]
+:END:
+
+
+
+
+*** Absolute differences
+
+    #+BEGIN_SRC ipython :session :ipyfile '((:name "absdiff" :filename "obipy-resources/absdiff.png" :caption "Difference in Col and Lym, positive values are where col has a stronger associated GO term, notice right :async t plot colour is inversed and referes to only col GO terms" :attr_html ":width 850px" :attr_latex ":width 15cm")) :exports results
+
+fig, ax = plt.subplots(1,2, figsize=(10,5), dpi=200)
+differences = differences.rename(columns={0:'value'}).sort_values(by='value')
+differences['col_specific'] = differences['value'].apply(lambda x: True if x > 0 else False)
+sns.barplot(data=differences.reset_index().iloc[:len(differences)//2], x='value', y='GO', hue='col_specific', ax=ax[0])
+sns.barplot(data=differences.reset_index().iloc[len(differences)//2:], x='value', y='GO', hue='col_specific', ax=ax[1])
+plt.tight_layout()
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [38]:
+# text/plain
+: <Figure size 2000x1000 with 2 Axes>
+
+# image/png
+#+attr_html: :width 850px
+#+attr_latex: :width 15cm
+#+caption: Difference in Col and Lym, positive values are where col has a stronger associated GO term, notice right plot colour is inversed and referes to only col GO terms
+#+name: absdiff
+[[file:obipy-resources/absdiff.png]]
+:END:
+
+
+*** Side by side
+ #+BEGIN_SRC ipython :session :ipyfile '((:name "6hr GO terms" :filename "obipy-resources/6hr GO terms.png" :caption "6hr GO terms" :attr_html ":width 250px" :attr_latex ":width 15cm")) :exports results :async t
+
+   sns.set(font_scale=1.0)
+   fig, ax = plt.subplots(2,2, figsize=(15,25), dpi=200, sharex=True)
+
+   def add_mid_space(s):
+       A = s.split(' ')
+       if len(A) == 1:
+           return s
+       try:
+           A[-2] = "\n{0}".format(A[-2])
+       except Exception as e:
+           try:
+               A[-1] = "\n{0}".format(A[-1])
+           except Exception as ee:
+               pass
+       return ("".join(A))
+
+   melted_6hr['GO'] = melted_6hr['GO'].apply(add_mid_space)
+   sns.set(font_scale=0.5)
+   sns.barplot(data=melted_6hr.iloc[:len(melted_6hr)//4], x='value', y='GO', hue='geno', ax=ax[0,0])
+   sns.barplot(data=melted_6hr.iloc[len(melted_6hr)//4:len(melted_6hr)//2], x='value', y='GO', hue='geno', ax=ax[0,1])
+   sns.barplot(data=melted_6hr.iloc[len(melted_6hr)//2:len(melted_6hr)-len(melted_6hr)//4], x='value', y='GO', hue='geno', ax=ax[1,0])
+   sns.barplot(data=melted_6hr.iloc[len(melted_6hr)-len(melted_6hr)//4:], x='value', y='GO', hue='geno', ax=ax[1,1])
+   fig.tight_layout()
+ #+END_SRC
+
+ #+RESULTS:
+ :RESULTS:
+ # Out [39]:
+ # text/plain
+ : <Figure size 3000x5000 with 4 Axes>
+
+ # image/png
+ #+attr_html: :width 250px
+ #+attr_latex: :width 15cm
+ #+caption: 6hr GO terms
+ #+name: 6hr GO terms
+ [[file:obipy-resources/6hr GO terms.png]]
+ :END:

@@ -1,0 +1,4 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{tfs} \PYG{o}{=} \PYG{n}{get\PYGZus{}gene\PYGZus{}names}\PYG{p}{(}\PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{DE}\PYG{o}{.}\PYG{n}{index}\PYG{o}{.}\PYG{n}{values}\PYG{p}{))}
+\PYG{n}{s\PYGZus{}tfs} \PYG{o}{=} \PYG{n}{tfs}\PYG{p}{[}\PYG{n}{tfs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}description\PYGZsq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{str}\PYG{o}{.}\PYG{n}{contains}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}transcription factor\PYGZsq{}}\PYG{p}{)]}
+\end{Verbatim}

@@ -1,0 +1,30 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{sklearn.decomposition} \PYG{k+kn}{import} \PYG{n}{PCA}
+\PYG{k+kn}{from} \PYG{n+nn}{sklearn.preprocessing} \PYG{k+kn}{import} \PYG{n}{StandardScaler}
+\PYG{n}{sns}\PYG{o}{.}\PYG{n}{set}\PYG{p}{()}
+
+\PYG{n}{cols} \PYG{o}{=} \PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{counts}\PYG{o}{.}\PYG{n}{columns}\PYG{p}{)}
+
+\PYG{n}{counts\PYGZus{}geno} \PYG{o}{=} \PYG{p}{[}\PYG{n}{c}\PYG{o}{.}\PYG{n}{split}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZus{}\PYGZdq{}}\PYG{p}{)[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{cols}\PYG{p}{]}
+\PYG{n}{counts\PYGZus{}treat} \PYG{o}{=} \PYG{p}{[}\PYG{n}{c}\PYG{o}{.}\PYG{n}{split}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZus{}\PYGZdq{}}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{cols}\PYG{p}{]}
+\PYG{n}{counts\PYGZus{}time} \PYG{o}{=} \PYG{p}{[}\PYG{n}{c}\PYG{o}{.}\PYG{n}{split}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZus{}\PYGZdq{}}\PYG{p}{)[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{cols}\PYG{p}{]}
+
+\PYG{n}{x} \PYG{o}{=} \PYG{p}{(}\PYG{n}{counts}\PYG{o}{.}\PYG{n}{T}\PYG{o}{.}\PYG{n}{values}\PYG{p}{)}
+
+\PYG{n}{pca} \PYG{o}{=} \PYG{n}{PCA}\PYG{p}{(}\PYG{n}{n\PYGZus{}components}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+\PYG{n}{principalComponents} \PYG{o}{=} \PYG{n}{pca}\PYG{o}{.}\PYG{n}{fit\PYGZus{}transform}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}
+\PYG{n}{principalDf} \PYG{o}{=} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{DataFrame}\PYG{p}{(}\PYG{n}{data}\PYG{o}{=}\PYG{n}{principalComponents}\PYG{p}{,} \PYG{n}{columns}\PYG{o}{=}\PYG{p}{[}
+                           \PYG{l+s+s1}{\PYGZsq{}principal component 1\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}principal component 2\PYGZsq{}}\PYG{p}{])}
+
+\PYG{n}{principalDf}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}genotype\PYGZsq{}}\PYG{p}{]} \PYG{o}{=} \PYG{n}{counts\PYGZus{}geno}
+\PYG{n}{principalDf}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}treatment\PYGZsq{}}\PYG{p}{]} \PYG{o}{=} \PYG{n}{counts\PYGZus{}treat}
+\PYG{n}{principalDf}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}time\PYGZsq{}}\PYG{p}{]} \PYG{o}{=} \PYG{n}{counts\PYGZus{}time}
+
+\PYG{n}{g} \PYG{o}{=} \PYG{n}{sns}\PYG{o}{.}\PYG{n}{FacetGrid}\PYG{p}{(}\PYG{n}{principalDf}\PYG{p}{,} \PYG{n}{col}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}time\PYGZsq{}}\PYG{p}{,} \PYG{n}{row}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}genotype\PYGZsq{}}\PYG{p}{,} \PYG{n}{hue}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}treatment\PYGZsq{}}\PYG{p}{)}
+
+\PYG{n}{g} \PYG{o}{=} \PYG{n}{g}\PYG{o}{.}\PYG{n}{map}\PYG{p}{(}\PYG{n}{plt}\PYG{o}{.}\PYG{n}{scatter}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}principal component 1\PYGZsq{}}\PYG{p}{,}
+          \PYG{l+s+s1}{\PYGZsq{}principal component 2\PYGZsq{}}\PYG{p}{)}\PYG{o}{.}\PYG{n}{add\PYGZus{}legend}\PYG{p}{()}
+
+\PYG{k}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Explained varience from PC1 \PYGZam{} 2 respectively:\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{print}\PYG{p}{(}\PYG{n}{pca}\PYG{o}{.}\PYG{n}{explained\PYGZus{}variance\PYGZus{}ratio\PYGZus{}}\PYG{p}{)}
+\end{Verbatim}

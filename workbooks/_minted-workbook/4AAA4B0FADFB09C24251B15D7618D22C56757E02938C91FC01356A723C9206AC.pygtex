@@ -1,0 +1,24 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{matplotlib.patches} \PYG{k+kn}{as} \PYG{n+nn}{mpatches}
+
+\PYG{k}{def} \PYG{n+nf}{collapse\PYGZus{}counts}\PYG{p}{(}\PYG{n}{counts}\PYG{p}{):}
+    \PYG{n}{u\PYGZus{}cols} \PYG{o}{=} \PYG{n+nb}{list}\PYG{p}{(}\PYG{n+nb}{set}\PYG{p}{([}\PYG{n}{l}\PYG{o}{.}\PYG{n}{rsplit}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZus{}\PYGZdq{}}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{k}{for} \PYG{n}{l} \PYG{o+ow}{in} \PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{counts}\PYG{o}{.}\PYG{n}{columns}\PYG{p}{)]))}
+    \PYG{n}{cols} \PYG{o}{=} \PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{counts}\PYG{o}{.}\PYG{n}{columns}\PYG{p}{)}
+    \PYG{n}{ss} \PYG{o}{=} \PYG{p}{[]}
+    \PYG{k}{for} \PYG{n}{uc} \PYG{o+ow}{in} \PYG{n}{u\PYGZus{}cols}\PYG{p}{:}
+        \PYG{n}{cs} \PYG{o}{=} \PYG{p}{[}\PYG{n}{c} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{cols} \PYG{k}{if} \PYG{n}{c}\PYG{o}{.}\PYG{n}{startswith}\PYG{p}{(}\PYG{n}{uc}\PYG{p}{)]}
+        \PYG{n}{ss}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{counts}\PYG{p}{[}\PYG{n}{cs}\PYG{p}{]}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{axis}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{.}\PYG{n}{rename}\PYG{p}{(}\PYG{n}{uc}\PYG{p}{))}
+    \PYG{n}{dc} \PYG{o}{=} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{concat}\PYG{p}{(}\PYG{n}{ss}\PYG{p}{,} \PYG{n}{axis}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{dc}
+
+
+\PYG{n}{collapsed\PYGZus{}counts} \PYG{o}{=} \PYG{n}{collapse\PYGZus{}counts}\PYG{p}{(}\PYG{n}{counts}\PYG{p}{)}
+\PYG{n}{lut} \PYG{o}{=} \PYG{n+nb}{dict}\PYG{p}{(}\PYG{n+nb}{zip}\PYG{p}{(}\PYG{n+nb}{list}\PYG{p}{(}\PYG{n+nb}{set}\PYG{p}{([}\PYG{n}{c}\PYG{p}{[:}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{collapsed\PYGZus{}counts}\PYG{o}{.}\PYG{n}{columns}\PYG{p}{])),} \PYG{l+s+s2}{\PYGZdq{}rbg\PYGZdq{}}\PYG{p}{))}
+\PYG{n}{row\PYGZus{}colors} \PYG{o}{=} \PYG{p}{[}\PYG{n}{lut}\PYG{p}{[}\PYG{n}{c}\PYG{p}{[:}\PYG{l+m+mi}{3}\PYG{p}{]]} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{collapsed\PYGZus{}counts}\PYG{o}{.}\PYG{n}{columns}\PYG{p}{]}
+\PYG{n}{legend\PYGZus{}TN} \PYG{o}{=} \PYG{p}{[}\PYG{n}{mpatches}\PYG{o}{.}\PYG{n}{Patch}\PYG{p}{(}\PYG{n}{color}\PYG{o}{=}\PYG{n}{c}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{n}{l}\PYG{p}{)} \PYG{k}{for} \PYG{p}{(}\PYG{n+nb}{list}\PYG{p}{(}\PYG{n+nb}{set}\PYG{p}{([}\PYG{n}{c}\PYG{p}{[:}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{collapsed\PYGZus{}counts}\PYG{o}{.}\PYG{n}{columns}\PYG{p}{]))]}
+
+\PYG{n}{distances} \PYG{o}{=} \PYG{n}{pdist}\PYG{p}{(}\PYG{n}{collapsed\PYGZus{}counts}\PYG{o}{.}\PYG{n}{T}\PYG{o}{.}\PYG{n}{values}\PYG{p}{,} \PYG{n}{metric}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}euclidean\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{dist\PYGZus{}matrix} \PYG{o}{=} \PYG{n}{squareform}\PYG{p}{(}\PYG{n}{distances}\PYG{p}{)}
+\PYG{n}{dist\PYGZus{}df} \PYG{o}{=} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{DataFrame}\PYG{p}{(}\PYG{n}{dist\PYGZus{}matrix}\PYG{p}{,} \PYG{n}{columns} \PYG{o}{=} \PYG{n}{collapsed\PYGZus{}counts}\PYG{o}{.}\PYG{n}{columns}\PYG{p}{,} \PYG{n}{index}\PYG{o}{=}\PYG{n}{collapsed\PYGZus{}counts}\PYG{o}{.}\PYG{n}{columns}\PYG{p}{)}
+\PYG{n}{sns}\PYG{o}{.}\PYG{n}{clustermap}\PYG{p}{(}\PYG{n}{dist\PYGZus{}df}\PYG{p}{,} \PYG{n}{row\PYGZus{}colors}\PYG{o}{=}\PYG{n}{row\PYGZus{}colors}\PYG{p}{)}
+\end{Verbatim}

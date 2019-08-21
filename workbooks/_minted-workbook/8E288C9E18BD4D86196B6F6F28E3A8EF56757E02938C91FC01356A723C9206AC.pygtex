@@ -1,0 +1,8 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{DE} \PYG{o}{=} \PYG{n}{DE}\PYG{o}{.}\PYG{n}{rename\PYGZus{}axis}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{)}\PYG{o}{.}\PYG{n}{sort\PYGZus{}values}\PYG{p}{(}
+    \PYG{n}{by}\PYG{o}{=}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{],} \PYG{n}{ascending}\PYG{o}{=}\PYG{p}{[}\PYG{n+nb+bp}{False}\PYG{p}{,} \PYG{n+nb+bp}{False}\PYG{p}{])}
+
+\PYG{n}{bottom} \PYG{o}{=} \PYG{n}{DE}\PYG{o}{.}\PYG{n}{iloc}\PYG{p}{[:}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{sheet\PYGZus{}names}\PYG{p}{)}\PYG{o}{*}\PYG{l+m+mi}{20}\PYG{p}{]}
+\PYG{n}{bottom} \PYG{o}{=} \PYG{n}{bottom}\PYG{o}{.}\PYG{n}{pivot}\PYG{p}{(}\PYG{n}{columns}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{,} \PYG{n}{values}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{bottom}
+\end{Verbatim}

@@ -1,0 +1,381 @@
+* Stringlis
+
+#+BEGIN_SRC ipython :session :async t
+  stringlis = read_xl('/Users/hughesn/PHD/Transcripts/Data/stringlis_True.xlsx')
+  stringlis_false = read_xl('/Users/hughesn/PHD/Transcripts/Data/stringlis_False.xlsx')
+  DE_pairings_05hr = read_xl('/Users/hughesn/PHD/Transcripts/Data/pairings_05hr.xlsx')
+  DE_pairings_6hr = read_xl('/Users/hughesn/PHD/Transcripts/Data/pairings_6hr.xlsx')
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [363]:
+:END:
+
+
+
+Regarding their data:
+
+#+CAPTION: Stringlis et al.
+#+ATTR_HTML: :width 400px
+[[./stringlis.png]]
+
+We find that there are DE genes #:
+
+#+BEGIN_SRC ipython :session
+
+  stringlis = stringlis.sort_values(by='sample')
+  cutoff = 0.05
+  upregulated = []
+  downregulated = []
+
+  for s in stringlis['sample'].unique():
+      num_genes_upregulated = len(stringlis[(stringlis['sample'] == s) &  (stringlis['padj'] <= cutoff) & (stringlis['log2FoldChange'] > 0)])
+      upregulated.append(num_genes_upregulated)
+      num_genes_downregulated = len(stringlis[(stringlis['sample'] == s) &  (stringlis['padj'] <= cutoff) & (stringlis['log2FoldChange'] < 0)])
+      downregulated.append(num_genes_downregulated*-1)
+      print('Stringlis: Num genes up {0} : {1} \t Down : {2}'.format(s, num_genes_upregulated, num_genes_downregulated))
+
+
+  falcon_data =  pd.concat([DE_pairings_05hr, DE_pairings_6hr])
+  falcon_data = falcon_data[falcon_data['sample'].str.contains('col')]
+
+
+  falc_up = []
+  falc_down = []
+  for s in falcon_data['sample'].unique():
+      num_genes_upregulated = len(falcon_data[(falcon_data['sample'] == s) &  (falcon_data['padj'] <= cutoff) & (falcon_data['log2FoldChange'] > 0)])
+      falc_up.append(num_genes_upregulated)
+      num_genes_downregulated = len(falcon_data[(falcon_data['sample'] == s) &  (falcon_data['padj'] <= cutoff) & (falcon_data['log2FoldChange'] < 0)])
+      falc_down.append(num_genes_downregulated*-1)
+      print('Faclcon: Num genes up {0} : {1} \t Down : {2}'.format(s, num_genes_upregulated, num_genes_downregulated))
+
+
+  fig, ax = plt.subplots(1,2, figsize=(20,10), sharey=True)
+  ax[0].bar(stringlis['sample'].unique(), upregulated, color='r')
+  ax[0].bar(stringlis['sample'].unique(), downregulated, color='b')
+
+  ax[1].bar(falcon_data['sample'].unique(), falc_up, color='r')
+  ax[1].bar(falcon_data['sample'].unique(), falc_down, color='b')
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [415]:
+# output
+Stringlis: Num genes up col_c_0h : 1193          Down : 222
+Stringlis: Num genes up col_c_1h : 313   Down : 247
+Stringlis: Num genes up col_c_3h : 162   Down : 22
+Stringlis: Num genes up col_c_6h : 108   Down : 9
+Faclcon: Num genes up col_c_05h : 2635   Down : 1163
+Faclcon: Num genes up col_c_6h : 1361    Down : 1289
+
+# text/plain
+: <BarContainer object of 2 artists>
+
+# text/plain
+: <Figure size 1440x720 with 2 Axes>
+
+# image/png
+[[file:obipy-resources/bfb6bdeff039ad19195cdcfdc4f4f89e9b31e769/325fcb285a80b0198ba9c66798cd7a07b04e41b0.png]]
+:END:
+
+
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+
+get_0hr = lambda x: x[x['sample'].str.contains('col_c_0h')]
+get_05hr = lambda x: x[x['sample'].str.contains('col_c_05h')]
+get_6hr = lambda x: x[x['sample'].str.contains('col_c_6h')]
+
+stringlis['source'] = 'stringlis'
+DE_pairings_05hr['source'] = 'Falcons'
+
+all_5hr_data = pd.concat([get_0hr(stringlis), get_05hr(DE_pairings_05hr)])
+all_6hr_data = pd.concat([get_6hr(stringlis), get_6hr(DE_pairings_05hr)])
+
+all_5hr_data.sort_values(by='gene').head()
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [365]:
+# text/org
+| gene      |   baseMean |   log2FoldChange |    lfcSE |   pvalue |     padj | sample    | source    |
+|-----------+------------+------------------+----------+----------+----------+-----------+-----------|
+| AT1G01010 |  121.183   |        0.0129093 | 0.101318 | 0.816548 | 0.928406 | col_c_05h | Falcons   |
+| AT1G01010 |    4.02744 |       -0.249459  | 0.488125 | 0.173545 | 0.524187 | col_c_0h  | stringlis |
+| AT1G01020 |    1.58541 |       -0.081872  | 0.430288 | 0.587807 | 0.835299 | col_c_0h  | stringlis |
+| AT1G01020 |  162.899   |        0.0224901 | 0.103561 | 0.689207 | 0.8667   | col_c_05h | Falcons   |
+| AT1G01030 |   40.0061  |       -0.0929198 | 0.205699 | 0.232017 | 0.509802 | col_c_05h | Falcons   |
+:END:
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+
+
+genes_in_falcons = set(get_05hr(DE_pairings_05hr)[get_05hr(DE_pairings_05hr)['padj'] < 0.05].index.values)
+genes_in_stringlis= set(get_0hr(stringlis)[get_0hr(stringlis)['padj'] < 0.05].index.values)
+
+genes_in_both = genes_in_falcons.intersection(genes_in_stringlis)
+genes_only_in_falcons = set(genes_in_falcons - genes_in_stringlis)
+genes_only_in_stringlis = set(genes_in_stringlis - genes_in_falcons )
+
+pivoted_05hr = all_5hr_data.reset_index().pivot('gene', columns='source', values='log2FoldChange')
+pivoted_05hr.head()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [366]:
+# text/org
+| gene      |     Falcons |   stringlis |
+|-----------+-------------+-------------|
+| AT1G01010 |  0.0129093  |  -0.249459  |
+| AT1G01020 |  0.0224901  |  -0.081872  |
+| AT1G01030 | -0.0929198  |   0.0782567 |
+| AT1G01040 |  0.0205338  |  -0.100005  |
+| AT1G01050 |  0.00143435 |  -0.474566  |
+:END:
+
+
+#+BEGIN_SRC ipython :session
+
+fig, ax = plt.subplots(1, figsize=(10,10))
+
+data = pivoted_05hr.fillna(0)
+exclus = lambda x,y: x.loc[y]
+
+ax.scatter(exclus(data, genes_in_both)['Falcons'], exclus(data, genes_in_both)['stringlis'], label='both', s=2 )
+ax.scatter(exclus(data, genes_only_in_falcons)['Falcons'], exclus(data, genes_only_in_falcons)['stringlis'], label='Falcons', s=2)
+ax.scatter(exclus(data, genes_only_in_stringlis)['Falcons'], exclus(data, genes_only_in_stringlis)['stringlis'], label='stringlis', s=2)
+
+ax.set_xlabel('Falcons\' log2foldchange')
+ax.set_ylabel('Stringlis\' log2foldchange')
+
+
+ax.axhline(0, color='r')
+ax.axvline(0, color='r')
+
+
+ax.plot([-5, 10+2], [-3, 12+2], color='k',linestyle='--')
+ax.plot([-5, 10+2], [-7, 8+2], color='k', linestyle='--', label='difference < 2')
+fig.legend()
+ax.set_xlim(-4,11)
+ax.set_ylim(-4,11)
+
+
+exclus(data, genes_in_both).to_csv('DEG_genes_CW_in_05hr_stringlis+falcons.csv')
+exclus(data, genes_only_in_falcons).to_csv('DEG_genes_CW_in_05hr_falcons.csv')
+exclus(data, genes_only_in_stringlis).to_csv('DEG_genes_CW_in_05hr_stringlis.csv')
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [390]:
+# text/plain
+: <Figure size 720x720 with 1 Axes>
+
+# image/png
+[[file:obipy-resources/bfb6bdeff039ad19195cdcfdc4f4f89e9b31e769/e3c2362e9f6a31268a860e0ca09e22e36a3b8d14.png]]
+:END:
+
+
+
+
+** With labels > 3 labelled
+#+BEGIN_SRC ipython :session
+import networkx as nx
+from numpy.random import rand
+
+dat = exclus(data, genes_only_in_stringlis)
+
+dat['label'] = dat.apply(lambda x: False if abs(x['Falcons'] - x['stringlis']) < 2 else True, axis=1 )
+dat['dist'] = dat.apply(lambda x: abs(x['Falcons'] - x['stringlis']), axis=1 )
+
+fig, ax = plt.subplots(1, figsize=(15,15))
+
+ax.scatter(exclus(data, genes_in_both)['Falcons'], exclus(data, genes_in_both)['stringlis'], label='both', s=2 )
+ax.scatter(exclus(data, genes_only_in_falcons)['Falcons'], exclus(data, genes_only_in_falcons)['stringlis'], label='Falcons', s=2)
+ax.scatter(exclus(data, genes_only_in_stringlis)['Falcons'], exclus(data, genes_only_in_stringlis)['stringlis'], label='stringlis', s=2)
+
+
+ax.set_xlabel('Falcons\' log2foldchange')
+ax.set_ylabel('Stringlis\' log2foldchange')
+
+
+ax.axhline(0, color='r')
+ax.axvline(0, color='r')
+
+
+ax.plot([-5, 10+2], [-3, 12+2], color='k',linestyle='--')
+ax.plot([-5, 10+2], [-7, 8+2], color='k', linestyle='--', label='difference < 2')
+fig.legend()
+#ax.set_xlim(-4,11)
+#ax.set_ylim(-4,11)
+
+
+N = len(dat[dat['label'] == True])
+
+G=nx.Graph()
+
+data_nodes = []
+init_pos = {}
+for j, xyn in enumerate(zip(dat[dat['label'] == True]['Falcons'], dat[dat['label'] == True]['stringlis'], dat.index.values)):
+    x,y,n = xyn
+    data_str = 'data_{0}'.format(j)
+    ano_str = n
+    G.add_node(data_str)
+    G.add_node(ano_str)
+    G.add_edge(data_str, ano_str)
+    data_nodes.append(data_str)
+    init_pos[data_str] = (x, y)
+    init_pos[ano_str] = (x*4, y*4)
+
+pos = nx.spring_layout(G, pos=init_pos, fixed=data_nodes, scale=1)
+
+
+for j,n in zip(range(N), dat.index.values):
+    data_str = 'data_{0}'.format(j)
+    ano_str = n
+    ax.annotate(ano_str,
+                xy=pos[data_str], xycoords='data',
+                xytext=pos[ano_str], textcoords='data',
+                arrowprops=dict(arrowstyle="->",
+                                connectionstyle="arc"))
+
+all_pos = np.vstack(pos.values())
+mins = np.min(all_pos, 0)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [552]:
+# text/plain
+: <Figure size 1080x1080 with 1 Axes>
+
+# image/png
+[[file:obipy-resources/bfb6bdeff039ad19195cdcfdc4f4f89e9b31e769/d287efc83a17ea1fd613e03c7c2dc4e4f5c6a1a2.png]]
+:END:
+
+
+** Compare Stringlis to our 05hr and 6hr
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+  size_of_plot = 5
+
+  stringlis_vs_us =
+
+  top, bot = get_two_clustermaps_data(stringlis, size_of_plot)
+  gt = sns.clustermap(top.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [8]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/bfb6bdeff039ad19195cdcfdc4f4f89e9b31e769/b8fc67301b6c3d680f6ccf3fe300c49749e219fa.png]]
+:END:
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  top
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [266]:
+# text/org
+| gene      |    cer_c_05h |   col_c_05h |   lym_c_05h | gene name                                                               |
+|-----------+--------------+-------------+-------------+-------------------------------------------------------------------------|
+| AT1G05675 |  0.00893468  |   6.57562   |    6.90205  | Glycosyltransferase (Fragment)                                          |
+| AT1G05767 |  0.00156277  |   9.08372   |    9.09077  | None                                                                    |
+| AT1G06135 |  0.00237129  |   6.73454   |    7.68988  | Transmembrane protein                                                   |
+| AT1G07160 |  0.00192329  |   7.72379   |    7.1869   | PP2C-type phosphatase AP2C2                                             |
+| AT1G11050 |  0.386889    |   3.01648   |    2.92607  | Probable receptor-like protein kinase At1g11050                         |
+| AT1G19020 |  0.317565    |   3.91422   |    4.48659  | CDP-diacylglycerol-glycerol-3-phosphate 3-phosphatidyltransferase       |
+| AT1G21326 |  0.000630418 |   6.97101   |    6.73914  | F16F4.1 protein                                                         |
+| AT1G42980 |  0.00111285  |   6.03702   |    7.50656  | Formin-like protein 12                                                  |
+| AT1G50280 |  0.196393    |  -0.388256  |   -0.376579 | BTB/POZ domain-containing protein At1g50280                             |
+| AT1G53080 |  0.00196619  |   7.4858    |    5.37267  | Lectin-like protein At1g53080                                           |
+| AT1G56240 |  0.00334292  |   7.35966   |    7.13746  | F-box protein PP2-B13                                                   |
+| AT1G56242 |  0.0158472   |   7.79839   |    7.10416  | other RNA                                                               |
+| AT1G56250 |  0.00327997  |   6.75366   |    7.0003   | F-box protein VBF                                                       |
+| AT1G63350 |  0.171491    |   1.7416    |    1.64759  | Disease resistance protein (CC-NBS-LRR class) family                    |
+| AT1G66500 |  0.34432     |   2.59918   |    2.29259  | Polyadenylation and cleavage factor homolog 1                           |
+| AT1G71520 | -0.000381972 |   7.07642   |    5.61138  | Ethylene-responsive transcription factor ERF020                         |
+| AT1G79680 |  0.00545018  |   7.65734   |    6.86287  | Wall-associated receptor kinase-like 10                                 |
+| AT2G23270 | -0.000456369 |   6.65713   |    7.97412  | At2g23270                                                               |
+| AT2G25297 |  0.000649582 |   8.2495    |    6.09435  | None                                                                    |
+| AT2G29100 | -0.00109021  |   5.67374   |    7.47033  | Glutamate receptor                                                      |
+| AT2G29110 | -0.00103965  |   8.17433   |    6.75335  | Glutamate receptor                                                      |
+| AT2G31345 |  0.000672878 |   8.13632   |    7.70065  | Transmembrane protein                                                   |
+| AT2G32030 |  0.360668    |   5.9818    |    5.83628  | Acyl-CoA N-acyltransferases (NAT) superfamily protein                   |
+| AT2G36430 |  0.527436    |   1.25286   |    1.01045  | Transmembrane protein, putative (DUF247)                                |
+| AT2G36440 | -0.000525888 |   6.31355   |    7.02035  | Uncharacterized protein At2g36440                                       |
+| AT2G36690 |  0.152988    |   3.88175   |    3.37702  | 2-oxoglutarate (2OG) and Fe(II)-dependent oxygenase superfamily protein |
+| AT2G36800 |  0.198698    |   0.906537  |    0.698726 | Glycosyltransferase (Fragment)                                          |
+| AT2G37430 |  0.00434456  |   7.29045   |    7.59681  | ZAT11                                                                   |
+| AT2G41010 |  0.273738    |   2.23082   |    2.31605  | Calmodulin-binding protein 25                                           |
+| AT3G01165 |  0.005025    |   8.62556   |    7.83296  | None                                                                    |
+| AT3G02840 |  0.000596146 |   7.51038   |    7.20897  | ARM repeat superfamily protein                                          |
+| AT3G04135 |  0.000980951 |   5.57737   |    7.16314  | None                                                                    |
+| AT3G13433 | -0.00010119  |   7.14669   |    7.29593  | Transmembrane protein                                                   |
+| AT3G23170 |  0.21665     |   2.1412    |    2.01655  | At3g23170                                                               |
+| AT3G44260 |  0.396441    |   4.00305   |    3.59981  | Probable CCR4-associated factor 1 homolog 9                             |
+| AT3G56790 | -0.00300532  |   7.9763    |    5.20384  | RNA splicing factor-like protein                                        |
+| AT3G56880 |  0.164487    |   2.85295   |    2.6552   | VQ motif-containing protein                                             |
+| AT3G60690 |  0.775347    |   1.38615   |    1.54601  | AT3g60690/T4C21_100                                                     |
+| AT4G01360 |  0.233189    |   2.97734   |    2.33281  | BPS1-like protein                                                       |
+| AT4G04480 |  0           |   7.79414   |    7.89893  | F-box protein with a domain protein                                     |
+| AT4G11470 |  0.00102285  |   8.1234    |    8.05746  | cysteine-rich RLK (RECEPTOR-like protein kinase) 31                     |
+| AT4G18197 |  0.500189    |   3.90951   |    4.02679  | Probable purine permease 7                                              |
+| AT4G22030 | -9.05787e-05 |  10.2178    |    9.9661   | F-box family protein with a domain of unknown function (DUF295)         |
+| AT4G22710 |  0.319379    |   4.32235   |    4.55066  | Cytochrome P450 - like protein                                          |
+| AT4G23190 |  0.20262     |   3.87874   |    3.80667  | Cysteine-rich receptor-like protein kinase 11                           |
+| AT4G28460 | -0.00111522  |  10.54      |    8.4825   | PAMP-induced secreted peptide 1                                         |
+| AT4G31510 |  0.178274    |   1.10968   |    1.20901  | Major centromere autoantigen B-like protein                             |
+| AT4G31550 |  0.204438    |   3.93376   |    3.97634  | Probable WRKY transcription factor 11                                   |
+| AT4G31950 |  0.00206106  |   8.8365    |    8.77984  | CYP82C3                                                                 |
+| AT5G05300 |  0.00347348  |   7.05948   |    6.38294  | Gb                                                                      |
+| AT5G11140 |  0.00159735  |  10.6716    |    9.14866  | Phospholipase-like protein (PEARLI 4) family protein                    |
+| AT5G22250 |  0.477879    |   4.06867   |    3.86216  | Probable CCR4-associated factor 1 homolog 11                            |
+| AT5G24110 | -0.00275784  |   7.95399   |    7.82602  | Probable WRKY transcription factor 30                                   |
+| AT5G47850 |  0.000699677 |   7.54891   |    6.62614  | Serine/threonine-protein kinase-like protein CCR4                       |
+| AT5G53030 |  0.231112    |   0.16589   |    0.213254 | Uncharacterized protein At5g53030                                       |
+| AT5G56960 |  0.00187238  |   5.03033   |    7.05902  | basic helix-loop-helix (bHLH) DNA-binding family protein                |
+| AT5G59320 |  0.825844    |   0.0554799 |    0.233408 | Non-specific lipid-transfer protein 3                                   |
+| AT5G61600 |  0.49286     |   4.37116   |    4.52404  | Ethylene-responsive transcription factor ERF104                         |
+| AT5G62470 |  0.49083     |   3.56957   |    3.3404   | Transcription factor MYB96                                              |
+:END:
+
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session
+  gb = sns.clustermap(bot.set_index('gene name'), cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(20,20))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [267]:
+# text/plain
+: <Figure size 1440x1440 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/e77a762dc857123716befe90c8377aaf6f2b9180/c365a265a55491401f8d27b2586a490fe584a275.png]]
+:END:
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  bot
+#+END_SRC

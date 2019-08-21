@@ -1,0 +1,25 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{pandas} \PYG{k+kn}{as} \PYG{n+nn}{pd}
+\PYG{k+kn}{import} \PYG{n+nn}{warnings}
+\PYG{n}{warnings}\PYG{o}{.}\PYG{n}{filterwarnings}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}ignore\PYGZsq{}}\PYG{p}{)}
+
+
+\PYG{k}{def} \PYG{n+nf}{read\PYGZus{}xl}\PYG{p}{(}\PYG{n}{fn}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}/Users/nathan/PHD/Transcripts/Data/diff\PYGZus{}from\PYGZus{}col0:False\PYGZus{}onlyDiff:False.xlsx\PYGZdq{}}\PYG{p}{):}
+    \PYG{n}{xl} \PYG{o}{=} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{ExcelFile}\PYG{p}{(}\PYG{n}{fn}\PYG{p}{)}
+    \PYG{n}{sheet\PYGZus{}names} \PYG{o}{=} \PYG{n}{xl}\PYG{o}{.}\PYG{n}{sheet\PYGZus{}names}
+    \PYG{n}{dfs} \PYG{o}{=} \PYG{p}{[]}
+    \PYG{k}{for} \PYG{n}{s} \PYG{o+ow}{in} \PYG{n}{sheet\PYGZus{}names}\PYG{p}{:}
+        \PYG{n}{d} \PYG{o}{=} \PYG{n}{xl}\PYG{o}{.}\PYG{n}{parse}\PYG{p}{(}\PYG{n}{s}\PYG{p}{)}
+        \PYG{n}{d}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{]} \PYG{o}{=} \PYG{n}{s}\PYG{o}{.}\PYG{n}{split}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}|\PYGZdq{}}\PYG{p}{)[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{replace}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{dfs}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{d}\PYG{p}{)}
+
+    \PYG{n}{DE} \PYG{o}{=} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{concat}\PYG{p}{(}\PYG{n}{dfs}\PYG{p}{)}
+    \PYG{n}{DE} \PYG{o}{=} \PYG{n}{DE}\PYG{o}{.}\PYG{n}{rename\PYGZus{}axis}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{)}\PYG{o}{.}\PYG{n}{sort\PYGZus{}values}\PYG{p}{(}\PYG{n}{by}\PYG{o}{=}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{],}
+                                            \PYG{n}{ascending}\PYG{o}{=}\PYG{p}{[}\PYG{n+nb+bp}{False}\PYG{p}{,} \PYG{n+nb+bp}{False}\PYG{p}{])}
+    \PYG{k}{return} \PYG{n}{DE}
+
+\PYG{n}{counts} \PYG{o}{=} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{read\PYGZus{}csv}\PYG{p}{(}
+    \PYG{l+s+s2}{\PYGZdq{}/Users/hughesn/PHD/Transcripts/Data/norml\PYGZus{}count\PYGZus{}data.csv\PYGZdq{}}\PYG{p}{,}\PYG{n}{index\PYGZus{}col}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)}
+
+\PYG{n}{counts}\PYG{p}{[[}\PYG{n}{c} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{counts}\PYG{o}{.}\PYG{n}{columns} \PYG{k}{if} \PYG{l+s+s1}{\PYGZsq{}cer\PYGZus{}c\PYGZsq{}} \PYG{o+ow}{in} \PYG{n}{c}\PYG{p}{]]}\PYG{o}{.}\PYG{n}{head}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}
+\end{Verbatim}

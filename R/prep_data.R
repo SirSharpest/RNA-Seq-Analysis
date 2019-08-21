@@ -19,7 +19,7 @@ get_data_and_normalise_edgeR <- function(data_location){
     dgel <- DGEList(count=data, group=groups)
     ## Here we remove those which are <3 in counts per million reads
     s0 <- dim(dgel)[1]
-    dgel <- dgel[rowSums(cpm(dgel)) >= 3,]
+    #dgel <- dgel[rowSums(cpm(dgel)) >= 3,]
     sprintf('%d genes dropped of %d', s0-dim(dgel)[1], s0)
     ## Recalculate sample numbers for normalisation
     dgel$samples$lib.size <- colSums(dgel$counts)

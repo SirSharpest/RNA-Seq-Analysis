@@ -1,0 +1,46 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{def} \PYG{n+nf}{get\PYGZus{}locs}\PYG{p}{(}\PYG{n}{DE}\PYG{p}{,} \PYG{n}{n}\PYG{p}{,} \PYG{n}{include\PYGZus{}large}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{,} \PYG{n}{include\PYGZus{}small}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{):}
+    \PYG{n}{samples} \PYG{o}{=} \PYG{n}{DE}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{unique}\PYG{p}{()}
+    \PYG{n}{locs} \PYG{o}{=} \PYG{p}{[]}
+    \PYG{k}{for} \PYG{n}{idx}\PYG{p}{,} \PYG{n}{s} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{samples}\PYG{p}{):}
+        \PYG{k}{if} \PYG{n}{include\PYGZus{}large}\PYG{p}{:}
+            \PYG{n}{l1} \PYG{o}{=} \PYG{n}{DE}\PYG{p}{[}\PYG{n}{DE}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{]} \PYG{o}{==} \PYG{n}{s}\PYG{p}{][[}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{]]}\PYG{o}{.}\PYG{n}{groupby}\PYG{p}{([}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{])}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{()}\PYG{o}{.}\PYG{n}{sort\PYGZus{}values}\PYG{p}{(}\PYG{n}{by}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{,}
+                                                                                               \PYG{n}{ascending}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}\PYG{o}{.}\PYG{n}{head}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}\PYG{o}{.}\PYG{n}{index}\PYG{o}{.}\PYG{n}{values}
+            \PYG{n}{locs}\PYG{o}{.}\PYG{n}{extend}\PYG{p}{(}\PYG{n}{l1}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n}{include\PYGZus{}small}\PYG{p}{:}
+            \PYG{n}{l2} \PYG{o}{=} \PYG{n}{DE}\PYG{p}{[}\PYG{n}{DE}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{]} \PYG{o}{==} \PYG{n}{s}\PYG{p}{][[}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{]]}\PYG{o}{.}\PYG{n}{groupby}\PYG{p}{([}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{])}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{()}\PYG{o}{.}\PYG{n}{sort\PYGZus{}values}\PYG{p}{(}\PYG{n}{by}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{,}
+                                                                                               \PYG{n}{ascending}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}\PYG{o}{.}\PYG{n}{head}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}\PYG{o}{.}\PYG{n}{index}\PYG{o}{.}\PYG{n}{values}
+            \PYG{n}{locs}\PYG{o}{.}\PYG{n}{extend}\PYG{p}{(}\PYG{n}{l2}\PYG{p}{)}
+    \PYG{n}{locs} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{locs}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{locs}
+
+
+\PYG{k}{def} \PYG{n+nf}{make\PYGZus{}clustermap\PYGZus{}df\PYGZus{}n\PYGZus{}samples}\PYG{p}{(}\PYG{n}{DE}\PYG{p}{,} \PYG{n}{description}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}description\PYGZsq{}}\PYG{p}{,} \PYG{n}{n}\PYG{o}{=}\PYG{l+m+mi}{20}\PYG{p}{,} \PYG{n}{include\PYGZus{}large}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{,} \PYG{n}{include\PYGZus{}small}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{):}
+    \PYG{n}{locs} \PYG{o}{=} \PYG{n}{get\PYGZus{}locs}\PYG{p}{(}\PYG{n}{DE}\PYG{p}{,} \PYG{n}{n}\PYG{p}{,} \PYG{n}{include\PYGZus{}large}\PYG{o}{=}\PYG{n}{include\PYGZus{}large}\PYG{p}{,} \PYG{n}{include\PYGZus{}small}\PYG{o}{=}\PYG{n}{include\PYGZus{}small}\PYG{p}{)}
+    \PYG{n}{top} \PYG{o}{=} \PYG{n}{DE}\PYG{o}{.}\PYG{n}{loc}\PYG{p}{[}\PYG{n}{locs}\PYG{p}{]}
+    \PYG{n}{top} \PYG{o}{=} \PYG{n}{top}\PYG{o}{.}\PYG{n}{groupby}\PYG{p}{([}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{])}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}
+    \PYG{p}{)}\PYG{o}{.}\PYG{n}{reset\PYGZus{}index}\PYG{p}{()}\PYG{o}{.}\PYG{n}{set\PYGZus{}index}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{top} \PYG{o}{=} \PYG{n}{top}\PYG{o}{.}\PYG{n}{pivot}\PYG{p}{(}\PYG{n}{columns}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}sample\PYGZsq{}}\PYG{p}{,} \PYG{n}{values}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{top}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}gene name\PYGZsq{}}\PYG{p}{]} \PYG{o}{=} \PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{get\PYGZus{}gene\PYGZus{}names}\PYG{p}{(}
+        \PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{top}\PYG{o}{.}\PYG{n}{index}\PYG{o}{.}\PYG{n}{values}\PYG{p}{))[}\PYG{n}{description}\PYG{p}{])}
+    \PYG{c+c1}{\PYGZsh{} top = top.set\PYGZus{}index(\PYGZsq{}gene name\PYGZsq{})}
+    \PYG{k}{return} \PYG{n}{top}
+
+
+\PYG{k}{def} \PYG{n+nf}{get\PYGZus{}two\PYGZus{}clustermaps\PYGZus{}data}\PYG{p}{(}\PYG{n}{df}\PYG{p}{,} \PYG{n}{n}\PYG{p}{):}
+    \PYG{n}{top} \PYG{o}{=} \PYG{n}{make\PYGZus{}clustermap\PYGZus{}df\PYGZus{}n\PYGZus{}samples}\PYG{p}{(}\PYG{n}{df}\PYG{p}{,} \PYG{n}{n}\PYG{o}{=}\PYG{n}{n}\PYG{p}{,} \PYG{n}{include\PYGZus{}small}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+    \PYG{n}{bot} \PYG{o}{=} \PYG{n}{make\PYGZus{}clustermap\PYGZus{}df\PYGZus{}n\PYGZus{}samples}\PYG{p}{(}\PYG{n}{df}\PYG{p}{,} \PYG{n}{n}\PYG{o}{=}\PYG{n}{n}\PYG{p}{,} \PYG{n}{include\PYGZus{}large}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+    \PYG{k}{return} \PYG{p}{(}\PYG{n}{top}\PYG{p}{,} \PYG{n}{bot}\PYG{p}{)}
+
+\PYG{k}{def} \PYG{n+nf}{make\PYGZus{}two\PYGZus{}clustermaps}\PYG{p}{(}\PYG{n}{df}\PYG{p}{,} \PYG{n}{n}\PYG{o}{=}\PYG{l+m+mi}{50}\PYG{p}{):}
+    \PYG{n}{top}\PYG{p}{,} \PYG{n}{bot} \PYG{o}{=} \PYG{n}{get\PYGZus{}two\PYGZus{}clustermaps\PYGZus{}data}\PYG{p}{(}\PYG{n}{df}\PYG{p}{,} \PYG{n}{n}\PYG{p}{)}
+    \PYG{n}{gt} \PYG{o}{=} \PYG{n}{sns}\PYG{o}{.}\PYG{n}{clustermap}\PYG{p}{(}\PYG{n}{top}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}bwr\PYGZsq{}}\PYG{p}{,} \PYG{n}{vmin}\PYG{o}{=\PYGZhy{}}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n}{vmax}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n}{yticklabels}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{,} \PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{15}\PYG{p}{,}\PYG{l+m+mi}{15}\PYG{p}{))}
+    \PYG{n}{gb} \PYG{o}{=} \PYG{n}{sns}\PYG{o}{.}\PYG{n}{clustermap}\PYG{p}{(}\PYG{n}{bot}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}bwr\PYGZsq{}}\PYG{p}{,} \PYG{n}{vmin}\PYG{o}{=\PYGZhy{}}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n}{vmax}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n}{yticklabels}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{,} \PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{15}\PYG{p}{,}\PYG{l+m+mi}{15}\PYG{p}{))}
+    \PYG{k}{return} \PYG{p}{(}\PYG{n}{top}\PYG{p}{,} \PYG{n}{bot}\PYG{p}{,} \PYG{n}{gt}\PYG{p}{,} \PYG{n}{gb}\PYG{p}{)}
+
+
+\PYG{k}{def} \PYG{n+nf}{make\PYGZus{}clustermap\PYGZus{}table}\PYG{p}{(}\PYG{n}{df}\PYG{p}{,} \PYG{n}{n}\PYG{o}{=}\PYG{l+m+mi}{50}\PYG{p}{):}
+    \PYG{n}{top} \PYG{o}{=} \PYG{n}{make\PYGZus{}clustermap\PYGZus{}df\PYGZus{}n\PYGZus{}samples}\PYG{p}{(}\PYG{n}{df}\PYG{p}{,} \PYG{n}{n}\PYG{o}{=}\PYG{n}{n}\PYG{p}{,} \PYG{n}{include\PYGZus{}small}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+    \PYG{n}{bot} \PYG{o}{=} \PYG{n}{make\PYGZus{}clustermap\PYGZus{}df\PYGZus{}n\PYGZus{}samples}\PYG{p}{(}\PYG{n}{df}\PYG{p}{,} \PYG{n}{n}\PYG{o}{=}\PYG{n}{n}\PYG{p}{,} \PYG{n}{include\PYGZus{}large}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{concat}\PYG{p}{([}\PYG{n}{top}\PYG{p}{,} \PYG{n}{bot}\PYG{p}{])}
+\end{Verbatim}

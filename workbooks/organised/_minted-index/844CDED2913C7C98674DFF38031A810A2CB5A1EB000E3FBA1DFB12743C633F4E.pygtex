@@ -1,0 +1,7 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{genes} \PYG{o}{=} \PYG{p}{[]}
+\PYG{k}{for} \PYG{n}{r}\PYG{p}{,}\PYG{n}{f} \PYG{o+ow}{in} \PYG{n+nb}{zip}\PYG{p}{(}\PYG{n}{fit}\PYG{o}{.}\PYG{n}{ranking\PYGZus{}}\PYG{p}{,} \PYG{n}{df}\PYG{o}{.}\PYG{n}{columns}\PYG{o}{.}\PYG{n}{values}\PYG{p}{):}
+      \PYG{k}{if} \PYG{n}{r} \PYG{o}{==}\PYG{l+m+mi}{1}\PYG{p}{:}
+            \PYG{n}{genes}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{f}\PYG{p}{)}
+\PYG{n}{get\PYGZus{}gene\PYGZus{}names}\PYG{p}{(}\PYG{n}{genes}\PYG{p}{)}
+\end{Verbatim}

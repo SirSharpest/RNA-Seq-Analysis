@@ -1,0 +1,20 @@
+#+TITLE: RNA-seq Report
+#+OPTIONS:  H:4 ^:nil \n:t
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/setup/theme-bigblow.setup
+
+
+#+HTML_HEAD: <style> #content{max-width:1800px;}</style>
+#+HTML_HEAD: <style> p{max-width:800px;}</style>
+#+HTML_HEAD: <style> li{max-width:800px;}</style>
+#+HTML_HEAD: <style> tbody {display: block;max-height: 300px;overflow-y: scroll;} </style>
+#+HTML_HEAD: <style> thead,tbody tr {display: table;width: 100%;table-layout: fixed;} </style>
+
+
+
+#+INCLUDE: "./setup.org"
+#+INCLUDE: "./cluster_maps.org"
+#+INCLUDE: "./gene_selection.org"
+#+INCLUDE: "./hypothesis_testing.org"
+#+INCLUDE: "./go_terms.org"

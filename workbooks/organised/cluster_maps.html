@@ -1,0 +1,1057 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2019-06-04 Tue 09:42 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>&lrm;</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Nathan Hughes (JIC)" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        displayAlign: "center",
+        displayIndent: "0em",
+
+        "HTML-CSS": { scale: 100,
+                        linebreaks: { automatic: "false" },
+                        webFont: "TeX"
+                       },
+        SVG: {scale: 100,
+              linebreaks: { automatic: "false" },
+              font: "TeX"},
+        NativeMML: {scale: 100},
+        TeX: { equationNumbers: {autoNumber: "AMS"},
+               MultLineWidth: "85%",
+               TagSide: "right",
+               TagIndent: ".8em"
+             }
+});
+</script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<div id="content">
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org29909a5">1. 05hr c/w</a>
+<ul>
+<li><a href="#org1b165a1">1.1. Clustermap of largest/smallest DE genes</a></li>
+<li><a href="#org534e547">1.2. Boxplots of differential changes</a></li>
+</ul>
+</li>
+<li><a href="#org3bace4b">2. 6hr c/w</a>
+<ul>
+<li><a href="#org01cd719">2.1. Clustermap of largest/smallest DE genes</a></li>
+<li><a href="#org39a8868">2.2. Boxplots of differential changes</a></li>
+</ul>
+</li>
+<li><a href="#org50ab584">3. lym 05hr c/w</a>
+<ul>
+<li><a href="#org8c894eb">3.1. Clustermap of largest/smallest DE genes</a></li>
+<li><a href="#orgec16ad7">3.2. Boxplots of differential changes</a></li>
+</ul>
+</li>
+<li><a href="#orgbbb9fe5">4. lym 6hr c/w</a>
+<ul>
+<li><a href="#org8cc3c60">4.1. Clustermap of largest/smallest DE genes</a></li>
+<li><a href="#org89b8eb2">4.2. Boxplots of differential changes</a></li>
+</ul>
+</li>
+<li><a href="#org09c6b6c">5. all genotypes across time</a>
+<ul>
+<li><a href="#orgda606b6">5.1. Clustermap of largest/smallest DE genes</a></li>
+<li><a href="#orgc4e0fb9">5.2. Boxplots of differential changes</a></li>
+<li><a href="#org875f1be">5.3. Lineplots of changes between samples for genes of interest</a></li>
+<li><a href="#org214cd96">5.4. Checking up and down data's largest</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org29909a5" class="outline-2">
+<h2 id="org29909a5"><span class="section-number-2">1</span> 05hr c/w</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+These treatments are comparing the X axis to their water treatments, not to each other, selection is done with the 10 most upregulated genes from each 3 genotypes, and pooled together for reference across genotypes.
+ The second heatmap is the same, only it is downregulated top 10 for each
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #D8DEE9;">DE_pairings_05hr</span> = read_xl<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">'/Users/hughesn/PHD/Transcripts/Data/pairings_05hr.xlsx'</span><span style="color: #8FBCBB;">)</span>
+</pre>
+</div>
+</div>
+
+
+<div id="outline-container-org1b165a1" class="outline-3">
+<h3 id="org1b165a1"><span class="section-number-3">1.1</span> Clustermap of largest/smallest DE genes</h3>
+<div class="outline-text-3" id="text-1-1">
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #81A1C1;">import</span> matplotlib.pyplot <span style="color: #81A1C1;">as</span> plt
+<span style="color: #81A1C1;">import</span> seaborn <span style="color: #81A1C1;">as</span> sns
+<span style="color: #81A1C1;">import</span> numpy <span style="color: #81A1C1;">as</span> np
+%matplotlib inline
+make_two_clustermaps<span style="color: #8FBCBB;">(</span>DE_pairings_05hr, n=10<span style="color: #8FBCBB;">)</span>
+
+</pre>
+</div>
+
+<pre class="example">
+&lt;Figure size 720x720 with 4 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/384a5b8d1959576a2479e38efbe99e05746b2508.png" alt="384a5b8d1959576a2479e38efbe99e05746b2508.png" />
+</p>
+</div>
+
+<pre class="example">
+&lt;Figure size 720x720 with 4 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/2956fef86cdb7fef3f1fc0336577b42a633ba97f.png" alt="2956fef86cdb7fef3f1fc0336577b42a633ba97f.png" />
+</p>
+</div>
+</div>
+</div>
+
+
+
+<div id="outline-container-org534e547" class="outline-3">
+<h3 id="org534e547"><span class="section-number-3">1.2</span> Boxplots of differential changes</h3>
+<div class="outline-text-3" id="text-1-2">
+<pre class="example">
+&lt;Figure size 1080x360 with 2 Axes&gt;
+
+</pre>
+
+
+<div id="orgcc47c96" class="figure">
+<p><img src="obipy-resources/pairings_05hr_boxplots.png" alt="pairings_05hr_boxplots.png" width="850px" />
+</p>
+<p><span class="figure-number">Figure 3: </span>Boxplots of differential expressions from 50 largest (left) and 50 lowe05hst (right) DE genes</p>
+</div>
+
+
+<p>
+\clearpage
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3bace4b" class="outline-2">
+<h2 id="org3bace4b"><span class="section-number-2">2</span> 6hr c/w</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+These treatments are comparing the X axis to their water treatments, not to each other, selection is done with the 10 most upregulated genes from each 3 genotypes, and pooled together for reference across genotypes.
+ The second heatmap is the same, only it is downregulated top 10 for each
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #D8DEE9;">DE_pairings_6hr</span> = read_xl<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">'/Users/hughesn/PHD/Transcripts/Data/pairings_6hr.xlsx'</span><span style="color: #8FBCBB;">)</span>
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org01cd719" class="outline-3">
+<h3 id="org01cd719"><span class="section-number-3">2.1</span> Clustermap of largest/smallest DE genes</h3>
+<div class="outline-text-3" id="text-2-1">
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #81A1C1;">import</span> matplotlib.pyplot <span style="color: #81A1C1;">as</span> plt
+<span style="color: #81A1C1;">import</span> seaborn <span style="color: #81A1C1;">as</span> sns
+<span style="color: #81A1C1;">import</span> numpy <span style="color: #81A1C1;">as</span> np
+%matplotlib inline
+
+make_two_clustermaps<span style="color: #8FBCBB;">(</span>DE_pairings_6hr, n=10<span style="color: #8FBCBB;">)</span>
+
+
+</pre>
+</div>
+
+<pre class="example">
+&lt;Figure size 720x720 with 4 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/27053162e46c053828971bef81d956b3f7e9a490.png" alt="27053162e46c053828971bef81d956b3f7e9a490.png" />
+</p>
+</div>
+
+<pre class="example">
+&lt;Figure size 720x720 with 4 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/ed937ebb166b8ea42a903209e3e5a97e82123a59.png" alt="ed937ebb166b8ea42a903209e3e5a97e82123a59.png" />
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org39a8868" class="outline-3">
+<h3 id="org39a8868"><span class="section-number-3">2.2</span> Boxplots of differential changes</h3>
+<div class="outline-text-3" id="text-2-2">
+<pre class="example">
+&lt;Figure size 1080x360 with 2 Axes&gt;
+
+</pre>
+
+
+<div id="org64afbd8" class="figure">
+<p><img src="obipy-resources/pairings_6hr_boxplots.png" alt="pairings_6hr_boxplots.png" width="850px" />
+</p>
+<p><span class="figure-number">Figure 6: </span>Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes</p>
+</div>
+
+
+
+<p>
+\clearpage
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org50ab584" class="outline-2">
+<h2 id="org50ab584"><span class="section-number-2">3</span> lym 05hr c/w</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+These treatments are comparing the X axis to their lym counter part. e.g. cer<sub>w</sub> is compared to lym<sub>w</sub> and col<sub>c</sub> is compared to lym<sub>c</sub>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #D8DEE9;">DE_pairings_to_lym_05hr</span> = read_xl<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">'/Users/hughesn/PHD/Transcripts/Data/pairings_to_lym_05hr.xlsx'</span><span style="color: #8FBCBB;">)</span>
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org8c894eb" class="outline-3">
+<h3 id="org8c894eb"><span class="section-number-3">3.1</span> Clustermap of largest/smallest DE genes</h3>
+<div class="outline-text-3" id="text-3-1">
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #81A1C1;">import</span> matplotlib.pyplot <span style="color: #81A1C1;">as</span> plt
+<span style="color: #81A1C1;">import</span> seaborn <span style="color: #81A1C1;">as</span> sns
+<span style="color: #81A1C1;">import</span> numpy <span style="color: #81A1C1;">as</span> np
+%matplotlib inline
+make_two_clustermaps<span style="color: #8FBCBB;">(</span>DE_pairings_to_lym_05hr, n=10<span style="color: #8FBCBB;">)</span>
+
+</pre>
+</div>
+
+<pre class="example">
+&lt;Figure size 720x720 with 4 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/38f963f596a7e16c887db5595838656510ce8ebd.png" alt="38f963f596a7e16c887db5595838656510ce8ebd.png" />
+</p>
+</div>
+
+<pre class="example">
+&lt;Figure size 720x720 with 4 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/07b9050e44a77bc19a28abf0f99fd4b549ed974e.png" alt="07b9050e44a77bc19a28abf0f99fd4b549ed974e.png" />
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgec16ad7" class="outline-3">
+<h3 id="orgec16ad7"><span class="section-number-3">3.2</span> Boxplots of differential changes</h3>
+<div class="outline-text-3" id="text-3-2">
+<pre class="example">
+&lt;Figure size 1080x360 with 2 Axes&gt;
+
+</pre>
+
+
+<div id="org1570ba9" class="figure">
+<p><img src="obipy-resources/pairings_05hr_lym_boxplots.png" alt="pairings_05hr_lym_boxplots.png" width="850px" />
+</p>
+<p><span class="figure-number">Figure 9: </span>Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes</p>
+</div>
+
+
+<p>
+\clearpage
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgbbb9fe5" class="outline-2">
+<h2 id="orgbbb9fe5"><span class="section-number-2">4</span> lym 6hr c/w</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+These treatments are comparing the X axis to their lym counter part. e.g. cer<sub>w</sub> is compared to lym<sub>w</sub> and col<sub>c</sub> is compared to lym<sub>c</sub>.
+</p>
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #D8DEE9;">DE_pairings_to_lym_6hr</span> = read_xl<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">'/Users/hughesn/PHD/Transcripts/Data/pairings_to_lym_6hr.xlsx'</span><span style="color: #8FBCBB;">)</span>
+</pre>
+</div>
+</div>
+
+
+<div id="outline-container-org8cc3c60" class="outline-3">
+<h3 id="org8cc3c60"><span class="section-number-3">4.1</span> Clustermap of largest/smallest DE genes</h3>
+<div class="outline-text-3" id="text-4-1">
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #81A1C1;">import</span> matplotlib.pyplot <span style="color: #81A1C1;">as</span> plt
+<span style="color: #81A1C1;">import</span> seaborn <span style="color: #81A1C1;">as</span> sns
+<span style="color: #81A1C1;">import</span> numpy <span style="color: #81A1C1;">as</span> np
+%matplotlib inline
+
+make_two_clustermaps<span style="color: #8FBCBB;">(</span>DE_pairings_to_lym_6hr, n=10<span style="color: #8FBCBB;">)</span>
+
+
+
+</pre>
+</div>
+
+<pre class="example">
+&lt;Figure size 720x720 with 4 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/81329caccb22c1c5c10dbdc8f02fd586f0fd377e.png" alt="81329caccb22c1c5c10dbdc8f02fd586f0fd377e.png" />
+</p>
+</div>
+
+<pre class="example">
+&lt;Figure size 720x720 with 4 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/a7398d39fd79f29f417ae53d41924aee2c280281.png" alt="a7398d39fd79f29f417ae53d41924aee2c280281.png" />
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org89b8eb2" class="outline-3">
+<h3 id="org89b8eb2"><span class="section-number-3">4.2</span> Boxplots of differential changes</h3>
+<div class="outline-text-3" id="text-4-2">
+<pre class="example">
+&lt;Figure size 1080x360 with 2 Axes&gt;
+
+</pre>
+
+
+<div id="org7beeced" class="figure">
+<p><img src="obipy-resources/pairings_6hr_lym_boxplots.png" alt="pairings_6hr_lym_boxplots.png" width="850px" />
+</p>
+<p><span class="figure-number">Figure 12: </span>Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes</p>
+</div>
+
+
+<p>
+\clearpage
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org09c6b6c" class="outline-2">
+<h2 id="org09c6b6c"><span class="section-number-2">5</span> all genotypes across time</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+Here these figures show the change for each treatment from it's 30min (05hr) to their 6hr counterpart.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #D8DEE9;">DE_cross_time_pairings</span> = read_xl<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">'/Users/hughesn/PHD/Transcripts/Data/cross_time_pairings.xlsx'</span><span style="color: #8FBCBB;">)</span>
+</pre>
+</div>
+</div>
+
+
+<div id="outline-container-orgda606b6" class="outline-3">
+<h3 id="orgda606b6"><span class="section-number-3">5.1</span> Clustermap of largest/smallest DE genes</h3>
+<div class="outline-text-3" id="text-5-1">
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #81A1C1;">import</span> matplotlib.pyplot <span style="color: #81A1C1;">as</span> plt
+<span style="color: #81A1C1;">import</span> seaborn <span style="color: #81A1C1;">as</span> sns
+<span style="color: #81A1C1;">import</span> numpy <span style="color: #81A1C1;">as</span> np
+%matplotlib inline
+
+make_two_clustermaps<span style="color: #8FBCBB;">(</span>DE_cross_time_pairings, n=10<span style="color: #8FBCBB;">)</span>
+
+</pre>
+</div>
+
+<pre class="example">
+&lt;Figure size 720x720 with 4 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/e92555b69f4f07ec2b3f8e711ed88b8dbe17c687.png" alt="e92555b69f4f07ec2b3f8e711ed88b8dbe17c687.png" />
+</p>
+</div>
+
+<pre class="example">
+&lt;Figure size 720x720 with 4 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/5606a8e491c69602ebc3199c1d72599041052d72.png" alt="5606a8e491c69602ebc3199c1d72599041052d72.png" />
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgc4e0fb9" class="outline-3">
+<h3 id="orgc4e0fb9"><span class="section-number-3">5.2</span> Boxplots of differential changes</h3>
+<div class="outline-text-3" id="text-5-2">
+<pre class="example">
+&lt;Figure size 1080x360 with 2 Axes&gt;
+
+</pre>
+
+
+<div id="org8ae9861" class="figure">
+<p><img src="obipy-resources/pairings_timingsr_boxplots.png" alt="pairings_timingsr_boxplots.png" width="850px" />
+</p>
+<p><span class="figure-number">Figure 15: </span>Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org875f1be" class="outline-3">
+<h3 id="org875f1be"><span class="section-number-3">5.3</span> Lineplots of changes between samples for genes of interest</h3>
+<div class="outline-text-3" id="text-5-3">
+<p>
+These lineplots are looking at the rate of change between the each sample's most up/down regulated genes (top 5 for each genotype/sample).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #81A1C1;">import</span> matplotlib.pyplot <span style="color: #81A1C1;">as</span> plt
+<span style="color: #81A1C1;">import</span> seaborn <span style="color: #81A1C1;">as</span> sns
+<span style="color: #81A1C1;">import</span> numpy <span style="color: #81A1C1;">as</span> np
+<span style="color: #D8DEE9;">DE_cross_time_pairings</span> = read_xl<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">'/Users/hughesn/PHD/Transcripts/Data/cross_time_pairings.xlsx'</span><span style="color: #8FBCBB;">)</span>
+
+<span style="color: #81A1C1;">def</span> <span style="color: #88C0D0;">get_linedata</span><span style="color: #8FBCBB;">(</span>time_pair_df, n=5, include_large=<span style="color: #81A1C1;">True</span>, include_small=<span style="color: #81A1C1;">True</span><span style="color: #8FBCBB;">)</span>:
+    <span style="color: #D8DEE9;">top</span> = time_pair_df.groupby<span style="color: #8FBCBB;">(</span>
+        <span style="color: #88C0D0;">[</span><span style="color: #A3BE8C;">'sample'</span>, <span style="color: #A3BE8C;">'gene'</span><span style="color: #88C0D0;">]</span><span style="color: #8FBCBB;">)</span>.mean<span style="color: #8FBCBB;">()</span>.reset_index<span style="color: #8FBCBB;">()</span>.set_index<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">'gene'</span><span style="color: #8FBCBB;">)</span>
+    <span style="color: #D8DEE9;">locs</span> = get_locs<span style="color: #8FBCBB;">(</span>top, n, include_large=include_large,
+                    include_small=include_small<span style="color: #8FBCBB;">)</span>
+    <span style="color: #D8DEE9;">tc</span> = counts.loc<span style="color: #8FBCBB;">[</span>locs<span style="color: #8FBCBB;">]</span>
+    <span style="color: #D8DEE9;">tc</span> = tc.T.reset_index<span style="color: #8FBCBB;">()</span>
+    <span style="color: #D8DEE9;">tc</span><span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'sample'</span><span style="color: #8FBCBB;">]</span> = tc<span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'index'</span><span style="color: #8FBCBB;">]</span>.<span style="color: #81A1C1;">apply</span><span style="color: #8FBCBB;">(</span><span style="color: #81A1C1;">lambda</span> x: <span style="color: #81A1C1;">str</span><span style="color: #88C0D0;">(</span>x<span style="color: #88C0D0;">)</span>.rsplit<span style="color: #88C0D0;">(</span><span style="color: #A3BE8C;">'_'</span>, 1<span style="color: #88C0D0;">)[</span>0<span style="color: #88C0D0;">]</span><span style="color: #8FBCBB;">)</span>
+    <span style="color: #D8DEE9;">tc</span> = tc.set_index<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">'index'</span><span style="color: #8FBCBB;">)</span>
+    <span style="color: #D8DEE9;">tc</span> = tc.reset_index<span style="color: #8FBCBB;">()</span>.melt<span style="color: #8FBCBB;">(</span>id_vars=<span style="color: #88C0D0;">[</span><span style="color: #A3BE8C;">'index'</span>, <span style="color: #A3BE8C;">'sample'</span><span style="color: #88C0D0;">]</span><span style="color: #8FBCBB;">)</span>
+    tc.rename<span style="color: #8FBCBB;">(</span>columns=<span style="color: #88C0D0;">{</span><span style="color: #A3BE8C;">'index'</span>: <span style="color: #A3BE8C;">'id'</span><span style="color: #88C0D0;">}</span>, inplace=<span style="color: #81A1C1;">True</span><span style="color: #8FBCBB;">)</span>
+    <span style="color: #D8DEE9;">tc</span><span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'time'</span><span style="color: #8FBCBB;">]</span> = tc<span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'sample'</span><span style="color: #8FBCBB;">]</span>.<span style="color: #81A1C1;">apply</span><span style="color: #8FBCBB;">(</span><span style="color: #81A1C1;">lambda</span> x: <span style="color: #81A1C1;">str</span><span style="color: #88C0D0;">(</span>x<span style="color: #88C0D0;">)</span>.rsplit<span style="color: #88C0D0;">(</span><span style="color: #A3BE8C;">'_'</span>, 1<span style="color: #88C0D0;">)[</span>-1<span style="color: #88C0D0;">]</span><span style="color: #8FBCBB;">)</span>
+    <span style="color: #D8DEE9;">tc</span><span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'treatment'</span><span style="color: #8FBCBB;">]</span> = tc<span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'id'</span><span style="color: #8FBCBB;">]</span>.<span style="color: #81A1C1;">apply</span><span style="color: #8FBCBB;">(</span><span style="color: #81A1C1;">lambda</span> x: <span style="color: #81A1C1;">str</span><span style="color: #88C0D0;">(</span>x<span style="color: #88C0D0;">)</span>.split<span style="color: #88C0D0;">(</span><span style="color: #A3BE8C;">'_'</span><span style="color: #88C0D0;">)[</span>1<span style="color: #88C0D0;">]</span><span style="color: #8FBCBB;">)</span>
+    <span style="color: #D8DEE9;">tc</span><span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'geno'</span><span style="color: #8FBCBB;">]</span> = tc<span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'id'</span><span style="color: #8FBCBB;">]</span>.<span style="color: #81A1C1;">apply</span><span style="color: #8FBCBB;">(</span><span style="color: #81A1C1;">lambda</span> x: <span style="color: #81A1C1;">str</span><span style="color: #88C0D0;">(</span>x<span style="color: #88C0D0;">)</span>.split<span style="color: #88C0D0;">(</span><span style="color: #A3BE8C;">'_'</span><span style="color: #88C0D0;">)[</span>0<span style="color: #88C0D0;">]</span><span style="color: #8FBCBB;">)</span>
+    <span style="color: #D8DEE9;">tc</span><span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'sample'</span><span style="color: #8FBCBB;">]</span> = tc<span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'sample'</span><span style="color: #8FBCBB;">]</span>.<span style="color: #81A1C1;">apply</span><span style="color: #8FBCBB;">(</span><span style="color: #81A1C1;">lambda</span> x: <span style="color: #81A1C1;">str</span><span style="color: #88C0D0;">(</span>x<span style="color: #88C0D0;">)[</span>:5<span style="color: #88C0D0;">]</span><span style="color: #8FBCBB;">)</span>
+    <span style="color: #81A1C1;">return</span> tc
+
+
+<span style="color: #81A1C1;">def</span> <span style="color: #88C0D0;">generate_plots_method_2</span><span style="color: #8FBCBB;">(</span>df<span style="color: #8FBCBB;">)</span>:
+    <span style="color: #81A1C1;">for</span> s <span style="color: #81A1C1;">in</span> df<span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'sample'</span><span style="color: #8FBCBB;">]</span>.unique<span style="color: #8FBCBB;">()</span>:
+        <span style="color: #D8DEE9;">tdf</span> = get_linedata<span style="color: #8FBCBB;">(</span>df<span style="color: #88C0D0;">[</span>df<span style="color: #81A1C1;">[</span><span style="color: #A3BE8C;">'sample'</span><span style="color: #81A1C1;">]</span> == s<span style="color: #88C0D0;">]</span>, include_small=<span style="color: #81A1C1;">False</span>, include_large=<span style="color: #81A1C1;">True</span><span style="color: #8FBCBB;">)</span>
+        <span style="color: #D8DEE9;">fig</span>, <span style="color: #D8DEE9;">axes</span> = plt.subplots<span style="color: #8FBCBB;">(</span>
+            2, <span style="color: #81A1C1;">len</span><span style="color: #88C0D0;">(</span>tdf<span style="color: #81A1C1;">[</span><span style="color: #A3BE8C;">'variable'</span><span style="color: #81A1C1;">]</span>.unique<span style="color: #81A1C1;">()</span><span style="color: #88C0D0;">)</span>, figsize=<span style="color: #88C0D0;">(</span>20,10<span style="color: #88C0D0;">)</span><span style="color: #8FBCBB;">)</span>
+        <span style="color: #D8DEE9;">j</span> = -1
+        <span style="color: #81A1C1;">for</span> v <span style="color: #81A1C1;">in</span> tdf<span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'variable'</span><span style="color: #8FBCBB;">]</span>.unique<span style="color: #8FBCBB;">()</span>:
+            <span style="color: #D8DEE9;">i</span> = 1
+            <span style="color: #D8DEE9;">j</span> = j+1
+
+            sns.lineplot<span style="color: #8FBCBB;">(</span>data=tdf<span style="color: #88C0D0;">[</span>tdf<span style="color: #81A1C1;">[</span><span style="color: #A3BE8C;">'variable'</span><span style="color: #81A1C1;">]</span>==v<span style="color: #88C0D0;">]</span>, x=<span style="color: #A3BE8C;">'time'</span>, y=<span style="color: #A3BE8C;">'value'</span>, err_style=<span style="color: #A3BE8C;">"bars"</span>,
+                         hue=<span style="color: #A3BE8C;">'geno'</span>, style=<span style="color: #A3BE8C;">"treatment"</span>, ax=axes<span style="color: #88C0D0;">[</span>i, j<span style="color: #88C0D0;">]</span>, legend=<span style="color: #81A1C1;">False</span><span style="color: #8FBCBB;">)</span>
+            axes<span style="color: #8FBCBB;">[</span>i, j<span style="color: #8FBCBB;">]</span>.set_title<span style="color: #8FBCBB;">(</span>v<span style="color: #8FBCBB;">)</span>
+
+        <span style="color: #D8DEE9;">tdf</span> = get_linedata<span style="color: #8FBCBB;">(</span>df<span style="color: #88C0D0;">[</span>df<span style="color: #81A1C1;">[</span><span style="color: #A3BE8C;">'sample'</span><span style="color: #81A1C1;">]</span> == s<span style="color: #88C0D0;">]</span>, include_small=<span style="color: #81A1C1;">True</span>, include_large=<span style="color: #81A1C1;">False</span><span style="color: #8FBCBB;">)</span>
+        <span style="color: #D8DEE9;">j</span> = -1
+        <span style="color: #81A1C1;">for</span>  v <span style="color: #81A1C1;">in</span> tdf<span style="color: #8FBCBB;">[</span><span style="color: #A3BE8C;">'variable'</span><span style="color: #8FBCBB;">]</span>.unique<span style="color: #8FBCBB;">()</span>:
+            <span style="color: #D8DEE9;">i</span> = 0
+            <span style="color: #D8DEE9;">j</span> = j+1
+            <span style="color: #81A1C1;">if</span> j+1 == <span style="color: #81A1C1;">len</span><span style="color: #8FBCBB;">(</span>tdf<span style="color: #88C0D0;">[</span><span style="color: #A3BE8C;">'variable'</span><span style="color: #88C0D0;">]</span>.unique<span style="color: #88C0D0;">()</span><span style="color: #8FBCBB;">)</span>:
+                sns.lineplot<span style="color: #8FBCBB;">(</span>data=tdf<span style="color: #88C0D0;">[</span>tdf<span style="color: #81A1C1;">[</span><span style="color: #A3BE8C;">'variable'</span><span style="color: #81A1C1;">]</span>==v<span style="color: #88C0D0;">]</span>, x=<span style="color: #A3BE8C;">'time'</span>, y=<span style="color: #A3BE8C;">'value'</span>, err_style=<span style="color: #A3BE8C;">"bars"</span>,
+                             hue=<span style="color: #A3BE8C;">'geno'</span>, style=<span style="color: #A3BE8C;">"treatment"</span>, ax=axes<span style="color: #88C0D0;">[</span>i, j<span style="color: #88C0D0;">]</span><span style="color: #8FBCBB;">)</span>
+            <span style="color: #81A1C1;">else</span>:
+                sns.lineplot<span style="color: #8FBCBB;">(</span>data=tdf<span style="color: #88C0D0;">[</span>tdf<span style="color: #81A1C1;">[</span><span style="color: #A3BE8C;">'variable'</span><span style="color: #81A1C1;">]</span>==v<span style="color: #88C0D0;">]</span>, x=<span style="color: #A3BE8C;">'time'</span>, y=<span style="color: #A3BE8C;">'value'</span>, err_style=<span style="color: #A3BE8C;">"bars"</span>,
+                             hue=<span style="color: #A3BE8C;">'geno'</span>, style=<span style="color: #A3BE8C;">"treatment"</span>, ax=axes<span style="color: #88C0D0;">[</span>i, j<span style="color: #88C0D0;">]</span>, legend=<span style="color: #81A1C1;">False</span><span style="color: #8FBCBB;">)</span>
+            axes<span style="color: #8FBCBB;">[</span>i, j<span style="color: #8FBCBB;">]</span>.set_title<span style="color: #8FBCBB;">(</span>v<span style="color: #8FBCBB;">)</span>
+
+        fig.suptitle<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">"Largest upreg (top row) and downreg (bottom row) DE genes for sample{0}"</span>.<span style="color: #81A1C1;">format</span><span style="color: #88C0D0;">(</span>s<span style="color: #88C0D0;">)</span><span style="color: #8FBCBB;">)</span>
+generate_plots_method_2<span style="color: #8FBCBB;">(</span>DE_cross_time_pairings<span style="color: #8FBCBB;">)</span>
+</pre>
+</div>
+
+<pre class="example">
+&lt;Figure size 1440x720 with 10 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/2e1dcdd476268fa47acba4442cf4062685d3139d.png" alt="2e1dcdd476268fa47acba4442cf4062685d3139d.png" />
+</p>
+</div>
+
+<pre class="example">
+&lt;Figure size 1440x720 with 10 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/ed7878489b5bbff80688c7060b2971a1bd60819f.png" alt="ed7878489b5bbff80688c7060b2971a1bd60819f.png" />
+</p>
+</div>
+
+<pre class="example">
+&lt;Figure size 1440x720 with 10 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/0805b9264e8195cc516bdcaf83864078969dc75a.png" alt="0805b9264e8195cc516bdcaf83864078969dc75a.png" />
+</p>
+</div>
+
+<pre class="example">
+&lt;Figure size 1440x720 with 10 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/8b57079270a2e48588aa55d8e02c6651fe7b127e.png" alt="8b57079270a2e48588aa55d8e02c6651fe7b127e.png" />
+</p>
+</div>
+
+<pre class="example">
+&lt;Figure size 1440x720 with 10 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/0b103b5da66d0203307c2aa52ed83582444394ce.png" alt="0b103b5da66d0203307c2aa52ed83582444394ce.png" />
+</p>
+</div>
+
+<pre class="example">
+&lt;Figure size 1440x720 with 10 Axes&gt;
+
+</pre>
+
+
+<div class="figure">
+<p><img src="obipy-resources/8aa424957eacd474a32a28b58ec1f9611cea8fbf/544b67ff3a90a381b5fd6de277e9a9107f810e2e.png" alt="544b67ff3a90a381b5fd6de277e9a9107f810e2e.png" />
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org214cd96" class="outline-3">
+<h3 id="org214cd96"><span class="section-number-3">5.4</span> Checking up and down data's largest</h3>
+<div class="outline-text-3" id="text-5-4">
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #D8DEE9;">DE_cross_time_pairings</span> = read_xl<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">'/Users/hughesn/PHD/Transcripts/Data/cross_time_pairings.xlsx'</span><span style="color: #8FBCBB;">)</span>
+<span style="color: #D8DEE9;">n</span> = 5
+<span style="color: #D8DEE9;">df</span> = DE_cross_time_pairings
+<span style="color: #D8DEE9;">s</span> = <span style="color: #81A1C1;">list</span><span style="color: #8FBCBB;">(</span>df<span style="color: #88C0D0;">[</span><span style="color: #A3BE8C;">'sample'</span><span style="color: #88C0D0;">]</span>.unique<span style="color: #88C0D0;">()</span><span style="color: #8FBCBB;">)[</span>0<span style="color: #8FBCBB;">]</span>
+<span style="color: #4c566a;">#</span><span style="color: #4c566a;">tdf =  get_linedata(df[df['sample'] == s], include_small=True, include_large=False)</span>
+<span style="color: #4c566a;">#</span><span style="color: #4c566a;">tdf.head(10)</span>
+
+<span style="color: #D8DEE9;">df</span> = df<span style="color: #8FBCBB;">[</span>df<span style="color: #88C0D0;">[</span><span style="color: #A3BE8C;">'sample'</span><span style="color: #88C0D0;">]</span> == s<span style="color: #8FBCBB;">]</span>
+<span style="color: #D8DEE9;">top</span> = df.groupby<span style="color: #8FBCBB;">(</span>
+    <span style="color: #88C0D0;">[</span><span style="color: #A3BE8C;">'sample'</span>, <span style="color: #A3BE8C;">'gene'</span><span style="color: #88C0D0;">]</span><span style="color: #8FBCBB;">)</span>.mean<span style="color: #8FBCBB;">()</span>.reset_index<span style="color: #8FBCBB;">()</span>.set_index<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">'gene'</span><span style="color: #8FBCBB;">)</span>
+<span style="color: #D8DEE9;">locs</span> = get_locs<span style="color: #8FBCBB;">(</span>top, n, include_large=<span style="color: #81A1C1;">True</span>,
+                include_small=<span style="color: #81A1C1;">False</span><span style="color: #8FBCBB;">)</span>
+<span style="color: #D8DEE9;">top</span>=top.loc<span style="color: #8FBCBB;">[</span>locs<span style="color: #8FBCBB;">]</span>
+<span style="color: #D8DEE9;">bot</span> = df.groupby<span style="color: #8FBCBB;">(</span>
+    <span style="color: #88C0D0;">[</span><span style="color: #A3BE8C;">'sample'</span>, <span style="color: #A3BE8C;">'gene'</span><span style="color: #88C0D0;">]</span><span style="color: #8FBCBB;">)</span>.mean<span style="color: #8FBCBB;">()</span>.reset_index<span style="color: #8FBCBB;">()</span>.set_index<span style="color: #8FBCBB;">(</span><span style="color: #A3BE8C;">'gene'</span><span style="color: #8FBCBB;">)</span>
+<span style="color: #D8DEE9;">locs</span> = get_locs<span style="color: #8FBCBB;">(</span>bot, n, include_large=<span style="color: #81A1C1;">False</span>,
+                include_small=<span style="color: #81A1C1;">True</span><span style="color: #8FBCBB;">)</span>
+<span style="color: #D8DEE9;">bot</span>=bot.loc<span style="color: #8FBCBB;">[</span>locs<span style="color: #8FBCBB;">]</span>
+<span style="color: #D8DEE9;">top_and_bot</span> = pd.concat<span style="color: #8FBCBB;">(</span><span style="color: #88C0D0;">[</span>top, bot<span style="color: #88C0D0;">]</span><span style="color: #8FBCBB;">)</span>
+<span style="color: #D8DEE9;">filter_cols</span> = <span style="color: #8FBCBB;">[</span>c <span style="color: #81A1C1;">for</span> c <span style="color: #81A1C1;">in</span> counts <span style="color: #81A1C1;">if</span> <span style="color: #88C0D0;">(</span>c.startswith<span style="color: #81A1C1;">(</span>s<span style="color: #81A1C1;">)</span> <span style="color: #81A1C1;">or</span> c.startswith<span style="color: #81A1C1;">(</span>s.replace<span style="color: #5E81AC;">(</span><span style="color: #A3BE8C;">'05h'</span>, <span style="color: #A3BE8C;">'6h'</span><span style="color: #5E81AC;">)</span><span style="color: #81A1C1;">)</span><span style="color: #88C0D0;">)</span><span style="color: #8FBCBB;">]</span>
+pd.merge<span style="color: #8FBCBB;">(</span>top_and_bot, counts<span style="color: #88C0D0;">[</span>filter_cols<span style="color: #88C0D0;">]</span>, left_index=<span style="color: #81A1C1;">True</span>, right_index=<span style="color: #81A1C1;">True</span><span style="color: #8FBCBB;">)</span>
+
+</pre>
+</div>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">&#xa0;</th>
+<th scope="col" class="org-left">sample</th>
+<th scope="col" class="org-right">baseMean</th>
+<th scope="col" class="org-right">log2FoldChange</th>
+<th scope="col" class="org-right">lfcSE</th>
+<th scope="col" class="org-right">stat</th>
+<th scope="col" class="org-right">pvalue</th>
+<th scope="col" class="org-right">padj</th>
+<th scope="col" class="org-right">lym<sub>c</sub><sub>05h</sub><sub>a21</sub></th>
+<th scope="col" class="org-right">lym<sub>c</sub><sub>05h</sub><sub>b22</sub></th>
+<th scope="col" class="org-right">lym<sub>c</sub><sub>05h</sub><sub>c23</sub></th>
+<th scope="col" class="org-right">lym<sub>c</sub><sub>6h</sub><sub>a69</sub></th>
+<th scope="col" class="org-right">lym<sub>c</sub><sub>6h</sub><sub>b70</sub></th>
+<th scope="col" class="org-right">lym<sub>c</sub><sub>6h</sub><sub>d72</sub></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">AT5G11140</td>
+<td class="org-left">lym<sub>c</sub><sub>05h</sub></td>
+<td class="org-right">193.93</td>
+<td class="org-right">8.02627</td>
+<td class="org-right">0.302206</td>
+<td class="org-right">14.2693</td>
+<td class="org-right">3.39885e-46</td>
+<td class="org-right">1.77167e-44</td>
+<td class="org-right">10.0746</td>
+<td class="org-right">10.0683</td>
+<td class="org-right">10.2896</td>
+<td class="org-right">5.94226</td>
+<td class="org-right">5.60783</td>
+<td class="org-right">5.91306</td>
+</tr>
+
+<tr>
+<td class="org-left">AT3G01165</td>
+<td class="org-left">lym<sub>c</sub><sub>05h</sub></td>
+<td class="org-right">199.868</td>
+<td class="org-right">7.47067</td>
+<td class="org-right">0.29057</td>
+<td class="org-right">17.4156</td>
+<td class="org-right">6.27809e-68</td>
+<td class="org-right">4.93084e-66</td>
+<td class="org-right">10.2797</td>
+<td class="org-right">9.96508</td>
+<td class="org-right">10.3646</td>
+<td class="org-right">6.07973</td>
+<td class="org-right">5.86799</td>
+<td class="org-right">5.91306</td>
+</tr>
+
+<tr>
+<td class="org-left">AT1G07160</td>
+<td class="org-left">lym<sub>c</sub><sub>05h</sub></td>
+<td class="org-right">489.663</td>
+<td class="org-right">7.27727</td>
+<td class="org-right">0.303962</td>
+<td class="org-right">20.531</td>
+<td class="org-right">1.13789e-93</td>
+<td class="org-right">1.42224e-91</td>
+<td class="org-right">11.4944</td>
+<td class="org-right">11.4053</td>
+<td class="org-right">11.551</td>
+<td class="org-right">6.15194</td>
+<td class="org-right">6.15713</td>
+<td class="org-right">6.21495</td>
+</tr>
+
+<tr>
+<td class="org-left">AT4G31950</td>
+<td class="org-left">lym<sub>c</sub><sub>05h</sub></td>
+<td class="org-right">62.134</td>
+<td class="org-right">7.24523</td>
+<td class="org-right">0.333259</td>
+<td class="org-right">9.31583</td>
+<td class="org-right">1.21003e-20</td>
+<td class="org-right">3.04446e-19</td>
+<td class="org-right">9.02695</td>
+<td class="org-right">8.85273</td>
+<td class="org-right">8.77664</td>
+<td class="org-right">5.60783</td>
+<td class="org-right">5.60783</td>
+<td class="org-right">5.60783</td>
+</tr>
+
+<tr>
+<td class="org-left">AT1G05767</td>
+<td class="org-left">lym<sub>c</sub><sub>05h</sub></td>
+<td class="org-right">39.595</td>
+<td class="org-right">6.55168</td>
+<td class="org-right">0.344912</td>
+<td class="org-right">8.7192</td>
+<td class="org-right">2.80169e-18</td>
+<td class="org-right">6.36071e-17</td>
+<td class="org-right">8.51408</td>
+<td class="org-right">8.23432</td>
+<td class="org-right">8.45238</td>
+<td class="org-right">5.60783</td>
+<td class="org-right">5.60783</td>
+<td class="org-right">5.60783</td>
+</tr>
+
+<tr>
+<td class="org-left">AT5G39120</td>
+<td class="org-left">lym<sub>c</sub><sub>05h</sub></td>
+<td class="org-right">134.311</td>
+<td class="org-right">-3.77404</td>
+<td class="org-right">0.244364</td>
+<td class="org-right">-14.8739</td>
+<td class="org-right">4.87108e-50</td>
+<td class="org-right">2.76202e-48</td>
+<td class="org-right">6.81626</td>
+<td class="org-right">6.77907</td>
+<td class="org-right">6.72882</td>
+<td class="org-right">9.37176</td>
+<td class="org-right">9.16792</td>
+<td class="org-right">9.66175</td>
+</tr>
+
+<tr>
+<td class="org-left">AT1G31173</td>
+<td class="org-left">lym<sub>c</sub><sub>05h</sub></td>
+<td class="org-right">29.224</td>
+<td class="org-right">-3.17483</td>
+<td class="org-right">0.344681</td>
+<td class="org-right">-6.50649</td>
+<td class="org-right">7.69248e-11</td>
+<td class="org-right">1.12916e-09</td>
+<td class="org-right">5.60783</td>
+<td class="org-right">5.60783</td>
+<td class="org-right">5.60783</td>
+<td class="org-right">7.04642</td>
+<td class="org-right">6.68769</td>
+<td class="org-right">7.24795</td>
+</tr>
+
+<tr>
+<td class="org-left">AT3G09275</td>
+<td class="org-left">lym<sub>c</sub><sub>05h</sub></td>
+<td class="org-right">529.907</td>
+<td class="org-right">-3.09702</td>
+<td class="org-right">0.18082</td>
+<td class="org-right">-16.9667</td>
+<td class="org-right">1.44802e-64</td>
+<td class="org-right">1.0586e-62</td>
+<td class="org-right">7.48199</td>
+<td class="org-right">7.25206</td>
+<td class="org-right">6.99692</td>
+<td class="org-right">9.38704</td>
+<td class="org-right">9.70817</td>
+<td class="org-right">9.78729</td>
+</tr>
+
+<tr>
+<td class="org-left">AT1G49205</td>
+<td class="org-left">lym<sub>c</sub><sub>05h</sub></td>
+<td class="org-right">37.8818</td>
+<td class="org-right">-3.00666</td>
+<td class="org-right">0.326604</td>
+<td class="org-right">-7.27043</td>
+<td class="org-right">3.5835e-13</td>
+<td class="org-right">6.1802e-12</td>
+<td class="org-right">5.84268</td>
+<td class="org-right">5.60783</td>
+<td class="org-right">6.10935</td>
+<td class="org-right">6.98954</td>
+<td class="org-right">7.20347</td>
+<td class="org-right">7.17624</td>
+</tr>
+
+<tr>
+<td class="org-left">AT5G61590</td>
+<td class="org-left">lym<sub>c</sub><sub>05h</sub></td>
+<td class="org-right">467.208</td>
+<td class="org-right">-2.92774</td>
+<td class="org-right">0.178787</td>
+<td class="org-right">-16.2392</td>
+<td class="org-right">2.66458e-59</td>
+<td class="org-right">1.78006e-57</td>
+<td class="org-right">7.05217</td>
+<td class="org-right">7.5295</td>
+<td class="org-right">7.21094</td>
+<td class="org-right">9.33478</td>
+<td class="org-right">9.62606</td>
+<td class="org-right">9.63805</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Nathan Hughes (JIC)</p>
+<p class="date">Created: 2019-06-04 Tue 09:42</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

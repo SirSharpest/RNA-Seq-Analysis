@@ -1,0 +1,24 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{sklearn.tree} \PYG{k+kn}{import} \PYG{n}{DecisionTreeClassifier}
+\PYG{n}{rfe\PYGZus{}forest} \PYG{o}{=} \PYG{n}{counts}\PYG{o}{.}\PYG{n}{loc}\PYG{p}{[}\PYG{n}{genes}\PYG{p}{][[}\PYG{n}{c} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{counts}\PYG{o}{.}\PYG{n}{columns} \PYG{k}{if} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}col\PYGZsq{}} \PYG{o+ow}{in} \PYG{n}{c} \PYG{o+ow}{or} \PYG{l+s+s1}{\PYGZsq{}lym\PYGZsq{}} \PYG{o+ow}{in} \PYG{n}{c} \PYG{o+ow}{or} \PYG{l+s+s1}{\PYGZsq{}cer\PYGZsq{}} \PYG{o+ow}{in} \PYG{n}{c}\PYG{p}{)]]}\PYG{o}{.}\PYG{n}{T}
+\PYG{n}{rfe\PYGZus{}forest} \PYG{o}{=} \PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{loc}\PYG{p}{[:,}\PYG{o}{\PYGZti{}}\PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{columns}\PYG{o}{.}\PYG{n}{duplicated}\PYG{p}{()]}
+\PYG{n}{rfe\PYGZus{}forest} \PYG{o}{=} \PYG{n}{rfe\PYGZus{}forest}\PYG{p}{[[}\PYG{n}{c} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n+nb}{set}\PYG{p}{(}\PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{columns}\PYG{o}{.}\PYG{n}{values}\PYG{p}{)]]}
+
+\PYG{n}{feat\PYGZus{}labels} \PYG{o}{=} \PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{columns}\PYG{o}{.}\PYG{n}{values}
+\PYG{n}{y} \PYG{o}{=} \PYG{p}{[}\PYG{n}{d}\PYG{o}{.}\PYG{n}{rsplit}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZus{}\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{k}{for} \PYG{n}{d} \PYG{o+ow}{in} \PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{index}\PYG{o}{.}\PYG{n}{values}\PYG{p}{]}
+
+\PYG{n}{X\PYGZus{}train}\PYG{p}{,} \PYG{n}{X\PYGZus{}test}\PYG{p}{,} \PYG{n}{y\PYGZus{}train}\PYG{p}{,} \PYG{n}{y\PYGZus{}test} \PYG{o}{=} \PYG{n}{train\PYGZus{}test\PYGZus{}split}\PYG{p}{(}\PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{values}\PYG{p}{,} \PYG{n}{y}\PYG{p}{,} \PYG{n}{test\PYGZus{}size}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{random\PYGZus{}state}\PYG{o}{=}\PYG{l+m+mi}{42}\PYG{p}{)}
+\PYG{n}{gnb} \PYG{o}{=} \PYG{n}{DecisionTreeClassifier}\PYG{p}{()}
+\PYG{n}{gnb} \PYG{o}{=} \PYG{n}{gnb}\PYG{o}{.}\PYG{n}{fit}\PYG{p}{(}\PYG{n}{X\PYGZus{}train}\PYG{p}{,} \PYG{n}{y\PYGZus{}train}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Export as dot file}
+\PYG{n}{export\PYGZus{}graphviz}\PYG{p}{(}\PYG{n}{gnb}\PYG{p}{,} \PYG{n}{out\PYGZus{}file}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}./tree.dot\PYGZsq{}}\PYG{p}{,}
+                \PYG{n}{feature\PYGZus{}names} \PYG{o}{=} \PYG{n}{get\PYGZus{}gene\PYGZus{}names}\PYG{p}{(}\PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{feat\PYGZus{}labels}\PYG{p}{))[}\PYG{l+s+s1}{\PYGZsq{}description\PYGZsq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{values}\PYG{p}{,}
+                \PYG{n}{class\PYGZus{}names} \PYG{o}{=} \PYG{n+nb}{list}\PYG{p}{(}\PYG{n+nb}{set}\PYG{p}{(}\PYG{n}{y}\PYG{p}{)),}
+                \PYG{n}{rounded} \PYG{o}{=} \PYG{n+nb+bp}{True}\PYG{p}{,} \PYG{n}{proportion} \PYG{o}{=} \PYG{n+nb+bp}{False}\PYG{p}{,}
+                \PYG{n}{precision} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{filled} \PYG{o}{=} \PYG{n+nb+bp}{True}\PYG{p}{)}
+\PYG{c+c1}{\PYGZsh{} Convert to png using system command (requires Graphviz)}
+\PYG{k+kn}{from} \PYG{n+nn}{subprocess} \PYG{k+kn}{import} \PYG{n}{call}
+\PYG{n}{\PYGZus{}}\PYG{o}{=}\PYG{n}{call}\PYG{p}{([}\PYG{l+s+s1}{\PYGZsq{}dot\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}\PYGZhy{}Tpng\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}./tree.dot\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}\PYGZhy{}o\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}./tree.png\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}\PYGZhy{}Gdpi=50\PYGZsq{}}\PYG{p}{])}
+\PYG{k}{print}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}[[./tree.png]]\PYGZsq{}}\PYG{p}{)}
+\end{Verbatim}

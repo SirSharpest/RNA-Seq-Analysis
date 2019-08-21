@@ -1,0 +1,831 @@
+% Created 2019-05-30 Thu 08:17
+% Intended LaTeX compiler: pdflatex
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\usepackage{minted}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{amssymb,amsmath}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\usepackage{lastpage}
+\usepackage{float}
+\restylefloat{figure}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\hypersetup{urlcolor=blue}
+\usepackage{titlesec}
+\setcounter{secnumdepth}{4}
+\usepackage{minted}
+\setminted{frame=single,framesep=10pt}
+\chead{}
+\rhead{\today}
+\cfoot{}
+\rfoot{\thepage\ of \pageref{LastPage}}
+\usepackage[parfill]{parskip}
+\usepackage{subfig}
+\usepackage[sort&compress, numbers]{natbib}
+\hypersetup{colorlinks=true,linkcolor=black, citecolor=black}
+\usepackage{framed}
+\usepackage{mathtools, cases}
+\author{Nathan Hughes (JIC)}
+\date{\today}
+\title{RNA-seq Report}
+\hypersetup{
+ pdfauthor={Nathan Hughes (JIC)},
+ pdftitle={RNA-seq Report},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 26.1 (Org mode 9.1.9)},
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\maketitle
+\clearpage
+\tableofcontents
+\clearpage
+
+\section{General helper functions}
+\label{sec:orgcd628f4}
+
+\subsection{Making nice tables}
+\label{sec:orga1cf8fc}
+
+\begin{minted}[frame=lines,linenos=true,fontfamily=Monaco]{ipython}
+import tabulate
+import IPython
+
+class OrgFormatter(IPython.core.formatters.BaseFormatter):
+    format_type = IPython.core.formatters.Unicode('text/org')
+    print_method = IPython.core.formatters.ObjectName('_repr_org_')
+
+def pd_dataframe_to_org(df):
+    return tabulate.tabulate(df, headers='keys', tablefmt='orgtbl', showindex='always')
+
+ip = get_ipython()
+ip.display_formatter.formatters['text/org'] = OrgFormatter()
+
+f = ip.display_formatter.formatters['text/org']
+f.for_type_by_name('pandas.core.frame', 'DataFrame', pd_dataframe_to_org)
+\end{minted}
+
+
+\subsection{Excel reader and loading count data}
+\label{sec:org7e9ed19}
+\begin{minted}[frame=lines,linenos=true,fontfamily=Monaco]{ipython}
+import pandas as pd
+import warnings
+warnings.filterwarnings('ignore')
+
+
+def read_xl(fn="/Users/nathan/PHD/Transcripts/Data/diff_from_col0:False_onlyDiff:False.xlsx"):
+    xl = pd.ExcelFile(fn)
+    sheet_names = xl.sheet_names
+    dfs = []
+    for s in sheet_names:
+        d = xl.parse(s)
+        d['sample'] = s.split("|")[0].replace(" ", "")
+        dfs.append(d)
+
+    DE = pd.concat(dfs)
+    DE = DE.rename_axis('gene').sort_values(by=['gene', 'log2FoldChange'],
+                                            ascending=[False, False])
+    return DE
+
+counts = pd.read_csv(
+    "/Users/hughesn/PHD/Transcripts/Data/norml_count_data.csv",index_col=0)
+counts[[c for c in counts.columns if 'cer_c' in c]].head(5)
+\end{minted}
+
+\begin{center}
+\begin{tabular}{lrrrrrr}
+ & cer\_c\_05h\_a37 & cer\_c\_05h\_b38 & cer\_c\_05h\_c39 & cer\_c\_6h\_a85 & cer\_c\_6h\_b86 & cer\_c\_6h\_c87\\
+\hline
+AT1G01010 & 7.65333 & 7.73449 & 7.5679 & 7.63575 & 7.62055 & 7.81064\\
+AT1G01020 & 7.93999 & 7.79909 & 7.79347 & 7.95616 & 7.924 & 7.88399\\
+AT1G01030 & 7.27285 & 7.09544 & 7.00389 & 6.88372 & 6.72014 & 6.58998\\
+AT1G01040 & 9.16837 & 9.09566 & 9.13567 & 9.05724 & 9.0856 & 9.21304\\
+AT1G01050 & 9.825 & 9.80514 & 9.76124 & 9.82781 & 9.91565 & 9.77211\\
+\end{tabular}
+\end{center}
+
+\subsection{Gprofiler function}
+\label{sec:org83696fe}
+\begin{minted}[frame=lines,linenos=true,fontfamily=Monaco]{ipython}
+from gprofiler import GProfiler
+
+def get_gene_names(geneList):
+
+    gp = GProfiler(return_dataframe=True)
+    df = gp.convert(organism='athaliana',
+               query=geneList)[['incoming', 'name', 'description']]
+    df['description'] = df.apply(lambda x: x['description'].split('[')[0].split(';')[0], axis=1)
+    return df
+get_gene_names(list(counts.head(5).index))
+\end{minted}
+
+\begin{center}
+\begin{tabular}{rlll}
+ & incoming & name & description\\
+\hline
+0 & AT1G01010 & NAC001 & NAC domain-containing protein 1\\
+1 & AT1G01020 & ARV1 & ARV1 family protein\\
+2 & AT1G01030 & NGA3 & B3 domain-containing transcription factor NGA3\\
+3 & AT1G01040 & DCL1 & Dicer-like 1\\
+4 & AT1G01050 & PPA1 & Soluble inorganic pyrophosphatase 1\\
+\end{tabular}
+\end{center}
+
+
+\section{Recursive Feature Elimination}
+\label{sec:org8a8f50e}
+
+\subsection{25 vars}
+\label{sec:org3e8da90}
+\begin{minted}[frame=lines,linenos=true,fontfamily=Monaco]{ipython}
+from sklearn.feature_selection import RFE, RFECV
+from sklearn.linear_model import LogisticRegression
+
+# load data
+DE_pairings_05hr = read_xl('./Data/pairings_05hr.xlsx')
+sig = DE_pairings_05hr[DE_pairings_05hr['padj'] < 0.05]
+sig = sig['log2FoldChange'].sort_values()
+locs = sig.index
+df = counts.loc[locs][[c for c in counts.columns if ('_05h' in c and 'col' in c)]].T
+df = df.loc[:,~df.columns.duplicated()]
+df = df[[c for c in set(df.columns.values)]]
+\end{minted}
+
+\begin{minted}[frame=lines,linenos=true,fontfamily=Monaco]{ipython}
+# Feature Extraction with RFE
+X = df.values
+y = [y.rsplit('_',1)[0] for y in df.reset_index()['index']]
+# feature extraction
+model = LogisticRegression()
+rfe = RFE(model, n_features_to_select=25)
+fit = rfe.fit(X, y)
+print("Num Features: {0}".format(fit.n_features_))
+print("Selected Features: {0}".format(fit.support_))
+print("Feature Ranking: {0}".format(fit.ranking_))
+\end{minted}
+
+Num Features: 25
+Selected Features: [False False False \ldots{} False False False]
+Feature Ranking: [ 394 3832 2928 \ldots{} 3537 4774 1915]
+
+
+\begin{center}
+\begin{tabular}{rlll}
+ & incoming & name & description\\
+\hline
+0 & AT5G61590 & ERF107 & Ethylene-responsive transcription factor ERF107\\
+1 & AT1G25440 & COL16 & Zinc finger protein CONSTANS-LIKE 16\\
+2 & AT1G56242 & AT1G56242 & other RNA\\
+3 & AT5G24110 & WRKY30 & Probable WRKY transcription factor 30\\
+4 & AT2G21210 & AT2G21210 & SAUR-like auxin-responsive protein family\\
+5 & AT3G09275 & AT3G09275 & None\\
+6 & AT1G07160 & AT1G07160 & PP2C-type phosphatase AP2C2\\
+7 & AT2G18440 & GUT15 & GUT15 (GENE WITH UNSTABLE TRANSCRIPT 15)\\
+8 & AT1G14540 & PER4 & Peroxidase\\
+9 & AT1G56240 & PP2B13 & F-box protein PP2-B13\\
+10 & AT2G37430 & ZAT11 & ZAT11\\
+11 & AT5G60390 & A1 & Elongation factor 1-alpha 4\\
+12 & AT5G11140 & AT5G11140 & Phospholipase-like protein (PEARLI 4) family protein\\
+13 & AT3G02840 & AT3G02840 & ARM repeat superfamily protein\\
+14 & AT5G59780 & MYB59 & Transcription factor MYB59\\
+15 & AT5G47230 & ERF5 & ERF5\\
+16 & AT4G38840 & AT4G38840 & At4g38840\\
+17 & AT5G37260 & RVE2 & Protein REVEILLE 2\\
+18 & AT5G27420 & ATL31 & E3 ubiquitin-protein ligase ATL31\\
+19 & AT4G19700 & BOI & E3 ubiquitin-protein ligase BOI\\
+20 & AT1G68520 & COL6 & Zinc finger protein CONSTANS-LIKE 6\\
+21 & AT5G25350 & EBF2 & EIN3-binding F-box protein 2\\
+22 & AT1G66090 & AT1G66090 & Disease resistance protein (TIR-NBS class)\\
+23 & AT1G72520 & LOX4 & Lipoxygenase 4, chloroplastic\\
+24 & AT3G59940 & SKIP20 & F-box/kelch-repeat protein SKIP20\\
+\end{tabular}
+\end{center}
+
+
+\subsubsection{Forest on this RFE set}
+\label{sec:org4c0e844}
+
+\begin{center}
+\begin{tabular}{lrll}
+gene & importance & name & description\\
+\hline
+AT1G68520 & 0.03995 & COL6 & Zinc finger protein CONSTANS-LIKE 6\\
+AT1G72520 & 0.03995 & LOX4 & Lipoxygenase 4, chloroplastic\\
+AT1G56242 & 0.03875 & AT1G56242 & other RNA\\
+AT1G25440 & 0.03825 & COL16 & Zinc finger protein CONSTANS-LIKE 16\\
+AT3G59940 & 0.03805 & SKIP20 & F-box/kelch-repeat protein SKIP20\\
+AT5G59780 & 0.0379 & MYB59 & Transcription factor MYB59\\
+AT1G66090 & 0.0379 & AT1G66090 & Disease resistance protein (TIR-NBS class)\\
+AT4G38840 & 0.03775 & AT4G38840 & At4g38840\\
+AT5G37260 & 0.0377 & RVE2 & Protein REVEILLE 2\\
+AT1G07160 & 0.0377 & AT1G07160 & PP2C-type phosphatase AP2C2\\
+AT5G27420 & 0.03745 & ATL31 & E3 ubiquitin-protein ligase ATL31\\
+AT5G11140 & 0.03705 & AT5G11140 & Phospholipase-like protein (PEARLI 4) family protein\\
+AT5G24110 & 0.0369 & WRKY30 & Probable WRKY transcription factor 30\\
+AT5G47230 & 0.0369 & ERF5 & ERF5\\
+AT3G09275 & 0.03685 & AT3G09275 & None\\
+AT2G21210 & 0.0367 & AT2G21210 & SAUR-like auxin-responsive protein family\\
+AT5G61590 & 0.03665 & ERF107 & Ethylene-responsive transcription factor ERF107\\
+AT4G19700 & 0.0365 & BOI & E3 ubiquitin-protein ligase BOI\\
+AT3G02840 & 0.03645 & AT3G02840 & ARM repeat superfamily protein\\
+AT2G18440 & 0.0362 & GUT15 & GUT15 (GENE WITH UNSTABLE TRANSCRIPT 15)\\
+AT1G14540 & 0.0361 & PER4 & Peroxidase\\
+AT2G37430 & 0.0354 & ZAT11 & ZAT11\\
+AT1G56240 & 0.035 & PP2B13 & F-box protein PP2-B13\\
+AT5G25350 & 0.03455 & EBF2 & EIN3-binding F-box protein 2\\
+AT5G60390 & 0.02035 & A1 & Elongation factor 1-alpha 4\\
+\end{tabular}
+\end{center}
+
+\begin{verbatim}
+<Figure size 432x288 with 1 Axes>
+\end{verbatim}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=.9\linewidth]{obipy-resources/featbar.png}
+\caption{\label{featbar}
+Genes importance in determining Chitin and Water tr :tangle recursive\_feature.pyeatments in Col0}
+\end{figure}
+
+
+\subsection{25 vars}
+\label{sec:org85b15b4}
+\begin{minted}[frame=lines,linenos=true,fontfamily=Monaco]{ipython}
+from sklearn.feature_selection import RFE, RFECV
+from sklearn.linear_model import LogisticRegression
+
+# load data
+DE_pairings_05hr = read_xl('./Data/pairings_05hr.xlsx')
+sig = DE_pairings_05hr[DE_pairings_05hr['padj'] < 0.05]
+sig = sig['log2FoldChange'].sort_values()
+locs = sig.index
+df = counts.loc[locs][[c for c in counts.columns if ('_05h' in c and 'col' in c)]].T
+df = df.loc[:,~df.columns.duplicated()]
+df = df[[c for c in set(df.columns.values)]]
+\end{minted}
+
+\begin{minted}[frame=lines,linenos=true,fontfamily=Monaco]{ipython}
+# Feature Extraction with RFE
+X = df.values
+y = [y.rsplit('_',1)[0] for y in df.reset_index()['index']]
+# feature extraction
+model = LogisticRegression()
+rfe = RFE(model, n_features_to_select=250)
+fit = rfe.fit(X, y)
+print("Num Features: {0}".format(fit.n_features_))
+print("Selected Features: {0}".format(fit.support_))
+print("Feature Ranking: {0}".format(fit.ranking_))
+\end{minted}
+
+Num Features: 250
+Selected Features: [False False False \ldots{} False False False]
+Feature Ranking: [ 169 3607 2703 \ldots{} 3312 4549 1690]
+
+
+\begin{center}
+\begin{tabular}{rlll}
+ & incoming & name & description\\
+\hline
+0 & AT5G51190 & ERF105 & Ethylene-responsive transcription factor ERF105\\
+1 & AT2G47440 & AT2G47440 & Tetratricopeptide repeat (TPR)-like superfamily protein\\
+2 & AT1G15690 & AVP1 & VHP1\\
+3 & AT2G41840 & RPS2C & 40S ribosomal protein S2-3\\
+4 & AT2G43340 & AT2G43340 & At2g43340\\
+5 & AT4G31550 & WRKY11 & Probable WRKY transcription factor 11\\
+6 & AT1G78100 & AT1G78100 & AUF1\\
+7 & AT5G61590 & ERF107 & Ethylene-responsive transcription factor ERF107\\
+8 & AT5G20290 & RPS8A & 40S ribosomal protein S8\\
+9 & AT3G29000 & CML45 & Probable calcium-binding protein CML45\\
+10 & AT5G64905 & PEP3 & Elicitor peptide 3\\
+11 & AT1G25440 & COL16 & Zinc finger protein CONSTANS-LIKE 16\\
+12 & AT3G53870 & RPS3B & 40S ribosomal protein S3-2\\
+13 & AT1G56242 & AT1G56242 & other RNA\\
+14 & AT1G80080 & TMM & TMM\\
+15 & AT2G25735 & AT2G25735 & Expressed protein\\
+16 & AT1G30370 & AT1G30370 & DLAH\\
+17 & AT2G01180 & ATPAP1 & phosphatidic acid phosphatase 1\\
+18 & AT5G15870 & AT5G15870 & Glycosyl hydrolase family 81 protein\\
+19 & AT5G61570 & AT5G61570 & Protein kinase superfamily protein\\
+20 & AT1G13930 & AT1G13930 & At1g13930/F16A14.27\\
+21 & AT3G22121 & AT3G22121 & other RNA\\
+22 & AT5G24110 & WRKY30 & Probable WRKY transcription factor 30\\
+23 & AT2G21210 & AT2G21210 & SAUR-like auxin-responsive protein family\\
+24 & AT5G61600 & ERF104 & Ethylene-responsive transcription factor ERF104\\
+25 & AT3G49010 & RPL13B & 60S ribosomal protein L13-1\\
+26 & AT4G13930 & SHM4 & Serine hydroxymethyltransferase 4\\
+27 & AT3G63200 & PLP9 & Probable inactive patatin-like protein 9\\
+28 & AT4G16720 & RPL15A & Ribosomal protein L15\\
+29 & AT2G10940 & AT2G10940 & At2g10940/F15K19.1\\
+30 & AT2G40140 & CZF1 & Zinc finger CCCH domain-containing protein 29\\
+31 & AT1G50040 & AT1G50040 & F2J10.8 protein\\
+32 & AT4G27280 & KRP1 & Calcium-binding protein KRP1\\
+33 & AT1G67430 & RPL17B & 60S ribosomal protein L17-2\\
+34 & AT3G28340 & GATL10 & Hexosyltransferase (Fragment)\\
+35 & AT5G59730 & ATEXO70H7 & Exocyst subunit Exo70 family protein\\
+36 & AT4G38860 & AT4G38860 & At4g38860\\
+37 & AT1G26380 & FOX1 & Berberine bridge enzyme-like 3\\
+38 & AT4G14450 & AT4G14450 & Uncharacterized protein At4g14450, chloroplastic\\
+39 & AT1G61360 & AT1G61360 & Serine/threonine-protein kinase\\
+40 & AT1G72370 & RPSAA & 40S ribosomal protein SA\\
+41 & AT4G18197 & PUP7 & Probable purine permease 7\\
+42 & AT1G59590 & ZCF37 & At1g59590\\
+43 & AT2G35930 & PUB23 & E3 ubiquitin-protein ligase PUB23\\
+44 & AT1G27730 & ZAT10 & Zinc finger protein ZAT10\\
+45 & AT1G79110 & BRG2 & Probable BOI-related E3 ubiquitin-protein ligase 2\\
+46 & AT3G18710 & PUB29 & RING-type E3 ubiquitin transferase\\
+47 & AT2G45180 & AT2G45180 & At2g45180/T14P1.1\\
+48 & AT5G56030 & HSP81-2 & Heat shock protein 81-2\\
+49 & AT1G78170 & AT1G78170 & E3 ubiquitin-protein ligase\\
+50 & AT1G19020 & AT1G19020 & CDP-diacylglycerol-glycerol-3-phosphate 3-phosphatidyltransferase\\
+51 & AT2G21660 & RBG7 & Glycine-rich RNA-binding protein 7\\
+52 & AT5G41750 & AT5G41750 & Disease resistance protein (TIR-NBS-LRR class) family\\
+53 & AT3G55980 & SZF1 & Salt-inducible zinc finger 1\\
+54 & AT3G23810 & SAHH2 & Adenosylhomocysteinase\\
+55 & AT5G57760 & AT5G57760 & At5g57760\\
+56 & AT1G12090 & ELP & ELP\\
+57 & AT5G25340 & AT5G25340 & Ubiquitin-like superfamily protein\\
+58 & AT3G23250 & MYB15 & Transcription factor MYB15\\
+59 & AT1G24145 & AT1G24145 & At1g24145\\
+60 & AT5G44680 & AT5G44680 & DNA glycosylase superfamily protein\\
+61 & AT3G44260 & CAF1-9 & Probable CCR4-associated factor 1 homolog 9\\
+62 & AT2G36530 & ENO2 & LOS2\\
+63 & AT2G28000 & CPN60A1 & SLP\\
+64 & AT4G13940 & SAHH1 & Adenosylhomocysteinase 1\\
+65 & AT1G09780 & PGM1 & IPGAM1\\
+66 & AT1G61560 & MLO6 & MLO-like protein 6\\
+67 & AT4G01250 & WRKY22 & WRKY transcription factor 22\\
+68 & AT3G50930 & HSR4 & Protein HYPER-SENSITIVITY-RELATED 4\\
+69 & AT4G39260 & RBG8 & GRP8\\
+70 & AT3G05590 & RPL18B & RPL18\\
+71 & AT3G25520 & ATL5 & RPL5A\\
+72 & AT4G34760 & SAUR50 & Auxin-responsive protein SAUR50\\
+73 & AT3G21150 & BBX32 & B-box zinc finger protein 32\\
+74 & AT5G03240 & UBQ3 & Ubiquitin 4\\
+75 & AT5G02870 & RPL4D & 60S ribosomal protein L4-2\\
+76 & AT5G49910 & HSP70-7 & Heat shock 70 kDa protein 7, chloroplastic\\
+77 & AT5G59732 & AT5G59732 & other RNA\\
+78 & AT4G22030 & AT4G22030 & F-box family protein with a domain of unknown function (DUF295)\\
+79 & AT2G22880 & AT2G22880 & At2g22880\\
+80 & AT2G31880 & SOBIR1 & Leucine-rich repeat receptor-like serine/threonine/tyrosine-protein kinase SOBIR1\\
+81 & AT3G04840 & RPS3AA & 40S ribosomal protein S3a-1\\
+82 & AT3G09275 & AT3G09275 & None\\
+83 & AT5G15845 & AT5G15845 & other RNA\\
+84 & AT2G02630 & AT2G02630 & Cysteine/Histidine-rich C1 domain family protein\\
+85 & AT3G60245 & RPL37AC & 60S ribosomal protein L37a-2\\
+86 & AT4G23180 & CRK10 & Cysteine-rich receptor-like protein kinase 10\\
+87 & AT5G65630 & GTE7 & Transcription factor GTE7\\
+88 & AT3G58120 & BZIP61 & BZIP61\\
+89 & AT1G68550 & ERF118 & Ethylene-responsive transcription factor ERF118\\
+90 & AT1G07160 & AT1G07160 & PP2C-type phosphatase AP2C2\\
+91 & AT4G17390 & RPL15B & 60S ribosomal protein L15-2\\
+92 & AT1G78080 & RAP2-4 & Ethylene-responsive transcription factor RAP2-4\\
+93 & AT4G23810 & WRKY53 & Probable WRKY transcription factor 53\\
+94 & AT5G14700 & AT5G14700 & Cinnamoyl CoA reductase-like protein\\
+95 & AT4G34950 & AT4G34950 & Major facilitator superfamily protein\\
+96 & AT1G21120 & AT1G21120 & O-methyltransferase family protein\\
+97 & AT2G29110 & ATGLR2.8 & Glutamate receptor\\
+98 & AT1G05675 & UGT74E1 & Glycosyltransferase (Fragment)\\
+99 & AT5G20630 & GER3 & Germin-like protein subfamily 3 member 3\\
+100 & AT4G14365 & XBAT34 & Putative E3 ubiquitin-protein ligase XBAT34\\
+101 & AT3G09500 & RPL35A & 60S ribosomal protein L35-1\\
+102 & AT1G14320 & RPL10A & 60S ribosomal protein L10-1\\
+103 & AT5G22250 & CAF1-11 & Probable CCR4-associated factor 1 homolog 11\\
+104 & AT3G19680 & AT3G19680 & Uncharacterized protein At3g19680\\
+105 & AT2G18440 & GUT15 & GUT15 (GENE WITH UNSTABLE TRANSCRIPT 15)\\
+106 & AT5G52050 & DTX50 & Protein DETOXIFICATION 50\\
+107 & AT4G24570 & PUMP4 & DIC2\\
+108 & AT1G74850 & PTAC2 & PTAC2\\
+109 & AT5G17920 & MS1 & 5-methyltetrahydropteroyltriglutamate--homocysteine methyltransferase 1\\
+110 & AT2G38470 & WRKY33 & WRKY33\\
+111 & AT5G01542 & AT5G01542 & Potential natural antisense gene, locus overlaps with AT5G01540\\
+112 & AT4G14370 & AT4G14370 & Disease resistance protein (TIR-NBS-LRR class) family\\
+113 & AT4G37540 & LBD39 & LOB domain-containing protein 39\\
+114 & AT1G50750 & AT1G50750 & Plant mobile domain protein family\\
+115 & AT1G18080 & RACK1A & RACK1A\_AT\\
+116 & AT2G44670 & FLZ3 & FCS-Like Zinc finger 3\\
+117 & AT1G10020 & AT1G10020 & At1g10020\\
+118 & AT5G01540 & LECRK62 & L-type lectin-domain containing receptor kinase VI.2\\
+119 & AT2G17040 & anac036 & NAC domain containing protein 36\\
+120 & AT1G61340 & AT1G61340 & F-box protein At1g61340\\
+121 & AT3G62870 & RPL7AB & 60S ribosomal protein L7a-2\\
+122 & AT1G05575 & AT1G05575 & Transmembrane protein\\
+123 & AT1G69760 & AT1G69760 & At1g69760\\
+124 & AT1G14540 & PER4 & Peroxidase\\
+125 & AT2G34480 & AT2G34480 & Ribosomal protein L18ae/LX family protein\\
+126 & AT5G56010 & HSP90-3 & Heat shock protein 90-3\\
+127 & AT1G12820 & AFB3 & Protein AUXIN SIGNALING F-BOX 3\\
+128 & AT3G03125 & AT3G03125 & None\\
+129 & AT4G15975 & AT4G15975 & RING/U-box superfamily protein\\
+130 & AT2G27660 & AT2G27660 & Cysteine/Histidine-rich C1 domain family protein\\
+131 & AT3G62980 & TIR1 & TIR1\\
+132 & AT1G73540 & NUDT21 & Nudix hydrolase 21, chloroplastic\\
+133 & AT2G31345 & AT2G31345 & Transmembrane protein\\
+134 & AT1G21326 & AT1G21326 & F16F4.1 protein\\
+135 & AT5G19240 & AT5G19240 & Uncharacterized GPI-anchored protein At5g19240\\
+136 & AT4G18100 & RPL32A & 60S ribosomal protein L32-1\\
+137 & AT2G40330 & PYL6 & Abscisic acid receptor PYL6\\
+138 & AT1G69530 & ATEXPA1 & Expansin\\
+139 & AT2G32030 & AT2G32030 & Acyl-CoA N-acyltransferases (NAT) superfamily protein\\
+140 & AT1G56240 & PP2B13 & F-box protein PP2-B13\\
+141 & AT4G16370 & ATOPT3 & oligopeptide transporter\\
+142 & AT5G42380 & CML37 & Calcium-binding protein CML37\\
+143 & AT5G04340 & ZAT6 & Zinc finger protein ZAT6\\
+144 & AT1G24140 & 3MMP & Metalloendoproteinase 3-MMP\\
+145 & AT1G65390 & PP2A5 & Protein PHLOEM PROTEIN 2-LIKE A5\\
+146 & AT1G43170 & ARP1 & 60S ribosomal protein L3-1\\
+147 & AT3G46130 & ATMYB48 & myb domain protein 48\\
+148 & AT5G26742 & RH3 & RH3\\
+149 & AT2G37430 & ZAT11 & ZAT11\\
+150 & AT3G09630 & RPL4A & 60S ribosomal protein L4-1\\
+151 & AT5G60390 & A1 & Elongation factor 1-alpha 4\\
+152 & AT4G22710 & CYP706A2 & Cytochrome P450 - like protein\\
+153 & AT1G74470 & CHLP & Geranylgeranyl diphosphate reductase, chloroplastic\\
+154 & AT1G56250 & VBF & F-box protein VBF\\
+155 & AT2G26530 & AR781 & AR781\\
+156 & AT3G22970 & AT3G22970 & At3g22970\\
+157 & AT5G02500 & MED37E & Probable mediator of RNA polymerase II transcription subunit 37e\\
+158 & AT1G57990 & PUP18 & PUP18\\
+159 & AT5G11140 & AT5G11140 & Phospholipase-like protein (PEARLI 4) family protein\\
+160 & AT2G24600 & AT2G24600 & Ankyrin repeat family protein\\
+161 & AT3G02840 & AT3G02840 & ARM repeat superfamily protein\\
+162 & AT1G19770 & PUP14 & PUP14\\
+163 & AT2G23130 & AGP17 & Lysine-rich arabinogalactan protein 17\\
+164 & AT4G02410 & LECRK43 & L-type lectin-domain containing receptor kinase IV.3\\
+165 & AT5G52750 & HIPP13 & Heavy metal-associated isoprenylated plant protein 13\\
+166 & AT5G28610 & AT5G28610 & LOW protein: ATP-dependent RNA helicase DRS1-like protein\\
+167 & AT5G65310 & ATHB-5 & Homeobox-leucine zipper protein ATHB-5\\
+168 & AT5G20230 & BCB & SAG14\\
+169 & AT4G11470 & CRK31 & cysteine-rich RLK (RECEPTOR-like protein kinase) 31\\
+170 & AT5G59780 & MYB59 & Transcription factor MYB59\\
+171 & AT4G29780 & AT4G29780 & Nuclease\\
+172 & AT3G01165 & AT3G01165 & None\\
+173 & AT4G28460 & PIP1 & PAMP-induced secreted peptide 1\\
+174 & AT5G47850 & CCR4 & Serine/threonine-protein kinase-like protein CCR4\\
+175 & AT5G15200 & RPS9B & 40S ribosomal protein S9-1\\
+176 & AT3G09260 & BGLU23 & PYK10\\
+177 & AT3G07195 & AT3G07195 & RPM1-interacting protein 4 (RIN4) family protein\\
+178 & AT1G72430 & SAUR78 & Auxin-responsive protein SAUR78\\
+179 & AT1G18540 & RPL6A & 60S ribosomal protein L6-1\\
+180 & AT1G70600 & RPL27AC & 60S ribosomal protein L27a-3\\
+181 & AT4G37370 & CYP81D8 & Cytochrome P450, family 81, subfamily D, polypeptide 8\\
+182 & AT5G25280 & AT5G25280 & AT5g25280/F18G18\_20\\
+183 & AT1G48300 & AT1G48300 & unknown protein\\
+184 & AT5G47230 & ERF5 & ERF5\\
+185 & AT5G13930 & CHS & Chalcone synthase family protein\\
+186 & AT3G16420 & PBP1 & PYK10-binding protein 1\\
+187 & AT2G36090 & AT2G36090 & Probable F-box protein At2g36090\\
+188 & AT5G18380 & RPS16C & 40S ribosomal protein S16-3\\
+189 & AT4G36648 & AT4G36648 & other RNA\\
+190 & AT1G72600 & AT1G72600 & At1g72600\\
+191 & AT4G36500 & AT4G36500 & Uncharacterized protein At4g36500\\
+192 & AT2G35935 & AT2G35935 & None\\
+193 & AT1G07135 & AT1G07135 & At1g07135\\
+194 & AT2G44840 & ERF13 & Ethylene-responsive transcription factor 13\\
+195 & AT2G36690 & AT2G36690 & 2-oxoglutarate (2OG) and Fe(II)-dependent oxygenase superfamily protein\\
+196 & AT4G23220 & CRK14 & Cysteine-rich receptor-like protein kinase 14\\
+197 & AT4G38840 & AT4G38840 & At4g38840\\
+198 & AT5G37260 & RVE2 & Protein REVEILLE 2\\
+199 & AT4G31950 & CYP82C3 & CYP82C3\\
+200 & AT5G67480 & BT4 & BTB and TAZ domain protein 4\\
+201 & AT5G27420 & ATL31 & E3 ubiquitin-protein ligase ATL31\\
+202 & AT1G80840 & WRKY40 & Probable WRKY transcription factor 40\\
+203 & AT5G25250 & FLOT1 & Flotillin-like protein 1\\
+204 & AT4G19700 & BOI & E3 ubiquitin-protein ligase BOI\\
+205 & AT1G09690 & RPL21A & 60S ribosomal protein L21-1\\
+206 & AT5G05300 & AT5G05300 & Gb\\
+207 & AT2G30520 & RPT2 & Root phototropism protein 2\\
+208 & AT2G08475 & AT2G08475 & None\\
+209 & AT5G47210 & RGGC & RGG repeats nuclear RNA binding protein C\\
+210 & AT3G52400 & SYP122 & Syntaxin-122\\
+211 & AT1G72910 & AT1G72910 & Similar to part of disease resistance protein\\
+212 & AT4G38620 & MYB4 & Transcription repressor MYB4\\
+213 & AT1G79680 & WAKL10 & Wall-associated receptor kinase-like 10\\
+214 & AT1G68520 & COL6 & Zinc finger protein CONSTANS-LIKE 6\\
+215 & AT2G23270 & AT2G23270 & At2g23270\\
+216 & AT5G41740 & AT5G41740 & Disease resistance protein (TIR-NBS-LRR class) family\\
+217 & AT1G17420 & LOX3 & Lipoxygenase 3, chloroplastic\\
+218 & AT1G17147 & VQ1 & VQ motif-containing protein 1\\
+219 & AT5G25350 & EBF2 & EIN3-binding F-box protein 2\\
+220 & AT1G69890 & AT1G69890 & Actin cross-linking protein (DUF569)\\
+221 & AT3G10930 & AT3G10930 & Uncharacterized protein At3g10930\\
+222 & AT2G18020 & RPL8A & EMB2296\\
+223 & AT1G02780 & RPL19A & 60S ribosomal protein L19-1\\
+224 & AT5G26920 & CBP60G & Calmodulin-binding protein 60 G\\
+225 & AT1G72610 & GLP1 & Germin-like protein subfamily 3 member 1\\
+226 & AT1G66090 & AT1G66090 & Disease resistance protein (TIR-NBS class)\\
+227 & AT3G09200 & RPP0B & 60S acidic ribosomal protein P0-2\\
+228 & AT2G27820 & ADT3 & Arogenate dehydratase 3, chloroplastic\\
+229 & AT1G20310 & AT1G20310 & Syringolide-induced protein\\
+230 & AT2G38310 & PYL4 & Abscisic acid receptor PYL4\\
+231 & AT5G02760 & AT5G02760 & Probable protein phosphatase 2C 67\\
+232 & AT4G17490 & ERF6 & Ethylene-responsive transcription factor 6\\
+233 & AT1G76600 & AT1G76600 & Poly polymerase\\
+234 & AT3G53460 & CP29 & Chloroplast RNA-binding protein 29\\
+235 & AT5G44130 & FLA13 & Fasciclin-like arabinogalactan protein 13\\
+236 & AT3G04400 & RPL23A & 60S ribosomal protein L23\\
+237 & AT3G53430 & RPL12B & 60S ribosomal Protein L12-like\\
+238 & AT2G02950 & PKS1 & Protein PHYTOCHROME KINASE SUBSTRATE 1\\
+239 & AT1G72520 & LOX4 & Lipoxygenase 4, chloroplastic\\
+240 & AT2G33580 & LYK5 & Protein LYK5\\
+241 & AT3G22120 & CWLP & Cell wall-plasma membrane linker protein\\
+242 & AT2G26560 & PLP2 & Patatin-like protein 2\\
+243 & AT5G59820 & ZAT12 & Zinc finger protein ZAT12\\
+244 & AT1G58420 & AT1G58420 & At1g58420\\
+245 & AT3G59940 & SKIP20 & F-box/kelch-repeat protein SKIP20\\
+246 & AT1G56070 & LOS1 & Elongation factor 2\\
+247 & AT5G57220 & CYP81F2 & Cytochrome P450 81F2\\
+248 & AT2G40000 & HSPRO2 & Nematode resistance protein-like HSPRO2\\
+249 & AT2G18160 & BZIP2 & bZIP transcription factor 2\\
+\end{tabular}
+\end{center}
+
+
+\subsubsection{Forest on this RFE set}
+\label{sec:org0a6e6cd}
+
+\begin{center}
+\begin{tabular}{lrll}
+gene & importance & name & description\\
+\hline
+AT3G07195 & 0.00485 & AT3G07195 & RPM1-interacting protein 4 (RIN4) family protein\\
+AT5G15200 & 0.0048 & RPS9B & 40S ribosomal protein S9-1\\
+AT5G56030 & 0.0047 & HSP81-2 & Heat shock protein 81-2\\
+AT4G02410 & 0.0046 & LECRK43 & L-type lectin-domain containing receptor kinase IV.3\\
+AT4G13930 & 0.00455 & SHM4 & Serine hydroxymethyltransferase 4\\
+AT2G18440 & 0.0045 & GUT15 & GUT15 (GENE WITH UNSTABLE TRANSCRIPT 15)\\
+AT4G14370 & 0.0045 & AT4G14370 & Disease resistance protein (TIR-NBS-LRR class) family\\
+AT2G45180 & 0.0045 & AT2G45180 & At2g45180/T14P1.1\\
+AT1G69530 & 0.00445 & ATEXPA1 & Expansin\\
+AT1G12090 & 0.0044 & ELP & ELP\\
+AT1G21120 & 0.0044 & AT1G21120 & O-methyltransferase family protein\\
+AT3G09275 & 0.0044 & AT3G09275 & None\\
+AT3G10930 & 0.0044 & AT3G10930 & Uncharacterized protein At3g10930\\
+AT5G25250 & 0.00435 & FLOT1 & Flotillin-like protein 1\\
+AT4G39260 & 0.00435 & RBG8 & GRP8\\
+AT1G68550 & 0.00435 & ERF118 & Ethylene-responsive transcription factor ERF118\\
+AT5G59780 & 0.00435 & MYB59 & Transcription factor MYB59\\
+AT4G23220 & 0.00435 & CRK14 & Cysteine-rich receptor-like protein kinase 14\\
+AT1G79680 & 0.0043 & WAKL10 & Wall-associated receptor kinase-like 10\\
+AT2G27820 & 0.0043 & ADT3 & Arogenate dehydratase 3, chloroplastic\\
+AT1G17420 & 0.0043 & LOX3 & Lipoxygenase 3, chloroplastic\\
+AT1G14540 & 0.0043 & PER4 & Peroxidase\\
+AT3G52400 & 0.0043 & SYP122 & Syntaxin-122\\
+AT3G09500 & 0.0043 & RPL35A & 60S ribosomal protein L35-1\\
+AT2G35935 & 0.0043 & AT2G35935 & None\\
+AT2G40140 & 0.00425 & CZF1 & Zinc finger CCCH domain-containing protein 29\\
+AT5G02500 & 0.00425 & MED37E & Probable mediator of RNA polymerase II transcription subunit 37e\\
+AT5G44680 & 0.00425 & AT5G44680 & DNA glycosylase superfamily protein\\
+AT2G36530 & 0.00425 & ENO2 & LOS2\\
+AT4G14450 & 0.00425 & AT4G14450 & Uncharacterized protein At4g14450, chloroplastic\\
+AT5G41740 & 0.00425 & AT5G41740 & Disease resistance protein (TIR-NBS-LRR class) family\\
+AT5G47850 & 0.0042 & CCR4 & Serine/threonine-protein kinase-like protein CCR4\\
+AT4G11470 & 0.0042 & CRK31 & cysteine-rich RLK (RECEPTOR-like protein kinase) 31\\
+AT4G22030 & 0.0042 & AT4G22030 & F-box family protein with a domain of unknown function (DUF295)\\
+AT5G22250 & 0.0042 & CAF1-11 & Probable CCR4-associated factor 1 homolog 11\\
+AT4G23180 & 0.00415 & CRK10 & Cysteine-rich receptor-like protein kinase 10\\
+AT1G80840 & 0.00415 & WRKY40 & Probable WRKY transcription factor 40\\
+AT5G04340 & 0.00415 & ZAT6 & Zinc finger protein ZAT6\\
+AT5G37260 & 0.00415 & RVE2 & Protein REVEILLE 2\\
+AT1G61360 & 0.00415 & AT1G61360 & Serine/threonine-protein kinase\\
+AT4G01250 & 0.00415 & WRKY22 & WRKY transcription factor 22\\
+AT3G59940 & 0.0041 & SKIP20 & F-box/kelch-repeat protein SKIP20\\
+AT2G02630 & 0.0041 & AT2G02630 & Cysteine/Histidine-rich C1 domain family protein\\
+AT4G19700 & 0.0041 & BOI & E3 ubiquitin-protein ligase BOI\\
+AT2G22880 & 0.0041 & AT2G22880 & At2g22880\\
+AT1G30370 & 0.0041 & AT1G30370 & DLAH\\
+AT1G20310 & 0.0041 & AT1G20310 & Syringolide-induced protein\\
+AT3G49010 & 0.0041 & RPL13B & 60S ribosomal protein L13-1\\
+AT2G23270 & 0.0041 & AT2G23270 & At2g23270\\
+AT4G28460 & 0.0041 & PIP1 & PAMP-induced secreted peptide 1\\
+AT3G05590 & 0.0041 & RPL18B & RPL18\\
+AT2G44670 & 0.00405 & FLZ3 & FCS-Like Zinc finger 3\\
+AT1G69890 & 0.00405 & AT1G69890 & Actin cross-linking protein (DUF569)\\
+AT2G30520 & 0.00405 & RPT2 & Root phototropism protein 2\\
+AT1G61560 & 0.00405 & MLO6 & MLO-like protein 6\\
+AT5G52050 & 0.004 & DTX50 & Protein DETOXIFICATION 50\\
+AT1G09780 & 0.004 & PGM1 & IPGAM1\\
+AT2G25735 & 0.004 & AT2G25735 & Expressed protein\\
+AT4G18100 & 0.004 & RPL32A & 60S ribosomal protein L32-1\\
+AT4G37540 & 0.004 & LBD39 & LOB domain-containing protein 39\\
+AT4G18197 & 0.004 & PUP7 & Probable purine permease 7\\
+AT1G24140 & 0.004 & 3MMP & Metalloendoproteinase 3-MMP\\
+AT5G13930 & 0.004 & CHS & Chalcone synthase family protein\\
+AT1G69760 & 0.004 & AT1G69760 & At1g69760\\
+AT2G01180 & 0.004 & ATPAP1 & phosphatidic acid phosphatase 1\\
+AT3G22970 & 0.004 & AT3G22970 & At3g22970\\
+AT5G64905 & 0.00395 & PEP3 & Elicitor peptide 3\\
+AT1G19770 & 0.00395 & PUP14 & PUP14\\
+AT1G19020 & 0.00395 & AT1G19020 & CDP-diacylglycerol-glycerol-3-phosphate 3-phosphatidyltransferase\\
+AT1G78170 & 0.00395 & AT1G78170 & E3 ubiquitin-protein ligase\\
+AT5G51190 & 0.00395 & ERF105 & Ethylene-responsive transcription factor ERF105\\
+AT1G24145 & 0.0039 & AT1G24145 & At1g24145\\
+AT1G02780 & 0.0039 & RPL19A & 60S ribosomal protein L19-1\\
+AT3G58120 & 0.0039 & BZIP61 & BZIP61\\
+AT3G18710 & 0.0039 & PUB29 & RING-type E3 ubiquitin transferase\\
+AT1G72520 & 0.0039 & LOX4 & Lipoxygenase 4, chloroplastic\\
+AT1G21326 & 0.0039 & AT1G21326 & F16F4.1 protein\\
+AT1G59590 & 0.0039 & ZCF37 & At1g59590\\
+AT3G04400 & 0.0039 & RPL23A & 60S ribosomal protein L23\\
+AT1G17147 & 0.0039 & VQ1 & VQ motif-containing protein 1\\
+AT4G36648 & 0.0039 & AT4G36648 & other RNA\\
+AT5G59732 & 0.0039 & AT5G59732 & other RNA\\
+AT1G68520 & 0.0039 & COL6 & Zinc finger protein CONSTANS-LIKE 6\\
+AT4G17490 & 0.0039 & ERF6 & Ethylene-responsive transcription factor 6\\
+AT1G74470 & 0.0039 & CHLP & Geranylgeranyl diphosphate reductase, chloroplastic\\
+AT2G36090 & 0.00385 & AT2G36090 & Probable F-box protein At2g36090\\
+AT5G59820 & 0.00385 & ZAT12 & Zinc finger protein ZAT12\\
+AT1G15690 & 0.00385 & AVP1 & VHP1\\
+AT1G72910 & 0.00385 & AT1G72910 & Similar to part of disease resistance protein\\
+AT1G76600 & 0.00385 & AT1G76600 & Poly polymerase\\
+AT1G07160 & 0.00385 & AT1G07160 & PP2C-type phosphatase AP2C2\\
+AT4G38840 & 0.00385 & AT4G38840 & At4g38840\\
+AT2G28000 & 0.00385 & CPN60A1 & SLP\\
+AT4G31550 & 0.00385 & WRKY11 & Probable WRKY transcription factor 11\\
+AT2G32030 & 0.0038 & AT2G32030 & Acyl-CoA N-acyltransferases (NAT) superfamily protein\\
+AT4G37370 & 0.0038 & CYP81D8 & Cytochrome P450, family 81, subfamily D, polypeptide 8\\
+AT3G44260 & 0.0038 & CAF1-9 & Probable CCR4-associated factor 1 homolog 9\\
+AT5G61570 & 0.0038 & AT5G61570 & Protein kinase superfamily protein\\
+AT5G25340 & 0.0038 & AT5G25340 & Ubiquitin-like superfamily protein\\
+AT2G38310 & 0.0038 & PYL4 & Abscisic acid receptor PYL4\\
+AT1G18540 & 0.0038 & RPL6A & 60S ribosomal protein L6-1\\
+AT4G27280 & 0.0038 & KRP1 & Calcium-binding protein KRP1\\
+AT5G18380 & 0.0038 & RPS16C & 40S ribosomal protein S16-3\\
+AT3G19680 & 0.0038 & AT3G19680 & Uncharacterized protein At3g19680\\
+AT2G41840 & 0.0038 & RPS2C & 40S ribosomal protein S2-3\\
+AT5G14700 & 0.00375 & AT5G14700 & Cinnamoyl CoA reductase-like protein\\
+AT1G12820 & 0.00375 & AFB3 & Protein AUXIN SIGNALING F-BOX 3\\
+AT5G59730 & 0.00375 & ATEXO70H7 & Exocyst subunit Exo70 family protein\\
+AT2G47440 & 0.00375 & AT2G47440 & Tetratricopeptide repeat (TPR)-like superfamily protein\\
+AT5G44130 & 0.00375 & FLA13 & Fasciclin-like arabinogalactan protein 13\\
+AT5G26742 & 0.00375 & RH3 & RH3\\
+AT5G05300 & 0.00375 & AT5G05300 & Gb\\
+AT2G31345 & 0.00375 & AT2G31345 & Transmembrane protein\\
+AT3G29000 & 0.00375 & CML45 & Probable calcium-binding protein CML45\\
+AT5G65630 & 0.00375 & GTE7 & Transcription factor GTE7\\
+AT5G24110 & 0.00375 & WRKY30 & Probable WRKY transcription factor 30\\
+AT5G25280 & 0.0037 & AT5G25280 & AT5g25280/F18G18\_20\\
+AT2G24600 & 0.0037 & AT2G24600 & Ankyrin repeat family protein\\
+AT3G21150 & 0.0037 & BBX32 & B-box zinc finger protein 32\\
+AT1G78080 & 0.0037 & RAP2-4 & Ethylene-responsive transcription factor RAP2-4\\
+AT1G14320 & 0.0037 & RPL10A & 60S ribosomal protein L10-1\\
+AT2G17040 & 0.0037 & anac036 & NAC domain containing protein 36\\
+AT1G61340 & 0.0037 & AT1G61340 & F-box protein At1g61340\\
+AT3G53430 & 0.0037 & RPL12B & 60S ribosomal Protein L12-like\\
+AT2G10940 & 0.0037 & AT2G10940 & At2g10940/F15K19.1\\
+AT4G34760 & 0.0037 & SAUR50 & Auxin-responsive protein SAUR50\\
+AT2G33580 & 0.0037 & LYK5 & Protein LYK5\\
+AT1G09690 & 0.0037 & RPL21A & 60S ribosomal protein L21-1\\
+AT1G72430 & 0.0037 & SAUR78 & Auxin-responsive protein SAUR78\\
+AT5G15870 & 0.0037 & AT5G15870 & Glycosyl hydrolase family 81 protein\\
+AT5G01540 & 0.00365 & LECRK62 & L-type lectin-domain containing receptor kinase VI.2\\
+AT1G56242 & 0.00365 & AT1G56242 & other RNA\\
+AT2G44840 & 0.00365 & ERF13 & Ethylene-responsive transcription factor 13\\
+AT4G22710 & 0.00365 & CYP706A2 & Cytochrome P450 - like protein\\
+AT4G13940 & 0.00365 & SAHH1 & Adenosylhomocysteinase 1\\
+AT1G70600 & 0.00365 & RPL27AC & 60S ribosomal protein L27a-3\\
+AT2G02950 & 0.00365 & PKS1 & Protein PHYTOCHROME KINASE SUBSTRATE 1\\
+AT1G67430 & 0.00365 & RPL17B & 60S ribosomal protein L17-2\\
+AT2G26530 & 0.00365 & AR781 & AR781\\
+AT4G16370 & 0.00365 & ATOPT3 & oligopeptide transporter\\
+AT3G03125 & 0.00365 & AT3G03125 & None\\
+AT3G60245 & 0.00365 & RPL37AC & 60S ribosomal protein L37a-2\\
+AT5G57760 & 0.0036 & AT5G57760 & At5g57760\\
+AT1G48300 & 0.0036 & AT1G48300 & unknown protein\\
+AT3G22120 & 0.0036 & CWLP & Cell wall-plasma membrane linker protein\\
+AT4G23810 & 0.0036 & WRKY53 & Probable WRKY transcription factor 53\\
+AT1G26380 & 0.0036 & FOX1 & Berberine bridge enzyme-like 3\\
+AT3G22121 & 0.0036 & AT3G22121 & other RNA\\
+AT3G09200 & 0.0036 & RPP0B & 60S acidic ribosomal protein P0-2\\
+AT2G40000 & 0.00355 & HSPRO2 & Nematode resistance protein-like HSPRO2\\
+AT1G05575 & 0.00355 & AT1G05575 & Transmembrane protein\\
+AT2G38470 & 0.00355 & WRKY33 & WRKY33\\
+AT1G66090 & 0.00355 & AT1G66090 & Disease resistance protein (TIR-NBS class)\\
+AT3G55980 & 0.00355 & SZF1 & Salt-inducible zinc finger 1\\
+AT3G01165 & 0.00355 & AT3G01165 & None\\
+AT1G50040 & 0.00355 & AT1G50040 & F2J10.8 protein\\
+AT2G27660 & 0.0035 & AT2G27660 & Cysteine/Histidine-rich C1 domain family protein\\
+AT2G37430 & 0.0035 & ZAT11 & ZAT11\\
+AT5G28610 & 0.0035 & AT5G28610 & LOW protein: ATP-dependent RNA helicase DRS1-like protein\\
+AT4G29780 & 0.0035 & AT4G29780 & Nuclease\\
+AT3G28340 & 0.0035 & GATL10 & Hexosyltransferase (Fragment)\\
+AT1G56070 & 0.0035 & LOS1 & Elongation factor 2\\
+AT5G20630 & 0.0035 & GER3 & Germin-like protein subfamily 3 member 3\\
+AT4G38620 & 0.0035 & MYB4 & Transcription repressor MYB4\\
+AT1G05675 & 0.0035 & UGT74E1 & Glycosyltransferase (Fragment)\\
+AT1G79110 & 0.0035 & BRG2 & Probable BOI-related E3 ubiquitin-protein ligase 2\\
+AT4G31950 & 0.0035 & CYP82C3 & CYP82C3\\
+AT3G46130 & 0.0035 & ATMYB48 & myb domain protein 48\\
+AT1G57990 & 0.0035 & PUP18 & PUP18\\
+AT4G34950 & 0.0035 & AT4G34950 & Major facilitator superfamily protein\\
+AT2G43340 & 0.0035 & AT2G43340 & At2g43340\\
+AT5G57220 & 0.0035 & CYP81F2 & Cytochrome P450 81F2\\
+AT5G61590 & 0.00345 & ERF107 & Ethylene-responsive transcription factor ERF107\\
+AT5G52750 & 0.00345 & HIPP13 & Heavy metal-associated isoprenylated plant protein 13\\
+AT2G18160 & 0.00345 & BZIP2 & bZIP transcription factor 2\\
+AT2G40330 & 0.00345 & PYL6 & Abscisic acid receptor PYL6\\
+AT5G42380 & 0.00345 & CML37 & Calcium-binding protein CML37\\
+AT5G47230 & 0.00345 & ERF5 & ERF5\\
+AT2G08475 & 0.00345 & AT2G08475 & None\\
+AT2G26560 & 0.00345 & PLP2 & Patatin-like protein 2\\
+AT3G53460 & 0.00345 & CP29 & Chloroplast RNA-binding protein 29\\
+AT5G19240 & 0.00345 & AT5G19240 & Uncharacterized GPI-anchored protein At5g19240\\
+AT4G24570 & 0.00345 & PUMP4 & DIC2\\
+AT5G65310 & 0.0034 & ATHB-5 & Homeobox-leucine zipper protein ATHB-5\\
+AT4G16720 & 0.0034 & RPL15A & Ribosomal protein L15\\
+AT5G20290 & 0.0034 & RPS8A & 40S ribosomal protein S8\\
+AT4G15975 & 0.0034 & AT4G15975 & RING/U-box superfamily protein\\
+AT5G47210 & 0.0034 & RGGC & RGG repeats nuclear RNA binding protein C\\
+AT1G56240 & 0.0034 & PP2B13 & F-box protein PP2-B13\\
+AT1G27730 & 0.0034 & ZAT10 & Zinc finger protein ZAT10\\
+AT5G20230 & 0.0034 & BCB & SAG14\\
+AT1G43170 & 0.0034 & ARP1 & 60S ribosomal protein L3-1\\
+AT5G49910 & 0.0034 & HSP70-7 & Heat shock 70 kDa protein 7, chloroplastic\\
+AT1G07135 & 0.00335 & AT1G07135 & At1g07135\\
+AT1G50750 & 0.00335 & AT1G50750 & Plant mobile domain protein family\\
+AT3G23810 & 0.00335 & SAHH2 & Adenosylhomocysteinase\\
+AT1G13930 & 0.00335 & AT1G13930 & At1g13930/F16A14.27\\
+AT5G27420 & 0.00335 & ATL31 & E3 ubiquitin-protein ligase ATL31\\
+AT5G67480 & 0.00335 & BT4 & BTB and TAZ domain protein 4\\
+AT3G23250 & 0.00335 & MYB15 & Transcription factor MYB15\\
+AT1G73540 & 0.00335 & NUDT21 & Nudix hydrolase 21, chloroplastic\\
+AT1G72370 & 0.00335 & RPSAA & 40S ribosomal protein SA\\
+AT2G23130 & 0.00335 & AGP17 & Lysine-rich arabinogalactan protein 17\\
+AT1G58420 & 0.00335 & AT1G58420 & At1g58420\\
+AT5G02870 & 0.00335 & RPL4D & 60S ribosomal protein L4-2\\
+AT5G61600 & 0.0033 & ERF104 & Ethylene-responsive transcription factor ERF104\\
+AT5G56010 & 0.0033 & HSP90-3 & Heat shock protein 90-3\\
+AT5G03240 & 0.0033 & UBQ3 & Ubiquitin 4\\
+AT2G36690 & 0.0033 & AT2G36690 & 2-oxoglutarate (2OG) and Fe(II)-dependent oxygenase superfamily protein\\
+AT1G80080 & 0.0033 & TMM & TMM\\
+AT5G26920 & 0.0033 & CBP60G & Calmodulin-binding protein 60 G\\
+AT2G21210 & 0.0033 & AT2G21210 & SAUR-like auxin-responsive protein family\\
+AT3G02840 & 0.00325 & AT3G02840 & ARM repeat superfamily protein\\
+AT3G25520 & 0.00325 & ATL5 & RPL5A\\
+AT2G31880 & 0.00325 & SOBIR1 & Leucine-rich repeat receptor-like serine/threonine/tyrosine-protein kinase SOBIR1\\
+AT5G17920 & 0.0032 & MS1 & 5-methyltetrahydropteroyltriglutamate--homocysteine methyltransferase 1\\
+AT1G25440 & 0.0032 & COL16 & Zinc finger protein CONSTANS-LIKE 16\\
+AT1G72610 & 0.0032 & GLP1 & Germin-like protein subfamily 3 member 1\\
+AT5G15845 & 0.00315 & AT5G15845 & other RNA\\
+AT4G17390 & 0.00315 & RPL15B & 60S ribosomal protein L15-2\\
+AT2G29110 & 0.00315 & ATGLR2.8 & Glutamate receptor\\
+AT5G01542 & 0.00315 & AT5G01542 & Potential natural antisense gene, locus overlaps with AT5G01540\\
+AT5G41750 & 0.00315 & AT5G41750 & Disease resistance protein (TIR-NBS-LRR class) family\\
+AT4G38860 & 0.00315 & AT4G38860 & At4g38860\\
+AT1G56250 & 0.00315 & VBF & F-box protein VBF\\
+AT5G25350 & 0.0031 & EBF2 & EIN3-binding F-box protein 2\\
+AT1G74850 & 0.0031 & PTAC2 & PTAC2\\
+AT1G78100 & 0.0031 & AT1G78100 & AUF1\\
+AT3G09630 & 0.0031 & RPL4A & 60S ribosomal protein L4-1\\
+AT3G50930 & 0.0031 & HSR4 & Protein HYPER-SENSITIVITY-RELATED 4\\
+AT1G10020 & 0.0031 & AT1G10020 & At1g10020\\
+AT4G14365 & 0.0031 & XBAT34 & Putative E3 ubiquitin-protein ligase XBAT34\\
+AT1G65390 & 0.0031 & PP2A5 & Protein PHLOEM PROTEIN 2-LIKE A5\\
+AT3G63200 & 0.0031 & PLP9 & Probable inactive patatin-like protein 9\\
+AT2G35930 & 0.00305 & PUB23 & E3 ubiquitin-protein ligase PUB23\\
+AT5G11140 & 0.00305 & AT5G11140 & Phospholipase-like protein (PEARLI 4) family protein\\
+AT1G72600 & 0.0029 & AT1G72600 & At1g72600\\
+AT3G53870 & 0.00285 & RPS3B & 40S ribosomal protein S3-2\\
+AT3G62980 & 0.00275 & TIR1 & TIR1\\
+AT4G36500 & 0.0027 & AT4G36500 & Uncharacterized protein At4g36500\\
+AT5G02760 & 0.0026 & AT5G02760 & Probable protein phosphatase 2C 67\\
+AT5G60390 & 0.0025 & A1 & Elongation factor 1-alpha 4\\
+AT1G18080 & 0.0021 & RACK1A & RACK1A\_AT\\
+AT3G62870 & 0.00205 & RPL7AB & 60S ribosomal protein L7a-2\\
+AT2G34480 & 0.0018 & AT2G34480 & Ribosomal protein L18ae/LX family protein\\
+AT3G04840 & 0.00165 & RPS3AA & 40S ribosomal protein S3a-1\\
+AT3G09260 & 0.0016 & BGLU23 & PYK10\\
+AT2G18020 & 0.00145 & RPL8A & EMB2296\\
+AT2G21660 & 0.00135 & RBG7 & Glycine-rich RNA-binding protein 7\\
+AT3G16420 & 0.001 & PBP1 & PYK10-binding protein 1\\
+\end{tabular}
+\end{center}
+
+\begin{verbatim}
+<Figure size 1440x2160 with 2 Axes>
+\end{verbatim}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=.9\linewidth]{obipy-resources/featbar2.png}
+\caption{\label{featbar}
+Genes importance in determining Chitin and Water tr :tangle recursive\_feature.pyeatments in Col0}
+\end{figure}
+\end{document}

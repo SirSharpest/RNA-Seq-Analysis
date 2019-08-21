@@ -1,0 +1,720 @@
+* Under construction:
+** TODO Using Normalised count data
+*** Comparing Col0 water and chitin at 05hr
+
+**** First read in data
+
+  #+BEGIN_SRC ipython :session
+    import jenkspy
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split
+    import numpy as np
+    import time
+    from sklearn.feature_selection import SelectFromModel
+    DE_pairings_05hr = read_xl('./Data/pairings_05hr.xlsx')
+
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [538]:
+  :END:
+
+**** Filter out only col_c_05h
+  Using these filters we look at genes which are significantly different between samples of col_c and col_w at 05hr
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    #sig = DE_pairings_05hr[(DE_pairings_05hr['padj'] < 0.001) & (DE_pairings_05hr['sample'] == 'col_c_05h')]
+    sig = DE_pairings_05hr[(DE_pairings_05hr['padj'] < 0.001)]
+    sig = sig['log2FoldChange'].sort_values()
+    locs = sig.index
+    subset = counts.loc[locs][[c for c in counts.columns if ('_05h' in c and 'col' in c)]]
+    subset.head(5).T
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [784]:
+  # text/org
+  |              |   AT1G31173 |   AT2G36090 |   AT5G61590 |   AT2G02630 |   AT3G09275 |
+  |--------------+-------------+-------------+-------------+-------------+-------------|
+  | col_c_05h_b6 |     6.17439 |     5.84037 |     7.28469 |     6.17439 |     7.45443 |
+  | col_c_05h_c7 |     5.83135 |     6.19572 |     7.49619 |     6.05354 |     7.17396 |
+  | col_c_05h_d8 |     5.83179 |     6.40593 |     7.12252 |     5.99497 |     7.09439 |
+  | col_w_05h_a1 |     6.89491 |     7.28167 |     9.06998 |     7.27069 |     9.06132 |
+  | col_w_05h_b2 |     6.78641 |     7.20444 |     9.26242 |     6.72574 |     8.99738 |
+  | col_w_05h_c3 |     6.63776 |     7.30284 |     9.40384 |     7.42714 |     9.03435 |
+  :END:
+
+
+**** Run initial random forest
+  Here we use these ID'd genes to build random forest classifiers and rank the importance of each "feature" (gene).
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    data = subset.T
+    feat_labels = data.columns.values
+    y = [d.rsplit('_', 1)[0] for d in data.index.values]
+    t_start = time.time()
+    X_train, X_test, y_train, y_test = train_test_split(
+        data.values, y, test_size=1, random_state=42)
+    forest = RandomForestClassifier(n_estimators=10000, random_state=1, n_jobs=-1)
+    forest.fit(X_train, y_train)
+
+    res = {k: v for k, v in sorted(
+        zip(feat_labels, forest.feature_importances_), key=lambda x: x[1], reverse=True)}
+    res_df = pd.DataFrame(list(res.items()), columns=[
+                          'gene', 'importance']).set_index('gene')
+    names = get_gene_names(list(res_df.index))
+    res_df = pd.merge(res_df, names, left_index=True, right_on='incoming').rename(
+        columns={'incoming': 'gene'}).set_index('gene').sort_values('importance', ascending=False)
+    res_df.head(5)
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [839]:
+  # text/org
+  | gene      |   importance | name      | description                                             |
+  |-----------+--------------+-----------+---------------------------------------------------------|
+  | AT4G19230 |       0.0008 | CYP707A1  | Cytochrome P450, family 707, subfamily A, polypeptide 1 |
+  | AT5G22270 |       0.0007 | AT5G22270 | AT5G22270 protein                                       |
+  | AT5G60050 |       0.0006 | AT5G60050 | BTB/POZ domain-containing protein At5g60050             |
+  | AT5G67080 |       0.0006 | MAPKKK19  | Mitogen-activated protein kinase kinase kinase 19       |
+  | AT3G51330 |       0.0006 | AT3G51330 | Eukaryotic aspartyl protease family protein             |
+  :END:
+
+
+**** Repeat but with subset of genes
+  Using the initial random forest we can select genes which appear to have a significant impact on differentiating the samples. With these we can build another forest using only those genes and further analyse for importance.
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    data = subset.loc[res_df[res_df['importance'] > res_df['importance'].mean()].index].T
+    feat_labels = data.columns.values
+    y = [d.rsplit('_',1)[0] for d in data.index.values]
+    t_start = time.time()
+    X_train, X_test, y_train, y_test = train_test_split(data.values, y, test_size=0.33, random_state=42)
+    forest = RandomForestClassifier(n_estimators=20000, random_state=1, n_jobs=-1)
+    forest.fit(X_train, y_train)
+    t_end = time.time()
+
+    sub_res = {k:v for k,v in sorted(zip(feat_labels, forest.feature_importances_), key=lambda x: x[1], reverse=True)}
+    sub_res_df = pd.DataFrame(list(sub_res.items()), columns=['gene','importance']).set_index('gene').sort_values('importance', ascending=False)
+    sub_names = get_gene_names(list(sub_res_df.index))
+    sub_res_df = pd.merge(sub_res_df, names, left_index=True, right_on='incoming' ).rename(columns={'incoming':'gene'}).set_index('gene')
+    sub_res_df.head(10)
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [673]:
+  # text/org
+  | gene      |   importance | name      | description                                        |
+  |-----------+--------------+-----------+----------------------------------------------------|
+  | AT2G36420 |      0.0014  | AT2G36420 | Nucleolin-like protein                             |
+  | AT1G74330 |      0.0014  | AT1G74330 | Protein kinase superfamily protein                 |
+  | AT2G27389 |      0.0013  | AT2G27389 | unknown protein                                    |
+  | AT4G23230 |      0.0013  | CRK15     | Cysteine-rich receptor-like protein kinase 15      |
+  | AT5G03240 |      0.00125 | UBQ3      | Ubiquitin 4                                        |
+  | AT1G71950 |      0.00125 | AT1G71950 | At1g71950                                          |
+  | AT3G61590 |      0.00125 | HWS       | Galactose oxidase/kelch repeat superfamily protein |
+  | AT3G51450 |      0.0012  | SSL7      | Protein STRICTOSIDINE SYNTHASE-LIKE 7              |
+  | AT3G07190 |      0.0012  | AT3G07190 | At3g07190                                          |
+  | AT2G30990 |      0.0012  | AT2G30990 | Protein of unknown function (DUF688)               |
+  :END:
+
+
+*** Using top 10 bot 10 Comparing Col0 water and chitin at 05hr
+
+**** First read in data
+
+  #+BEGIN_SRC ipython :session
+    import jenkspy
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split
+    import numpy as np
+    import time
+    from sklearn.feature_selection import SelectFromModel
+    DE_pairings_05hr = read_xl('./Data/pairings_05hr.xlsx')
+
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [538]:
+  :END:
+
+**** Filter out only col_c_05h
+  Using these filters we look at genes which are significantly different between samples of col_c and col_w at 05hr
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    #sig = DE_pairings_05hr[(DE_pairings_05hr['padj'] < 0.001) & (DE_pairings_05hr['sample'] == 'col_c_05h')]
+    sig = DE_pairings_05hr[(DE_pairings_05hr['padj'] < 0.001)]
+    sig = sig['log2FoldChange'].sort_values()
+    locs = np.concatenate([sig[0:100].index.values, sig[-100:].index.values])
+    subset = counts.loc[locs][[c for c in counts.columns if ('_05h' in c )]]
+    subset.head(5).T
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [903]:
+  # text/org
+  |               |   AT1G31173 |   AT2G36090 |   AT5G61590 |   AT2G02630 |   AT3G09275 |
+  |---------------+-------------+-------------+-------------+-------------+-------------|
+  | cer_c_05h_a37 |     6.59045 |     6.86126 |     8.68338 |     7.16669 |     8.17065 |
+  | cer_c_05h_b38 |     6.50681 |     6.63403 |     8.63767 |     7.2022  |     8.31546 |
+  | cer_c_05h_c39 |     6.79013 |     6.94546 |     8.73204 |     7.23878 |     8.16738 |
+  | cer_w_05h_a33 |     6.8732  |     6.82086 |     8.83158 |     7.27924 |     8.38255 |
+  | cer_w_05h_c35 |     6.75355 |     7.10004 |     8.58116 |     7.23913 |     8.3387  |
+  | cer_w_05h_d36 |     6.51867 |     7.25017 |     8.8803  |     6.94817 |     8.3772  |
+  | col_c_05h_b6  |     6.17439 |     5.84037 |     7.28469 |     6.17439 |     7.45443 |
+  | col_c_05h_c7  |     5.83135 |     6.19572 |     7.49619 |     6.05354 |     7.17396 |
+  | col_c_05h_d8  |     5.83179 |     6.40593 |     7.12252 |     5.99497 |     7.09439 |
+  | col_w_05h_a1  |     6.89491 |     7.28167 |     9.06998 |     7.27069 |     9.06132 |
+  | col_w_05h_b2  |     6.78641 |     7.20444 |     9.26242 |     6.72574 |     8.99738 |
+  | col_w_05h_c3  |     6.63776 |     7.30284 |     9.40384 |     7.42714 |     9.03435 |
+  | lym_c_05h_a21 |     5.60783 |     6.17997 |     7.05217 |     6.17997 |     7.48199 |
+  | lym_c_05h_b22 |     5.60783 |     5.94093 |     7.5295  |     6.3928  |     7.25206 |
+  | lym_c_05h_c23 |     5.60783 |     6.10935 |     7.21094 |     6.05685 |     6.99692 |
+  | lym_w_05h_b18 |     6.8942  |     7.11368 |     8.96491 |     6.93963 |     8.58036 |
+  | lym_w_05h_c19 |     6.74022 |     7.35937 |     9.12705 |     6.99255 |     8.92728 |
+  | lym_w_05h_d20 |     6.68768 |     7.16976 |     8.80077 |     7.23279 |     8.61253 |
+  :END:
+
+
+**** Run initial random forest
+  Here we use these ID'd genes to build random forest classifiers and rank the importance of each "feature" (gene).
+
+  #+BEGIN_SRC ipython :session  :display text/org :async
+    data = subset.T
+    feat_labels = data.columns.values
+    y = [d.rsplit('_', 1)[0] for d in data.index.values]
+    t_start = time.time()
+    X_train, X_test, y_train, y_test = train_test_split(
+        data.values, y, test_size=0.33, random_state=5594)
+    forest = RandomForestClassifier(n_estimators=100000, random_state=5594, n_jobs=-1)
+    forest.fit(X_train, y_train)
+
+    res = {k: v for k, v in sorted(
+        zip(feat_labels, forest.feature_importances_), key=lambda x: x[1], reverse=True)}
+    res_df = pd.DataFrame(list(res.items()), columns=[
+                          'gene', 'importance']).set_index('gene')
+    names = get_gene_names(list(res_df.index))
+    res_df = pd.merge(res_df, names, left_index=True, right_on='incoming').rename(
+        columns={'incoming': 'gene'}).set_index('gene').sort_values('importance', ascending=False)
+    res_df.head(5)
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [916]:
+  # text/org
+  | gene      |   importance | name      | description                                        |
+  |-----------+--------------+-----------+----------------------------------------------------|
+  | AT4G26950 |   0.0178985  | AT4G26950 | At4g26950                                          |
+  | AT1G79110 |   0.00951531 | BRG2      | Probable BOI-related E3 ubiquitin-protein ligase 2 |
+  | AT4G25750 |   0.00885206 | ABCG4     | ABC transporter G family member 4                  |
+  | AT1G01560 |   0.0083898  | MPK11     | Mitogen-activated protein kinase 11                |
+  | AT5G52900 |   0.00825698 | MAKR6     | Probable membrane-associated kinase regulator 6    |
+  :END:
+
+ #+BEGIN_SRC ipython :session
+ from sklearn.metrics import accuracy_score
+ print ("Trained model :: ", forest)
+ predictions = forest.predict(X_test)
+
+ # Train and Test Accuracy
+ print( "Train Accuracy :: ", accuracy_score(y_train, forest.predict(X_train)))
+ print( "Test Accuracy  :: ", accuracy_score(y_test, predictions))
+ #+END_SRC
+
+ #+RESULTS:
+ :RESULTS:
+ # Out [913]:
+ # output
+ Trained model ::  RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
+             max_depth=None, max_features='auto', max_leaf_nodes=None,
+             min_impurity_decrease=0.0, min_impurity_split=None,
+             min_samples_leaf=1, min_samples_split=2,
+             min_weight_fraction_leaf=0.0, n_estimators=100000, n_jobs=-1,
+             oob_score=False, random_state=1, verbose=0, warm_start=False)
+ Train Accuracy ::  1.0
+ Test Accuracy  ::  0.25
+
+ :END:
+
+
+**** Repeat but with subset of genes
+  Using the initial random forest we can select genes which appear to have a significant impact on differentiating the samples. With these we can build another forest using only those genes and further analyse for importance.
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    data = subset.loc[res_df[res_df['importance'] > res_df['importance'].mean()].index].T
+    feat_labels = data.columns.values
+    y = [d.rsplit('_',1)[0] for d in data.index.values]
+    t_start = time.time()
+    X_train, X_test, y_train, y_test = train_test_split(data.values, y, test_size=0.33, random_state=42)
+    forest = RandomForestClassifier(n_estimators=100000, random_state=1, n_jobs=-1)
+    forest.fit(X_train, y_train)
+    t_end = time.time()
+
+    sub_res = {k:v for k,v in sorted(zip(feat_labels, forest.feature_importances_), key=lambda x: x[1], reverse=True)}
+    sub_res_df = pd.DataFrame(list(sub_res.items()), columns=['gene','importance']).set_index('gene').sort_values('importance', ascending=False)
+    sub_names = get_gene_names(list(sub_res_df.index))
+    sub_res_df = pd.merge(sub_res_df, names, left_index=True, right_on='incoming' ).rename(columns={'incoming':'gene'}).set_index('gene')
+    sub_res_df.head(10)
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [914]:
+  # text/org
+  | gene      |   importance | name      | description                                           |
+  |-----------+--------------+-----------+-------------------------------------------------------|
+  | AT2G21210 |    0.02047   | AT2G21210 | SAUR-like auxin-responsive protein family             |
+  | AT1G68520 |    0.0202614 | COL6      | Zinc finger protein CONSTANS-LIKE 6                   |
+  | AT3G09275 |    0.0200608 | AT3G09275 | None                                                  |
+  | AT4G23810 |    0.0198547 | WRKY53    | Probable WRKY transcription factor 53                 |
+  | AT3G59940 |    0.0194946 | SKIP20    | F-box/kelch-repeat protein SKIP20                     |
+  | AT2G38470 |    0.0193811 | WRKY33    | WRKY33                                                |
+  | AT5G25340 |    0.0186318 | AT5G25340 | Ubiquitin-like superfamily protein                    |
+  | AT5G41750 |    0.018618  | AT5G41750 | Disease resistance protein (TIR-NBS-LRR class) family |
+  | AT5G51190 |    0.0175785 | ERF105    | Ethylene-responsive transcription factor ERF105       |
+  | AT2G17040 |    0.0175366 | anac036   | NAC domain containing protein 36                      |
+  :END:
+
+
+ #+BEGIN_SRC ipython :session
+ from sklearn.metrics import accuracy_score
+ print ("Trained model :: ", forest)
+ predictions = forest.predict(X_test)
+
+ # Train and Test Accuracy
+ print( "Train Accuracy :: ", accuracy_score(y_train, forest.predict(X_train)))
+ print( "Test Accuracy  :: ", accuracy_score(y_test, predictions))
+ #+END_SRC
+
+ #+RESULTS:
+ :RESULTS:
+ # Out [915]:
+ # output
+ Trained model ::  RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
+             max_depth=None, max_features='auto', max_leaf_nodes=None,
+             min_impurity_decrease=0.0, min_impurity_split=None,
+             min_samples_leaf=1, min_samples_split=2,
+             min_weight_fraction_leaf=0.0, n_estimators=20000, n_jobs=-1,
+             oob_score=False, random_state=1, verbose=0, warm_start=False)
+ Train Accuracy ::  1.0
+ Test Accuracy  ::  0.5
+
+ :END:
+
+*** Comparing Col0 chitin and Lym2 chitin at 05hr
+
+**** First read in data
+
+  #+BEGIN_SRC ipython :session
+    import jenkspy
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split
+    import numpy as np
+    import time
+    from sklearn.feature_selection import SelectFromModel
+    DE_pairings_05hr = read_xl('./Data/pairings_05hr.xlsx')
+
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [690]:
+  :END:
+
+**** Filter out only col_c_05h
+  Using these filters we look at genes which are significantly different between samples of col_c and col_w at 05hr
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    #sig = DE_pairings_05hr[(DE_pairings_05hr['padj'] < 0.001) & (DE_pairings_05hr['sample'] == 'col_c_05h')]
+    sig = DE_pairings_05hr[(DE_pairings_05hr['padj'] < 0.001)]
+    sig = sig['log2FoldChange'].sort_values()
+    locs = sig.index
+    subset = counts.loc[locs][[c for c in counts.columns if ('col_c_05h' in c or 'lym_c_05h' in c)]]
+    subset.head(5).T
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [750]:
+  # text/org
+  |               |   AT1G31173 |   AT2G36090 |   AT5G61590 |   AT2G02630 |   AT3G09275 |
+  |---------------+-------------+-------------+-------------+-------------+-------------|
+  | col_c_05h_b6  |     6.17439 |     5.84037 |     7.28469 |     6.17439 |     7.45443 |
+  | col_c_05h_c7  |     5.83135 |     6.19572 |     7.49619 |     6.05354 |     7.17396 |
+  | col_c_05h_d8  |     5.83179 |     6.40593 |     7.12252 |     5.99497 |     7.09439 |
+  | lym_c_05h_a21 |     5.60783 |     6.17997 |     7.05217 |     6.17997 |     7.48199 |
+  | lym_c_05h_b22 |     5.60783 |     5.94093 |     7.5295  |     6.3928  |     7.25206 |
+  | lym_c_05h_c23 |     5.60783 |     6.10935 |     7.21094 |     6.05685 |     6.99692 |
+  :END:
+
+
+**** Run initial random forest
+  Here we use these ID'd genes to build random forest classifiers and rank the importance of each "feature" (gene).
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    data = subset.T
+    feat_labels = data.columns.values
+    y = [d.rsplit('_', 1)[0] for d in data.index.values]
+    t_start = time.time()
+    X_train, X_test, y_train, y_test = train_test_split(
+        data.values, y, test_size=0.33, random_state=42)
+    forest = RandomForestClassifier(n_estimators=20000, random_state=1, n_jobs=-1)
+    forest.fit(X_train, y_train)
+
+    res = {k: v for k, v in sorted(
+        zip(feat_labels, forest.feature_importances_), key=lambda x: x[1], reverse=True)}
+    res_df = pd.DataFrame(list(res.items()), columns=[
+                          'gene', 'importance']).set_index('gene')
+    names = get_gene_names(list(res_df.index))
+    res_df = pd.merge(res_df, names, left_index=True, right_on='incoming').rename(
+        columns={'incoming': 'gene'}).set_index('gene').sort_values('importance', ascending=False)
+    res_df.head(10)
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [751]:
+  # text/org
+  | gene      |   importance | name      | description                                       |
+  |-----------+--------------+-----------+---------------------------------------------------|
+  | AT1G15030 |      0.00055 | AT1G15030 | T15D22.8                                          |
+  | AT2G46260 |      0.0005  | AT2G46260 | BTB/POZ domain-containing protein At2g46260       |
+  | AT4G01720 |      0.0005  | WRKY47    | Probable WRKY transcription factor 47             |
+  | AT5G67080 |      0.00045 | MAPKKK19  | Mitogen-activated protein kinase kinase kinase 19 |
+  | AT4G09510 |      0.00045 | CINV2     | Alkaline/neutral invertase CINV2                  |
+  | AT3G58990 |      0.00045 | IPMI1     | 3-isopropylmalate dehydratase small subunit 2     |
+  | AT4G27290 |      0.00045 | AT4G27290 | Serine/threonine-protein kinase                   |
+  | AT4G27657 |      0.00045 | AT4G27657 | At4g27657                                         |
+  | AT1G80850 |      0.00045 | AT1G80850 | At1g80850                                         |
+  | AT4G26470 |      0.00045 | AT4G26470 | Calcium-binding EF-hand family protein            |
+  :END:
+
+
+**** Repeat but with subset of genes
+  Using the initial random forest we can select genes which appear to have a significant impact on differentiating the samples. With these we can build another forest using only those genes and further analyse for importance.
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    data = subset.loc[res_df[res_df['importance'] > res_df['importance'].mean()].index].T
+    feat_labels = data.columns.values
+    y = [d.rsplit('_',1)[0] for d in data.index.values]
+    t_start = time.time()
+    X_train, X_test, y_train, y_test = train_test_split(data.values, y, test_size=0.33, random_state=42)
+    forest = RandomForestClassifier(n_estimators=20000, random_state=1, n_jobs=-1)
+    forest.fit(X_train, y_train)
+    t_end = time.time()
+
+    sub_res = {k:v for k,v in sorted(zip(feat_labels, forest.feature_importances_), key=lambda x: x[1], reverse=True)}
+    sub_res_df = pd.DataFrame(list(sub_res.items()), columns=['gene','importance']).set_index('gene').sort_values('importance', ascending=False)
+    sub_names = get_gene_names(list(sub_res_df.index))
+    sub_res_df = pd.merge(sub_res_df, names, left_index=True, right_on='incoming' ).rename(columns={'incoming':'gene'}).set_index('gene')
+    sub_res_df.head(10)
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [753]:
+  # text/org
+  | gene      |   importance | name      | description                                                     |
+  |-----------+--------------+-----------+-----------------------------------------------------------------|
+  | AT1G25450 |      0.0008  | KCS5      | 3-ketoacyl-CoA synthase 5                                       |
+  | AT1G70130 |      0.0008  | LECRK52   | Putative L-type lectin-domain containing receptor kinase V.2    |
+  | AT5G67150 |      0.00075 | AT5G67150 | Anthranilate N-hydroxycinnamoyl/benzoyltransferase-like protein |
+  | AT2G37760 |      0.00075 | AKR4C8    | Aldo-keto reductase family 4 member C8                          |
+  | AT1G08757 |      0.00075 | AT1G08757 | None                                                            |
+  | AT1G12330 |      0.00075 | AT1G12330 | Cyclin-dependent kinase-like protein                            |
+  | AT4G16447 |      0.00075 | AT4G16447 | At4g16447                                                       |
+  | AT2G41800 |      0.00075 | AT2G41800 | At2g41800/T11A7.10                                              |
+  | AT5G03240 |      0.00075 | UBQ3      | Ubiquitin 4                                                     |
+  | AT4G01720 |      0.00075 | WRKY47    | Probable WRKY transcription factor 47                           |
+  :END:
+
+** TODO Using log2 data
+
+*** Comparing Col0 water and chitin at 05hr
+
+**** First read in data
+
+  #+BEGIN_SRC ipython :session
+    import jenkspy
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split
+    import numpy as np
+    import time
+    from sklearn.feature_selection import SelectFromModel
+    DE_pairings_05hr = read_xl('./Data/pairings_05hr.xlsx')
+
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [538]:
+  :END:
+
+**** Filter out only col_c_05h
+  Using these filters we look at genes which are significantly different between samples of col_c and col_w at 05hr
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    #sig = DE_pairings_05hr[(DE_pairings_05hr['padj'] < 0.001) & (DE_pairings_05hr['sample'] == 'col_c_05h')]
+    sig = DE_pairings_05hr[(DE_pairings_05hr['padj'] < 0.001)]
+    sig = sig['log2FoldChange'].sort_values()
+    locs = sig.index
+    subset = DE_pairings_05hr.loc[locs][[c for c in DE_pairings_05hr.columns if ('_05h' in c and 'col' in c)]]
+    subset.head(5).T
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [775]:
+  # text/org
+  | AT1G31173   | AT1G31173   | AT1G31173   | AT2G36090   | AT2G36090   |
+  |-------------+-------------+-------------+-------------+-------------|
+  :END:
+
+
+**** Run initial random forest
+  Here we use these ID'd genes to build random forest classifiers and rank the importance of each "feature" (gene).
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    data = subset.T
+    feat_labels = data.columns.values
+    y = [d.rsplit('_', 1)[0] for d in data.index.values]
+    t_start = time.time()
+    X_train, X_test, y_train, y_test = train_test_split(
+        data.values, y, test_size=0.33, random_state=42)
+    forest = RandomForestClassifier(n_estimators=20000, random_state=1, n_jobs=-1)
+    forest.fit(X_train, y_train)
+
+    res = {k: v for k, v in sorted(
+        zip(feat_labels, forest.feature_importances_), key=lambda x: x[1], reverse=True)}
+    res_df = pd.DataFrame(list(res.items()), columns=[
+                          'gene', 'importance']).set_index('gene')
+    names = get_gene_names(list(res_df.index))
+    res_df = pd.merge(res_df, names, left_index=True, right_on='incoming').rename(
+        columns={'incoming': 'gene'}).set_index('gene').sort_values('importance', ascending=False)
+    res_df.head(10)
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [671]:
+  # text/org
+  | gene      |   importance | name      | description                                                              |
+  |-----------+--------------+-----------+--------------------------------------------------------------------------|
+  | AT3G19970 |      0.0008  | AT3G19970 | AT3g19970/MZE19_2                                                        |
+  | AT5G48655 |      0.00075 | AT5G48655 | Putative RING zinc finger                                                |
+  | AT3G26230 |      0.00075 | CYP71B24  | Cytochrome P450 71B24                                                    |
+  | AT1G07670 |      0.0007  | ECA4      | Calcium-transporting ATPase 4, endoplasmic reticulum-type                |
+  | AT5G02595 |      0.0007  | AT5G02595 | None                                                                     |
+  | AT1G63245 |      0.0007  | CLE14     | CLE14                                                                    |
+  | AT5G12880 |      0.0007  | AT5G12880 | At5g12880                                                                |
+  | AT3G23230 |      0.0007  | ERF098    | Ethylene-responsive transcription factor ERF098                          |
+  | AT1G55450 |      0.0007  | AT1G55450 | S-adenosyl-L-methionine-dependent methyltransferases superfamily protein |
+  | AT3G14225 |      0.00065 | GLIP4     | GDSL esterase/lipase 4                                                   |
+  :END:
+
+
+**** Repeat but with subset of genes
+  Using the initial random forest we can select genes which appear to have a significant impact on differentiating the samples. With these we can build another forest using only those genes and further analyse for importance.
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    data = subset.loc[res_df[res_df['importance'] > res_df['importance'].mean()].index].T
+    feat_labels = data.columns.values
+    y = [d.rsplit('_',1)[0] for d in data.index.values]
+    t_start = time.time()
+    X_train, X_test, y_train, y_test = train_test_split(data.values, y, test_size=0.33, random_state=42)
+    forest = RandomForestClassifier(n_estimators=20000, random_state=1, n_jobs=-1)
+    forest.fit(X_train, y_train)
+    t_end = time.time()
+
+    sub_res = {k:v for k,v in sorted(zip(feat_labels, forest.feature_importances_), key=lambda x: x[1], reverse=True)}
+    sub_res_df = pd.DataFrame(list(sub_res.items()), columns=['gene','importance']).set_index('gene').sort_values('importance', ascending=False)
+    sub_names = get_gene_names(list(sub_res_df.index))
+    sub_res_df = pd.merge(sub_res_df, names, left_index=True, right_on='incoming' ).rename(columns={'incoming':'gene'}).set_index('gene')
+    sub_res_df.head(10)
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [673]:
+  # text/org
+  | gene      |   importance | name      | description                                        |
+  |-----------+--------------+-----------+----------------------------------------------------|
+  | AT2G36420 |      0.0014  | AT2G36420 | Nucleolin-like protein                             |
+  | AT1G74330 |      0.0014  | AT1G74330 | Protein kinase superfamily protein                 |
+  | AT2G27389 |      0.0013  | AT2G27389 | unknown protein                                    |
+  | AT4G23230 |      0.0013  | CRK15     | Cysteine-rich receptor-like protein kinase 15      |
+  | AT5G03240 |      0.00125 | UBQ3      | Ubiquitin 4                                        |
+  | AT1G71950 |      0.00125 | AT1G71950 | At1g71950                                          |
+  | AT3G61590 |      0.00125 | HWS       | Galactose oxidase/kelch repeat superfamily protein |
+  | AT3G51450 |      0.0012  | SSL7      | Protein STRICTOSIDINE SYNTHASE-LIKE 7              |
+  | AT3G07190 |      0.0012  | AT3G07190 | At3g07190                                          |
+  | AT2G30990 |      0.0012  | AT2G30990 | Protein of unknown function (DUF688)               |
+  :END:
+
+
+* Feature selection pt2.
+
+  #+BEGIN_SRC ipython :session
+    import jenkspy
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split
+    import numpy as np
+    import time
+    from sklearn.feature_selection import SelectFromModel
+    DE_pairings_05hr = read_xl('./Data/pairings_05hr.xlsx')
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [918]:
+  :END:
+
+
+  #+BEGIN_SRC ipython :session  :display text/org
+    sig = DE_pairings_05hr[(DE_pairings_05hr['padj'] < 0.1)]
+    sig = sig['log2FoldChange'].sort_values()
+    locs = sig.index
+    subset = counts.loc[locs][[c for c in counts.columns if ('_05h' in c and 'col' in c)]]
+    subset.head(5).T
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [1169]:
+  # text/org
+  |              |   AT1G31173 |   AT2G36090 |   AT5G61590 |   AT2G02630 |   AT3G09275 |
+  |--------------+-------------+-------------+-------------+-------------+-------------|
+  | col_c_05h_b6 |     6.17439 |     5.84037 |     7.28469 |     6.17439 |     7.45443 |
+  | col_c_05h_c7 |     5.83135 |     6.19572 |     7.49619 |     6.05354 |     7.17396 |
+  | col_c_05h_d8 |     5.83179 |     6.40593 |     7.12252 |     5.99497 |     7.09439 |
+  | col_w_05h_a1 |     6.89491 |     7.28167 |     9.06998 |     7.27069 |     9.06132 |
+  | col_w_05h_b2 |     6.78641 |     7.20444 |     9.26242 |     6.72574 |     8.99738 |
+  | col_w_05h_c3 |     6.63776 |     7.30284 |     9.40384 |     7.42714 |     9.03435 |
+  :END:
+
+*** TODO Create more samples
+
+#+BEGIN_SRC ipython :session
+
+  for t in set([i.rsplit('_',1)[0] for i in DE_pairings_05hr.index.values]):
+      sub = DE_pairings_05hr
+      sub.T
+
+#+END_SRC
+
+
+
+
+** Attempt to remove genes with large deviation within samples
+#+BEGIN_SRC ipython :session :display text/org :exports results
+
+  forest_dataframe = subset.T
+  forest_dataframe = forest_dataframe.reset_index()
+  forest_dataframe['index'] = forest_dataframe['index'].apply(lambda x: x.rsplit('_',1)[0])
+  forest_dataframe = forest_dataframe.rename(columns={'index':'treatment'})
+
+  X = forest_dataframe.drop('treatment', axis=1).values
+  feat_labels = forest_dataframe.drop('treatment', axis=1).columns.values
+  y = forest_dataframe['treatment'].values
+
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=0)
+
+  # Create a random forest classifier
+  clf = RandomForestClassifier(n_estimators=1000, random_state=0, n_jobs=-1)
+
+  # Train the classifier
+  clf.fit(X_train, y_train)
+
+  res = {k:v for k,v in sorted(zip(feat_labels, clf.feature_importances_), key=lambda x: x[1], reverse=True)}
+  res_df = pd.DataFrame(list(res.items()), columns=['gene','importance']).set_index('gene').sort_values('importance', ascending=False)
+  names = get_gene_names(list(res_df.index))
+  res_df = pd.merge(res_df, names, left_index=True, right_on='incoming' ).rename(columns={'incoming':'gene'}).set_index('gene')
+
+
+  for i in range(5):
+      data = subset.loc[res_df[res_df['importance'] > res_df['importance'].mean()].index].T
+      feat_labels = data.columns.values
+      y = [d.rsplit('_',1)[0] for d in data.index.values]
+      t_start = time.time()
+      X_train, X_test, y_train, y_test = train_test_split(data.values, y, test_size=0.33, random_state=42)
+      forest = RandomForestClassifier(n_estimators=1000, random_state=1, n_jobs=-1)
+      forest.fit(X_train, y_train)
+      t_end = time.time()
+
+      res = {k:v for k,v in sorted(zip(feat_labels, forest.feature_importances_), key=lambda x: x[1], reverse=True)}
+      res_df = pd.DataFrame(list(res.items()), columns=['gene','importance']).set_index('gene').sort_values('importance', ascending=False)
+      names = get_gene_names(list(res_df.index))
+      res_df = pd.merge(res_df, names, left_index=True, right_on='incoming' ).rename(columns={'incoming':'gene'}).set_index('gene')
+
+  res_df.head()
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [1186]:
+# text/org
+| gene      |   importance | name      | description                                                 |
+|-----------+--------------+-----------+-------------------------------------------------------------|
+| AT5G41730 |        0.059 | AT5G41730 | Protein kinase family protein                               |
+| AT5G57990 |        0.059 | UBP23     | Ubiquitin carboxyl-terminal hydrolase 23                    |
+| AT2G39370 |        0.058 | MAKR4     | Probable membrane-associated kinase regulator 4             |
+| AT4G26555 |        0.056 | FKBP16-1  | Peptidyl-prolyl cis-trans isomerase FKBP16-1, chloroplastic |
+| AT2G08575 |        0.054 | AT2G08575 | None                                                        |
+:END:
+
+
+#+BEGIN_SRC ipython :session
+  res_df['importance'].sum()
+#+END_SRC
+
+
+
+
+
+
+
+** Super interesting PCA
+
+  #+BEGIN_SRC ipython :session :ipyfile '((:name "pca" :filename "obipy-resources/pca.png" :caption "pca" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    from sklearn.decomposition import PCA
+
+    X = counts.T.values
+    y = [c.rsplit('_', 1)[0] for c in  counts.T.index.values]
+
+    pca = PCA(n_components=2)
+    principalComponents = pca.fit_transform(X)
+    principalDf = pd.DataFrame(data=principalComponents, columns=[
+                           'principal component 1', 'principal component 2'])
+
+    principalDf['treatment'] = y
+    sns.scatterplot(x='principal component 1', y='principal component 2', data=principalDf, hue='treatment')
+
+    plt.axis('equal');
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  # Out [929]:
+  # text/plain
+  : <Figure size 432x288 with 1 Axes>
+
+  # image/png
+  #+attr_html: :width 850px
+  #+caption: pca
+  #+name: pca
+  [[file:obipy-resources/pca.png]]
+  :END:
+
+
+* Alternative try 2

@@ -1,0 +1,147 @@
+,GO,count,defence,geno
+9,DNA binding,22.0,False,lym
+9,DNA binding,51.0,False,col
+10,DNA-binding transcription factor activity,45.0,False,col
+11,FAD binding,15.0,False,col
+12,anchored component of membrane,28.0,False,col
+10,apoplast,55.0,False,lym
+13,apoplast,93.0,False,col
+11,caffeoyl-CoA O-methyltransferase activity,3.0,False,lym
+12,camalexin biosynthetic process,6.0,False,lym
+14,carbohydrate binding,30.0,False,col
+13,cell wall,55.0,False,lym
+15,cell wall,86.0,False,col
+16,cellular response to hypoxia,12.0,False,col
+14,cellular response to hypoxia,13.0,False,lym
+0,chitin catabolic process,7.0,True,lym
+1,chitinase activity,8.0,True,lym
+17,chlorophyll binding,10.0,False,col
+15,chlorophyll biosynthetic process,9.0,False,lym
+18,chlorophyll biosynthetic process,14.0,False,col
+19,chloroplast,542.0,False,col
+16,chloroplast,297.0,False,lym
+17,chloroplast envelope,66.0,False,lym
+20,chloroplast envelope,113.0,False,col
+18,chloroplast inner membrane,11.0,False,lym
+19,chloroplast nucleoid,12.0,False,lym
+21,chloroplast nucleoid,19.0,False,col
+20,chloroplast organization,24.0,False,lym
+22,chloroplast organization,30.0,False,col
+21,chloroplast protein-transporting ATPase activity,4.0,False,lym
+22,chloroplast rRNA processing,6.0,False,lym
+23,chloroplast rRNA processing,7.0,False,col
+24,chloroplast stroma,170.0,False,col
+23,chloroplast stroma,111.0,False,lym
+24,chloroplast thylakoid,27.0,False,lym
+25,chloroplast thylakoid,48.0,False,col
+25,chloroplast thylakoid membrane,40.0,False,lym
+26,chloroplast thylakoid membrane,78.0,False,col
+27,chorismate biosynthetic process,5.0,False,col
+26,copper ion binding,22.0,False,lym
+28,copper ion binding,38.0,False,col
+29,cytoplasm,308.0,False,col
+30,cytosol,179.0,False,col
+27,cytosol,93.0,False,lym
+31,cytosolic large ribosomal subunit,35.0,False,col
+32,cytosolic ribosome,38.0,False,col
+2,defense response by callose deposition in cell wall,8.0,True,lym
+0,defense response by callose deposition in cell wall,8.0,True,col
+1,defense response to bacterium,51.0,True,col
+3,defense response to bacterium,31.0,True,lym
+2,defense response to fungus,32.0,True,col
+33,endoplasmic reticulum,79.0,False,col
+28,endoplasmic reticulum,45.0,False,lym
+29,endoplasmic reticulum lumen,7.0,False,lym
+34,endoplasmic reticulum lumen,15.0,False,col
+30,extracellular region,127.0,False,lym
+35,extracellular region,226.0,False,col
+36,fatty acid beta-oxidation,11.0,False,col
+37,galactolipase activity,5.0,False,col
+38,glucosinolate biosynthetic process,9.0,False,col
+31,glutathione binding,8.0,False,lym
+39,glutathione binding,9.0,False,col
+32,glutathione metabolic process,9.0,False,lym
+40,glutathione metabolic process,13.0,False,col
+33,glutathione transferase activity,11.0,False,lym
+41,glutathione transferase activity,15.0,False,col
+42,heme binding,43.0,False,col
+34,heme binding,33.0,False,lym
+43,hydrogen peroxide catabolic process,13.0,False,col
+35,hydrogen peroxide catabolic process,13.0,False,lym
+36,indoleacetic acid biosynthetic process,5.0,False,lym
+4,induced systemic resistance,8.0,True,lym
+3,induced systemic resistance,9.0,True,col
+44,large ribosomal subunit,13.0,False,col
+45,light-harvesting complex,8.0,False,col
+46,lipid transport,17.0,False,col
+37,magnesium chelatase complex,3.0,False,lym
+47,manganese ion binding,11.0,False,col
+38,manganese ion binding,8.0,False,lym
+39,membrane,95.0,False,lym
+48,membrane,170.0,False,col
+49,nucleus,346.0,False,col
+40,nucleus,165.0,False,lym
+50,nutrient reservoir activity,15.0,False,col
+41,nutrient reservoir activity,10.0,False,lym
+42,oxidation-reduction process,80.0,False,lym
+51,oxidation-reduction process,130.0,False,col
+43,peroxidase activity,22.0,False,lym
+52,peroxidase activity,22.0,False,col
+44,photosynthesis,18.0,False,lym
+53,photosynthesis,34.0,False,col
+54,"photosynthesis, light harvesting in photosystem I",8.0,False,col
+45,plant-type cell wall,32.0,False,lym
+55,plant-type cell wall,55.0,False,col
+5,plasmodesma,55.0,True,lym
+4,plasmodesma,108.0,True,col
+46,plastid,32.0,False,lym
+56,plastid,49.0,False,col
+47,plastid chromosome,5.0,False,lym
+48,plastid transcription,5.0,False,lym
+57,plastid translation,7.0,False,col
+49,plastid-encoded plastid RNA polymerase complex,3.0,False,lym
+58,plastoglobule,15.0,False,col
+50,polysaccharide catabolic process,6.0,False,lym
+51,protein import into chloroplast stroma,9.0,False,lym
+59,protein import into chloroplast stroma,11.0,False,col
+60,proteolysis,43.0,False,col
+52,rRNA binding,18.0,False,lym
+61,rRNA binding,29.0,False,col
+62,"regulation of transcription, DNA-templated",49.0,False,col
+63,response to bacterium,20.0,False,col
+53,response to bacterium,17.0,False,lym
+54,response to cadmium ion,32.0,False,lym
+64,response to cadmium ion,57.0,False,col
+65,response to cold,47.0,False,col
+55,response to cold,26.0,False,lym
+66,response to cytokinin,38.0,False,col
+56,response to endoplasmic reticulum stress,7.0,False,lym
+67,response to endoplasmic reticulum stress,9.0,False,col
+5,response to fungus,16.0,True,col
+6,response to jasmonic acid,16.0,True,lym
+6,response to jasmonic acid,25.0,True,col
+68,response to karrikin,21.0,False,col
+57,response to karrikin,14.0,False,lym
+7,response to oomycetes,11.0,True,col
+7,response to oomycetes,7.0,True,lym
+69,response to oxidative stress,40.0,False,col
+58,response to oxidative stress,31.0,False,lym
+70,response to salt stress,71.0,False,col
+59,response to salt stress,39.0,False,lym
+71,response to water deprivation,38.0,False,col
+8,response to wounding,32.0,True,col
+8,response to wounding,18.0,True,lym
+72,ribosome,64.0,False,col
+73,ribosome biogenesis,23.0,False,col
+74,stromule,10.0,False,col
+75,structural constituent of ribosome,79.0,False,col
+60,tRNA aminoacylation for protein translation,6.0,False,lym
+76,thylakoid,53.0,False,col
+61,thylakoid,27.0,False,lym
+77,toxin catabolic process,13.0,False,col
+62,toxin catabolic process,10.0,False,lym
+78,translation,83.0,False,col
+79,tryptophan biosynthetic process,9.0,False,col
+63,tryptophan biosynthetic process,9.0,False,lym
+80,tubulin complex,6.0,False,col
+81,vacuole,66.0,False,col

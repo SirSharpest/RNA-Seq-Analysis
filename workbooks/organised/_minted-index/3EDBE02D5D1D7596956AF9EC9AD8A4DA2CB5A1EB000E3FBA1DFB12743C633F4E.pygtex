@@ -1,0 +1,8 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{matplotlib.pyplot} \PYG{k+kn}{as} \PYG{n+nn}{plt}
+\PYG{k+kn}{import} \PYG{n+nn}{seaborn} \PYG{k+kn}{as} \PYG{n+nn}{sns}
+\PYG{k+kn}{import} \PYG{n+nn}{numpy} \PYG{k+kn}{as} \PYG{n+nn}{np}
+\PYG{o}{\PYGZpc{}}\PYG{k}{matplotlib} inline
+\PYG{n}{top}\PYG{p}{,} \PYG{n}{bot} \PYG{o}{=} \PYG{n}{get\PYGZus{}two\PYGZus{}clustermaps\PYGZus{}data}\PYG{p}{(}\PYG{n}{DE\PYGZus{}pairings\PYGZus{}to\PYGZus{}lym\PYGZus{}05hr}\PYG{p}{,} \PYG{l+m+mi}{25}\PYG{p}{)}
+\PYG{n}{gt} \PYG{o}{=} \PYG{n}{sns}\PYG{o}{.}\PYG{n}{clustermap}\PYG{p}{(}\PYG{n}{top}\PYG{o}{.}\PYG{n}{set\PYGZus{}index}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}gene name\PYGZsq{}}\PYG{p}{),} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}bwr\PYGZsq{}}\PYG{p}{,} \PYG{n}{vmin}\PYG{o}{=\PYGZhy{}}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n}{vmax}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n}{yticklabels}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{,} \PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{20}\PYG{p}{,}\PYG{l+m+mi}{20}\PYG{p}{))}
+\end{Verbatim}

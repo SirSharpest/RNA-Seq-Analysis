@@ -1,0 +1,74 @@
+#+BEGIN_SRC ipython :session
+  counts = pd.read_csv("{0}/PHD/Transcripts/Data/norml_count_data.csv".format(expanduser('~/'),index_col=1)).rename(columns={'Unnamed: 0':'gene'}).set_index('gene')
+
+  DE_pairings_c_05hr = read_xl('/Users/hughesn/PHD/Transcripts/Data/pairings_05hr.xlsx', unique=True)
+  pval = 0.05
+
+  col_genes_down = DE_pairings_c_05hr[((DE_pairings_c_05hr['sample'] == 'col_c_05h') & (DE_pairings_c_05hr['padj'] < pval) & (DE_pairings_c_05hr['log2FoldChange'] < 0))].index.values
+  col_genes_up = DE_pairings_c_05hr[((DE_pairings_c_05hr['sample'] == 'col_c_05h') & (DE_pairings_c_05hr['padj'] < pval) & (DE_pairings_c_05hr['log2FoldChange'] > 0))].index.values
+
+  lym_genes_down = DE_pairings_c_05hr[((DE_pairings_c_05hr['sample'] == 'lym_c_05h') & (DE_pairings_c_05hr['padj'] < pval) & (DE_pairings_c_05hr['log2FoldChange'] < 0) )].index.values
+  lym_genes_up = DE_pairings_c_05hr[((DE_pairings_c_05hr['sample'] == 'lym_c_05h') & (DE_pairings_c_05hr['padj'] < pval) & (DE_pairings_c_05hr['log2FoldChange'] > 0) )].index.values
+
+  cerk_genes_down = DE_pairings_c_05hr[((DE_pairings_c_05hr['sample'] == 'cer_c_05h') & (DE_pairings_c_05hr['padj'] < pval) & (DE_pairings_c_05hr['log2FoldChange'] < 0) )].index.values
+  cerk_genes_up = DE_pairings_c_05hr[((DE_pairings_c_05hr['sample'] == 'cer_c_05h') & (DE_pairings_c_05hr['padj'] < pval) & (DE_pairings_c_05hr['log2FoldChange'] > 0) )].index.values
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [2292]:
+:END:
+
+#+BEGIN_SRC ipython :session
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    sns.set()
+
+    genes = list(cerk_genes_down)
+    [genes.append(g) for g in cerk_genes_up]
+    [genes.append(g) for g in set(set(cerk_genes_down) & set(col_genes_down) & set(lym_genes_down))]
+
+    genes = list(set(genes))
+
+    for g in list(set(cerk_genes_down) & set(lym_genes_down)):
+        shared = g
+
+    fig, ax = plt.subplots(len(genes), figsize=(8,15))
+  11
+    for idx, g in enumerate(genes):
+        d = get_gene_names([g]).iloc[0]['description']
+        tc = counts.loc[g]
+        tc = tc.T.reset_index()
+        tc['sample'] = tc['index'].apply(lambda x: str(x).rsplit('_', 1)[0])
+        tc = tc.set_index('index')
+        tc = tc.reset_index().melt(id_vars=['index', 'sample'])
+        tc.rename(columns={'index': 'id'}, inplace=True)
+        tc['time'] = tc['sample'].apply(lambda x: str(x).rsplit('_', 1)[-1])
+        tc['treatment'] = tc['id'].apply(lambda x: str(x).split('_')[1])
+        tc['geno'] = pd.Categorical(tc['id'].apply(lambda x: str(x).split('_')[0]),['col','lym','cer'],ordered=True)
+        tc['sample'] = tc['sample'].apply(lambda x: str(x)[:5])
+        tc = tc.sort_values(by='geno')
+        tc['value'] = tc.apply(lambda x: x['value']/tc[(tc['geno'] == x['geno']) &(tc['time']=='05h')&(tc['treatment'] == 'w')]['value'].mean(), axis=1)
+
+        sns.boxplot(data=tc[tc['time'] == '05h'], x='geno', y='value', hue='treatment', ax=ax[idx])
+        if idx > 0:
+            ax[idx].legend().set_visible(False)
+            tc['geno']
+        if g == shared:
+            ax[idx].set_title(f"{g} | {d} (lym+cerk)")
+        else:
+            ax[idx].set_title(f"{g} | {d}")
+    fig.tight_layout()
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [2349]:
+# text/plain
+: <Figure size 576x1080 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/648e3d2c347911d25ab0c59946b67420d7130dfb/f4396c4a29e19f896d390cb8304025dd9d3102bd.png]]
+:END:

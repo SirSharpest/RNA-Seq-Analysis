@@ -1,0 +1,11 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{seaborn} \PYG{k+kn}{as} \PYG{n+nn}{sns}
+\PYG{k+kn}{import} \PYG{n+nn}{matplotlib.pyplot} \PYG{k+kn}{as} \PYG{n+nn}{plt}
+\PYG{k+kn}{from} \PYG{n+nn}{scipy.spatial.distance} \PYG{k+kn}{import} \PYG{n}{pdist}\PYG{p}{,} \PYG{n}{squareform}
+
+\PYG{n}{distances} \PYG{o}{=} \PYG{n}{pdist}\PYG{p}{(}\PYG{n}{counts}\PYG{o}{.}\PYG{n}{T}\PYG{o}{.}\PYG{n}{values}\PYG{p}{,} \PYG{n}{metric}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}euclidean\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{dist\PYGZus{}matrix} \PYG{o}{=} \PYG{n}{squareform}\PYG{p}{(}\PYG{n}{distances}\PYG{p}{)}
+\PYG{n}{dist\PYGZus{}df} \PYG{o}{=} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{DataFrame}\PYG{p}{(}\PYG{n}{dist\PYGZus{}matrix}\PYG{p}{,} \PYG{n}{columns} \PYG{o}{=} \PYG{n}{counts}\PYG{o}{.}\PYG{n}{columns}\PYG{p}{,} \PYG{n}{index}\PYG{o}{=}\PYG{n}{counts}\PYG{o}{.}\PYG{n}{columns}\PYG{p}{)}
+
+\PYG{n}{sns}\PYG{o}{.}\PYG{n}{clustermap}\PYG{p}{(}\PYG{n}{dist\PYGZus{}df}\PYG{p}{)}
+\end{Verbatim}

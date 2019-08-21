@@ -1,0 +1,20 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{rfe\PYGZus{}forest} \PYG{o}{=} \PYG{n}{counts}\PYG{o}{.}\PYG{n}{loc}\PYG{p}{[}\PYG{n}{genes}\PYG{p}{][[}\PYG{n}{c} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{counts}\PYG{o}{.}\PYG{n}{columns} \PYG{k}{if} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZus{}05h\PYGZsq{}} \PYG{o+ow}{in} \PYG{n}{c} \PYG{o+ow}{and} \PYG{l+s+s1}{\PYGZsq{}cer\PYGZsq{}} \PYG{o+ow}{in} \PYG{n}{c}\PYG{p}{)]]}\PYG{o}{.}\PYG{n}{T}
+\PYG{n}{rfe\PYGZus{}forest} \PYG{o}{=} \PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{loc}\PYG{p}{[:,}\PYG{o}{\PYGZti{}}\PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{columns}\PYG{o}{.}\PYG{n}{duplicated}\PYG{p}{()]}
+\PYG{n}{rfe\PYGZus{}forest} \PYG{o}{=} \PYG{n}{rfe\PYGZus{}forest}\PYG{p}{[[}\PYG{n}{c} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n+nb}{set}\PYG{p}{(}\PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{columns}\PYG{o}{.}\PYG{n}{values}\PYG{p}{)]]}
+
+\PYG{n}{feat\PYGZus{}labels} \PYG{o}{=} \PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{columns}\PYG{o}{.}\PYG{n}{values}
+\PYG{n}{y} \PYG{o}{=} \PYG{p}{[}\PYG{n}{d}\PYG{o}{.}\PYG{n}{rsplit}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZus{}\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{k}{for} \PYG{n}{d} \PYG{o+ow}{in} \PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{index}\PYG{o}{.}\PYG{n}{values}\PYG{p}{]}
+
+\PYG{n}{X\PYGZus{}train}\PYG{p}{,} \PYG{n}{X\PYGZus{}test}\PYG{p}{,} \PYG{n}{y\PYGZus{}train}\PYG{p}{,} \PYG{n}{y\PYGZus{}test} \PYG{o}{=} \PYG{n}{train\PYGZus{}test\PYGZus{}split}\PYG{p}{(}\PYG{n}{rfe\PYGZus{}forest}\PYG{o}{.}\PYG{n}{values}\PYG{p}{,} \PYG{n}{y}\PYG{p}{,} \PYG{n}{test\PYGZus{}size}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{random\PYGZus{}state}\PYG{o}{=}\PYG{l+m+mi}{42}\PYG{p}{)}
+\PYG{n}{forest} \PYG{o}{=} \PYG{n}{RandomForestClassifier}\PYG{p}{(}\PYG{n}{n\PYGZus{}estimators}\PYG{o}{=}\PYG{l+m+mi}{20000}\PYG{p}{,} \PYG{n}{random\PYGZus{}state}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{n\PYGZus{}jobs}\PYG{o}{=\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{n}{forest}\PYG{o}{.}\PYG{n}{fit}\PYG{p}{(}\PYG{n}{X\PYGZus{}train}\PYG{p}{,} \PYG{n}{y\PYGZus{}train}\PYG{p}{)}
+\PYG{n}{res} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{n}{k}\PYG{p}{:} \PYG{n}{v} \PYG{k}{for} \PYG{n}{k}\PYG{p}{,} \PYG{n}{v} \PYG{o+ow}{in} \PYG{n+nb}{sorted}\PYG{p}{(}
+    \PYG{n+nb}{zip}\PYG{p}{(}\PYG{n}{feat\PYGZus{}labels}\PYG{p}{,} \PYG{n}{forest}\PYG{o}{.}\PYG{n}{feature\PYGZus{}importances\PYGZus{}}\PYG{p}{),} \PYG{n}{key}\PYG{o}{=}\PYG{k}{lambda} \PYG{n}{x}\PYG{p}{:} \PYG{n}{x}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{reverse}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)\PYGZcb{}}
+\PYG{n}{res\PYGZus{}df} \PYG{o}{=} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{DataFrame}\PYG{p}{(}\PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{res}\PYG{o}{.}\PYG{n}{items}\PYG{p}{()),} \PYG{n}{columns}\PYG{o}{=}\PYG{p}{[}
+                      \PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}importance\PYGZsq{}}\PYG{p}{])}\PYG{o}{.}\PYG{n}{set\PYGZus{}index}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{names} \PYG{o}{=} \PYG{n}{get\PYGZus{}gene\PYGZus{}names}\PYG{p}{(}\PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{res\PYGZus{}df}\PYG{o}{.}\PYG{n}{index}\PYG{p}{))}
+\PYG{n}{res\PYGZus{}df} \PYG{o}{=} \PYG{n}{pd}\PYG{o}{.}\PYG{n}{merge}\PYG{p}{(}\PYG{n}{res\PYGZus{}df}\PYG{p}{,} \PYG{n}{names}\PYG{p}{,} \PYG{n}{left\PYGZus{}index}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{,} \PYG{n}{right\PYGZus{}on}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}incoming\PYGZsq{}}\PYG{p}{)}\PYG{o}{.}\PYG{n}{rename}\PYG{p}{(}
+    \PYG{n}{columns}\PYG{o}{=}\PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}incoming\PYGZsq{}}\PYG{p}{:} \PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{\PYGZcb{})}\PYG{o}{.}\PYG{n}{set\PYGZus{}index}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}gene\PYGZsq{}}\PYG{p}{)}\PYG{o}{.}\PYG{n}{sort\PYGZus{}values}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}importance\PYGZsq{}}\PYG{p}{,} \PYG{n}{ascending}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+\PYG{n}{res\PYGZus{}df}
+\end{Verbatim}

@@ -1,0 +1,970 @@
+#+TITLE: RNA-seq Report
+#+OPTIONS: toc:nil H:4 ^:nil
+#+LaTeX_CLASS: article
+#+LaTeX_CLASS_OPTIONS: [a4paper]
+#+LaTeX_HEADER: \usepackage[margin=0.8in]{geometry}
+#+LaTeX_HEADER: \usepackage{amssymb,amsmath}
+#+LaTeX_HEADER: \usepackage{fancyhdr}
+#+LaTeX_HEADER: \pagestyle{fancy}
+#+LaTeX_HEADER: \usepackage{lastpage}
+#+LaTeX_HEADER: \usepackage{float}
+#+LaTeX_HEADER: \restylefloat{figure}
+#+LaTeX_HEADER: \usepackage{hyperref}
+#+LaTeX_HEADER: \usepackage{tabularx}
+#+LaTeX_HEADER: \hypersetup{urlcolor=blue}
+#+LaTex_HEADER: \usepackage{titlesec}
+#+LaTex_HEADER: \setcounter{secnumdepth}{4}
+#+LaTeX_HEADER: \usepackage{minted}
+#+LaTeX_HEADER: \setminted{frame=single,framesep=10pt}
+#+LaTeX_HEADER: \chead{}
+#+LaTeX_HEADER: \rhead{\today}
+#+LaTeX_HEADER: \cfoot{}
+#+LaTeX_HEADER: \rfoot{\thepage\ of \pageref{LastPage}}
+#+LaTeX_HEADER: \usepackage[parfill]{parskip}
+#+LaTeX_HEADER:\usepackage{subfig}
+#+LaTex_HEADER: \usepackage[sort&compress, numbers]{natbib}
+#+LaTeX_HEADER: \hypersetup{colorlinks=true,linkcolor=black, citecolor=black}
+#+LATEX_HEADER_EXTRA:  \usepackage{framed}
+#+LATEX_HEADER_EXTRA: \usepackage{mathtools, cases}
+#+LATEX: \maketitle
+#+LATEX: \clearpage
+#+LATEX: \tableofcontents
+#+LATEX: \clearpage
+
+
+
+* Intro + example data
+
+
+#+BEGIN_SRC ipython :session :exports none
+  import tabulate
+  import IPython
+
+  class OrgFormatter(IPython.core.formatters.BaseFormatter):
+      format_type = IPython.core.formatters.Unicode('text/org')
+      print_method = IPython.core.formatters.ObjectName('_repr_org_')
+
+  def pd_dataframe_to_org(df):
+      return tabulate.tabulate(df, headers='keys', tablefmt='orgtbl', showindex='always')
+
+  ip = get_ipython()
+  ip.display_formatter.formatters['text/org'] = OrgFormatter()
+
+  f = ip.display_formatter.formatters['text/org']
+  f.for_type_by_name('pandas.core.frame', 'DataFrame', pd_dataframe_to_org)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [2]:
+:END:
+
+
+#+BEGIN_SRC ipython :session :exports none
+  import pandas as pd
+  import warnings
+  warnings.filterwarnings('ignore')
+
+
+  def read_xl(fn="/Users/nathan/PHD/Transcripts/Data/diff_from_col0:False_onlyDiff:False.xlsx"):
+      xl = pd.ExcelFile(fn)
+      sheet_names = xl.sheet_names
+      dfs = []
+      for s in sheet_names:
+          d = xl.parse(s)
+          d['sample'] = s.split("|")[0].replace(" ", "")
+          dfs.append(d)
+
+      DE = pd.concat(dfs)
+      DE = DE.rename_axis('gene').sort_values(by=['gene', 'log2FoldChange'],
+                                              ascending=[False, False])
+      return DE
+
+  counts = pd.read_csv(
+      "/Users/hughesn/PHD/Transcripts/Data/norml_count_data.csv",index_col=0)
+
+  #DE = read_xl()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [3]:
+:END:
+
+** Examples of data
+
+*** Normalised count data
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :display text/org :exports results
+counts.sample(20)[counts.columns[:4]]
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [7]:
+# text/org
+|           |   cer_c_05h_a37 |   cer_c_05h_b38 |   cer_c_05h_c39 |   cer_c_6h_a85 |
+|-----------+-----------------+-----------------+-----------------+----------------|
+| AT1G57560 |         6.66594 |         6.86016 |         6.71742 |        7.03654 |
+| AT2G03260 |         6.97298 |         7.08292 |         6.73242 |        6.89541 |
+| AT2G36355 |         7.53624 |         7.24664 |         7.22017 |        7.3226  |
+| AT1G11185 |         7.44287 |         7.37075 |         7.32766 |        6.51549 |
+| AT5G23030 |         6.06316 |         6.35515 |         6.21125 |        6.12698 |
+| AT5G16520 |         7.66076 |         7.63511 |         7.5679  |        7.40679 |
+| AT4G33150 |         9.03895 |         9.07082 |         9.05513 |        9.35499 |
+| AT4G14630 |         8.05476 |         8.24193 |         8.07485 |        7.42149 |
+| AT3G14560 |         7.08607 |         7.13215 |         7.1723  |        7.31465 |
+| AT1G18590 |         9.10513 |         8.96686 |         9.02159 |        9.35499 |
+| AT5G05365 |         8.09272 |         8.31546 |         7.93893 |        7.69591 |
+| AT5G11160 |         7.54439 |         7.81302 |         7.70158 |        7.61088 |
+| AT1G27420 |         7.12133 |         6.72751 |         6.53351 |        7.29047 |
+| AT5G18270 |         7.9986  |         7.83365 |         7.70791 |        7.24903 |
+| AT1G80440 |         6.8464  |         6.93494 |         6.83126 |        7.4786  |
+| AT1G07970 |         7.98129 |         8.0474  |         8.10328 |        8.20224 |
+| AT1G55450 |        10.1205  |        10.3351  |        10.2424  |        9.58924 |
+| AT5G24840 |         8.21536 |         8.27673 |         8.22432 |        8.19418 |
+| AT2G37460 |         8.14517 |         8.3438  |         8.19834 |        7.99419 |
+| AT2G07595 |         6.10621 |         6.02556 |         5.99113 |        5.97591 |
+:END:
+
+*** Expression difference hypothesis tests
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :display text/org :exports results
+DE.sample(20)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [8]:
+# text/org
+| gene      |   baseMean |   log2FoldChange |     lfcSE |       stat |      pvalue |        padj | sample    |
+|-----------+------------+------------------+-----------+------------+-------------+-------------+-----------|
+| AT5G39090 |   13.2487  |       0.9219     | 0.594288  |  1.55127   | 0.120838    | 0.335167    | cer_w_05h |
+| AT5G14380 |    8.87757 |      -1.17008    | 0.659602  | -1.77391   | 0.0760777   | 0.257841    | cer_w_6h  |
+| AT1G19730 |  119.519   |      -0.021061   | 0.203546  | -0.10347   | 0.91759     | 0.968718    | col_c_05h |
+| AT1G05493 |    4.37256 |       0.191672   | 0.96016   |  0.199625  | 0.841774    | 0.933395    | lym_c_05h |
+| AT3G09032 |   22.053   |       0.399712   | 0.48984   |  0.816006  | 0.414497    | 0.676983    | cer_c_05h |
+| AT2G41375 |   45.7757  |       0.0301228  | 0.31699   |  0.0950276 | 0.924293    | 0.971808    | cer_c_6h  |
+| AT4G36180 |  257.118   |       0.121669   | 0.189834  |  0.640924  | 0.521572    | 0.863141    | col_w_6h  |
+| AT1G23210 |    5.9605  |       0.155948   | 0.988455  |  0.157769  | 0.874639    | 0.951012    | col_c_05h |
+| AT2G01750 |  254.113   |      -0.313262   | 0.140221  | -2.23405   | 0.0254795   | 0.119981    | col_c_05h |
+| AT2G18780 |   17.807   |       0.149322   | 0.570296  |  0.261832  | 0.793451    | 0.905366    | col_c_6h  |
+| AT1G17410 |   46.0602  |      -0.101394   | 0.267701  | -0.378756  | 0.704869    | 0.858978    | col_c_6h  |
+| AT4G39330 | 1441.72    |      -0.0939816  | 0.0989497 | -0.949792  | 0.342218    | 0.863757    | lym_w_05h |
+| AT4G38130 | 1203.39    |       0.00369207 | 0.0794837 |  0.0464507 | 0.962951    | 0.998246    | lym_w_05h |
+| AT3G52190 |  273.452   |       0.55585    | 0.161152  |  3.44924   | 0.000562174 | 0.00753138  | cer_w_6h  |
+| AT3G12270 |  323.137   |       0.377735   | 0.153265  |  2.46459   | 0.0137171   | 0.0821683   | cer_w_05h |
+| AT4G24805 |  199.389   |       0.6758     | 0.150516  |  4.4899    | 7.12563e-06 | 7.87341e-05 | lym_c_05h |
+| AT3G05430 |   32.4406  |       0.350837   | 0.362139  |  0.96879   | 0.33265     | 0.859876    | lym_w_05h |
+| AT3G01135 |   43.5689  |      -0.379412   | 0.268763  | -1.4117    | 0.158039    | 0.421368    | cer_c_6h  |
+| AT3G13404 |    6.12748 |      -0.193849   | 0.861789  | -0.224938  | 0.822028    | 0.925835    | cer_w_6h  |
+| AT2G24860 |  270.011   |      -0.174685   | 0.160757  | -1.08664   | 0.277195    | 0.715961    | col_w_6h  |
+:END:
+
+*** Data with extra descriptions
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :display text/org :exports results
+  from gprofiler import GProfiler
+
+  def get_gene_names(geneList):
+
+      gp = GProfiler(return_dataframe=True)
+      df = gp.convert(organism='athaliana',
+                 query=geneList)[['incoming', 'name', 'description']]
+      df['description'] = df.apply(lambda x: x['description'].split('[')[0].split(';')[0], axis=1)
+      return df
+
+  #get_gene_names(list(DE.sample(20).index))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [451]:
+:END:
+
+\clearpage
+* Initial data checking
+
+** Check sample counts
+This shows that the normalisation of the count data has worked correctly, each sample is presented as having the same number of reads.
+This prevents different samples having different weights due to RNA-seq not producing uniform samples.
+
+   #+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "samplecounts" :filename "obipy-resources/samplecounts.png" :caption "Counting the number of reads found in each sample" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+   import matplotlib.pyplot as plt
+   import seaborn as sns
+   import numpy as np
+   %matplotlib inline
+
+   fig, ax = plt.subplots(1, figsize=(10,10))
+   tmp_counts = pd.DataFrame(counts.sum(), columns=['sum'])
+   tmp_counts['samples'] = tmp_counts.index.map(lambda x: str(x))
+   tmp_counts['groups'] = tmp_counts.index.map(lambda x: str(x)[:-4])
+   sns.barplot(data=tmp_counts, y='samples', x='sum', ax=ax, color="aqua")
+   #+END_SRC
+
+   #+RESULTS:
+   :RESULTS:
+   # Out [10]:
+
+
+   # text/plain
+   : <Figure size 720x720 with 1 Axes>
+
+   # image/png
+   #+attr_html: :width 850px
+   #+caption: Counting the number of reads found in each sample
+   #+name: samplecounts
+   [[file:obipy-resources/samplecounts.png]]
+   :END:
+
+\clearpage
+
+
+** Check for sample differences
+Here, we do a naive check that there is variance within the samples; this matrix shows that a straight-forward euclidean distance of all counts in the samples are different. i.e. if there was a very small difference here it would be worrying and suggest that there isn't any significant changes.
+This figure is a simple data sanity check, *not of use for scientific purposes*.
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "distancemappooled" :filename "obipy-resources/distancemap_together.png" :caption "Distance map between samples, pooled together " :attr_html ":width 850px" :attr_latex ":width 15cm")) :exports results
+import matplotlib.patches as mpatches
+
+def collapse_counts(counts):
+    u_cols = list(set([l.rsplit("_", 1)[0] for l in list(counts.columns)]))
+    cols = list(counts.columns)
+    ss = []
+    for uc in u_cols:
+        cs = [c for c in cols if c.startswith(uc)]
+        ss.append(counts[cs].sum(axis=1).rename(uc))
+    dc = pd.concat(ss, axis=1)
+    return dc
+
+
+collapsed_counts = collapse_counts(counts)
+lut = dict(zip(list(set([c[:3] for c in collapsed_counts.columns])), "rbg"))
+row_colors = [lut[c[:3]] for c in collapsed_counts.columns]
+#legend_TN = [mpatches.Patch(color=c, label=l) for (list(set([c[:3] for c in collapsed_counts.columns]))]
+
+distances = pdist(collapsed_counts.T.values, metric='euclidean')
+dist_matrix = squareform(distances)
+dist_df = pd.DataFrame(dist_matrix, columns = collapsed_counts.columns, index=collapsed_counts.columns)
+sns.clustermap(dist_df)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [310]:
+
+
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+#+attr_html: :width 850px
+#+attr_latex: :width 15cm
+#+caption: Distance map between samples, pooled together
+#+name: distancemappooled
+[[file:obipy-resources/distancemap_together.png]]
+:END:
+
+\clearpage
+* Analysis
+
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :exports none
+  def make_clustermap_df(DE, description='description', n=20):
+      locs = DE[['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange',
+                                                                        ascending=False).head(n).index.values
+      top = DE.loc[locs]
+      top = top.pivot(columns='sample', values='log2FoldChange')
+
+      locs = DE[['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange',
+                                                                        ascending=True).head(n).index.values
+      bot = DE.loc[locs]
+      bot = bot.pivot(columns='sample', values='log2FoldChange')
+
+      both = pd.concat([top,bot])
+
+      both['gene name'] = list(get_gene_names(list(both.index.values))[description])
+      both = both.set_index('gene name')
+
+      return both
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [13]:
+:END:
+
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :exports none
+  def get_locs(DE, n, include_large=True, include_small=True):
+      samples = DE['sample'].unique()
+      locs = []
+      for idx, s in enumerate(samples):
+          if include_large:
+              l1 = DE[DE['sample'] == s][['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange',
+                                                                                                 ascending=False).head(n).index.values
+              locs.extend(l1)
+          if include_small:
+              l2 = DE[DE['sample'] == s][['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange',
+                                                                                                 ascending=True).head(n).index.values
+              locs.extend(l2)
+      locs = np.array(locs)
+      return locs
+
+
+  def make_clustermap_df_n_samples(DE, description='description', n=20, include_large=True, include_small=True):
+      locs = get_locs(DE, n, include_large=include_large, include_small=include_small)
+      top = DE.loc[locs]
+      top = top.groupby(['sample', 'gene']).mean(
+      ).reset_index().set_index('gene')
+      top = top.pivot(columns='sample', values='log2FoldChange')
+      top['gene name'] = list(get_gene_names(
+          list(top.index.values))[description])
+      top = top.set_index('gene name')
+      return top
+
+
+  def make_two_clustermaps(df, n=20):
+      top = make_clustermap_df_n_samples(df, n=n, include_small=False)
+      bot = make_clustermap_df_n_samples(df, n=n, include_large=False)
+      sns.clustermap(top, cmap='bwr', vmin=-10, vmax=10, yticklabels=True)
+      sns.clustermap(bot, cmap='bwr', vmin=-10, vmax=10, yticklabels=True)
+
+  def make_clustermap_table(df, n=20):
+      top = make_clustermap_df_n_samples(df, n=n, include_small=False)
+      bot = make_clustermap_df_n_samples(df, n=n, include_large=False)
+      return pd.concat([top, bot])
+#+END_SRC
+
+
+
+** Count data feature ranking
+
+
+*** Feature selection
+
+So it's worth noting that all expression profiles look similar, so choosing from 20k+ genes for being a key trait is not going to work.
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "histo" :filename "obipy-resources/histo.png" :caption "Histogram of samples expression profile" :attr_html ":width 450px" :attsr_latex ":width 15cm")) :exports results
+  import pandas as pd
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  sns.set()
+  counts = pd.read_csv(
+      "/Users/hughesn/PHD/Transcripts/Data/norml_count_data.csv", index_col=0)
+
+  filter_cols = [c for c in counts.columns if (
+      c.startswith('col_w_6h') or c.startswith('col_c_6h'))]
+
+  col_counts = counts[filter_cols]
+
+  col_w_counts = col_counts[[c for c in col_counts.columns if '_w_' in c]]
+  col_c_counts = col_counts[[c for c in col_counts.columns if '_c_' in c]]
+
+  fig, ax = plt.subplots(1,3, sharex=True, sharey=True, figsize=(15,5))
+  axes = iter(ax)
+  for c,w in zip(col_c_counts.columns, col_w_counts.columns):
+      a = next(axes)
+      a.hist(col_c_counts[c], alpha=0.3)
+      a.hist(col_w_counts[w], alpha=0.3)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [23]:
+# text/plain
+: <Figure size 1080x360 with 3 Axes>
+
+# image/png
+#+attr_html: :width 450px
+#+caption: Histogram of samples expression profile
+#+name: histo
+[[file:obipy-resources/histo.png]]
+:END:
+
+
+*** Specifically grouped genes to test with random forest
+**** Grouped by counts
+/N.B. doesn't work well/
+
+#+BEGIN_SRC ipython :session :exports results
+  import jenkspy
+
+  col0 = counts[[c for c in counts.columns if c.startswith('col_w_05h')]].mean(axis=1).sort_values()
+  col0A = np.array(col0)
+  breaks = jenkspy.jenks_breaks(col0A, nb_class=20)
+
+  col0_index = pd.Index(col0)
+
+  indices = []
+  for b in breaks:
+      r = col0_index.get_loc(b)
+      if isinstance(r, slice):
+          r = r.stop
+      indices.append(r)
+
+  group_locs = [df.index for df in np.split(col0, indices)]
+
+  cols = {}
+  for c in counts.columns:
+      avg_vals = []
+      for g in group_locs:
+          avg_vals.append(np.mean(counts[c].loc[g]))
+      cols[c] = avg_vals
+  refined_counts = pd.DataFrame(cols)
+  refined_counts = refined_counts.set_index(pd.Index(["group {0}".format(i) for i in refined_counts.index]))
+
+  from sklearn.ensemble import RandomForestClassifier
+  from sklearn.model_selection import train_test_split
+  import numpy as np
+  import time
+
+  subset = refined_counts[[c for c in refined_counts.columns if (c.startswith('col_w_05h') or c.startswith('col_c_05h')) ]]
+  data = refined_counts.T
+  data = data.reset_index()
+  data['index'] = data['index'].apply(lambda x: x.rsplit('_',1)[0])
+  data = data.set_index('index')
+  feat_labels = data.columns
+
+  t_start = time.time()
+  X_train, X_test, y_train, y_test = train_test_split(data.values.T, feat_labels, test_size=0.33, random_state=42)
+  forest = RandomForestClassifier(n_estimators=10000, random_state=0, n_jobs=-1)
+  forest.fit(X_train, y_train)
+  t_end = time.time()
+  importances = forest.feature_importances_
+  indices = np.argsort(importances)[::-1]
+
+  for feature in sorted(zip(feat_labels, forest.feature_importances_), key=lambda x: x[1]):
+      print(feature)
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [180]:
+# output
+('group 19', 0.02673065440188904)
+('group 0', 0.026805531708766744)
+('group 8', 0.02693006569866829)
+('group 7', 0.026945590365085717)
+('group 11', 0.0273549621065065)
+('group 14', 0.027445354116411903)
+('group 13', 0.027541784964519728)
+('group 12', 0.0277207993593499)
+('group 5', 0.02775004237869988)
+('group 15', 0.02779604871488358)
+('group 3', 0.027869968213346162)
+('group 17', 0.0279730082624969)
+('group 6', 0.028066443188964892)
+('group 21', 0.028163391058461162)
+('group 2', 0.0281666759612335)
+('group 10', 0.02826043573185192)
+('group 20', 0.02829118692473585)
+('group 4', 0.028328336739638103)
+('group 16', 0.028503011380151832)
+('group 1', 0.0287560048630577)
+('group 9', 0.028834542073436394)
+('group 18', 0.028910475534047003)
+
+:END:
+
+
+
+
+** Comparing 05hr chitin to water treatments
+
+#+BEGIN_SRC ipython :session :exports none
+  DE_pairings_05hr = read_xl('./Data/pairings_05hr.xlsx')
+#+END_SRC
+
+
+*** Clustermap of largest/smallest DE genes
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session  :exports results
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+  make_two_clustermaps(DE_pairings_05hr, n=10)
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [301]:
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/64b51c1cbc1e5d4112f6b391f5f33b91f8774633.png]]
+
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/f1d5bf9ebf5510461deba3e9ea7334988f295e15.png]]
+:END:
+
+
+
+*** Boxplots of differential changes
+
+    #+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "pairings_05hr_boxplots" :filename "obipy-resources/pairings_05hr_boxplots.png" :caption "Boxplots of differential expressions from 50 largest (left) and 50 lowe05hst (right) DE genes" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    %matplotlib inline
+
+    fig, ax = plt.subplots(1,2, sharex=True, sharey =True, figsize=(15,5))
+    top = DE_pairings_05hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    top_extracted = top.loc[get_locs(top, 50, include_small=False)]
+    sns.boxplot(data=top_extracted, x='sample', y='log2FoldChange', ax=ax[0])
+
+
+    bot = DE_pairings_05hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    bot_extracted = bot.loc[get_locs(bot, 50, include_large=False)]
+    sns.boxplot(data=bot_extracted, x='sample', y='log2FoldChange', ax=ax[1])
+
+
+    #+END_SRC
+
+    #+RESULTS:
+    :RESULTS:
+    # Out [16]:
+
+
+    # text/plain
+    : <Figure size 1080x360 with 2 Axes>
+
+    # image/png
+    #+attr_html: :width 850px
+    #+caption: Boxplots of differential expressions from 50 largest (left) and 50 lowe05hst (right) DE genes
+    #+name: pairings_05hr_boxplots
+    [[file:obipy-resources/pairings_05hr_boxplots.png]]
+    :END:
+
+
+\clearpage
+
+** Comparing 6hr chitin to water treatments
+#+BEGIN_SRC ipython :session :exports none
+  DE_pairings_6hr = read_xl('./Data/pairings_6hr.xlsx')
+#+END_SRC
+
+*** Clustermap of largest/smallest DE genes
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session  :exports results
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+
+  make_two_clustermaps(DE_pairings_6hr, n=10)
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [303]:
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/a7bd280b6a85e3544fc81c603a6243f9f82eb888.png]]
+
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/08c8c5f37494d9b646ffd479ad1db0ac175106aa.png]]
+:END:
+
+*** Boxplots of differential changes
+
+    #+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "pairings_6hr_boxplots" :filename "obipy-resources/pairings_6hr_boxplots.png" :caption "Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    %matplotlib inline
+
+    fig, ax = plt.subplots(1,2, sharex=True, sharey =True, figsize=(15,5))
+    top = DE_pairings_6hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    top_extracted = top.loc[get_locs(top, 50, include_small=False)]
+    sns.boxplot(data=top_extracted, x='sample', y='log2FoldChange', ax=ax[0])
+
+
+    bot = DE_pairings_6hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    bot_extracted = bot.loc[get_locs(bot, 50, include_large=False)]
+    sns.boxplot(data=bot_extracted, x='sample', y='log2FoldChange', ax=ax[1])
+
+
+    #+END_SRC
+
+    #+RESULTS:
+    :RESULTS:
+    # Out [18]:
+
+
+    # text/plain
+    : <Figure size 1080x360 with 2 Axes>
+
+    # image/png
+    #+attr_html: :width 850px
+    #+caption: Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes
+    #+name: pairings_6hr_boxplots
+    [[file:obipy-resources/pairings_6hr_boxplots.png]]
+    :END:
+
+
+
+\clearpage
+** Comparing 05hr treatments to lym
+#+BEGIN_SRC ipython :session :exports none
+  DE_pairings_to_lym_05hr = read_xl('./Data/pairings_to_lym_05hr.xlsx')
+#+END_SRC
+
+*** Clustermap of largest/smallest DE genes
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :exports results
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+  make_two_clustermaps(DE_pairings_to_lym_05hr, n=10)
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [304]:
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/59db26fd12b341fe438b64d3f155a63a90695e85.png]]
+
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/8276239e9ae27707edfee10548406edf576eac5e.png]]
+:END:
+
+*** Boxplots of differential changes
+
+    #+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "pairings_05hr_lym_boxplots" :filename "obipy-resources/pairings_05hr_lym_boxplots.png" :caption "Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    %matplotlib inline
+
+    fig, ax = plt.subplots(1,2, sharex=True, sharey =True, figsize=(15,5))
+    top = DE_pairings_to_lym_05hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    top_extracted = top.loc[get_locs(top, 50, include_small=False)]
+    sns.boxplot(data=top_extracted, x='sample', y='log2FoldChange', ax=ax[0])
+
+
+    bot = DE_pairings_to_lym_05hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    bot_extracted = bot.loc[get_locs(bot, 50, include_large=False)]
+    sns.boxplot(data=bot_extracted, x='sample', y='log2FoldChange', ax=ax[1])
+
+
+    #+END_SRC
+
+    #+RESULTS:
+    :RESULTS:
+    # Out [20]:
+
+
+    # text/plain
+    : <Figure size 1080x360 with 2 Axes>
+
+    # image/png
+    #+attr_html: :width 850px
+    #+caption: Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes
+    #+name: pairings_05hr_lym_boxplots
+    [[file:obipy-resources/pairings_05hr_lym_boxplots.png]]
+    :END:
+
+
+\clearpage
+** Comparing 6hr treatments to lym
+#+BEGIN_SRC ipython :session :exports none
+  DE_pairings_to_lym_6hr = read_xl('./Data/pairings_to_lym_6hr.xlsx')
+#+END_SRC
+
+
+*** Clustermap of largest/smallest DE genes
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :exports results
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+
+  make_two_clustermaps(DE_pairings_to_lym_6hr, n=10)
+
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [307]:
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/a828d5e435d435dc3cb8524d5cdb1871265369fd.png]]
+
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/f6b62fef4158e761352c1841a1a9ff9d7946e0e3.png]]
+:END:
+
+
+*** Boxplots of differential changes
+
+    #+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "pairings_6hr_lym_boxplots" :filename "obipy-resources/pairings_6hr_lym_boxplots.png" :caption "Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    %matplotlib inline
+
+    fig, ax = plt.subplots(1,2, sharex=True, sharey =True, figsize=(15,5))
+    top = DE_pairings_6hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    top_extracted = top.loc[get_locs(top, 50, include_small=False)]
+    sns.boxplot(data=top_extracted, x='sample', y='log2FoldChange', ax=ax[0])
+
+
+    bot = DE_pairings_6hr.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    bot_extracted = bot.loc[get_locs(bot, 50, include_large=False)]
+    sns.boxplot(data=bot_extracted, x='sample', y='log2FoldChange', ax=ax[1])
+
+
+    #+END_SRC
+
+    #+RESULTS:
+    :RESULTS:
+    # Out [22]:
+
+
+    # text/plain
+    : <Figure size 1080x360 with 2 Axes>
+
+    # image/png
+    #+attr_html: :width 850px
+    #+caption: Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes
+    #+name: pairings_6hr_lym_boxplots
+    [[file:obipy-resources/pairings_6hr_lym_boxplots.png]]
+    :END:
+
+
+\clearpage
+** Comparing all treatments across time
+
+#+BEGIN_SRC ipython :session :exports none
+  DE_cross_time_pairings = read_xl('./Data/cross_time_pairings.xlsx')
+#+END_SRC
+
+
+*** Clustermap of largest/smallest DE genes
+#+BEGIN_SRC ipython :tangle analysis_from_wb.py :session  :exports results
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+
+  make_two_clustermaps(DE_cross_time_pairings, n=10)
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [309]:
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/75adc85bc64db8458b069cf3d3fc9882f28e1d78.png]]
+
+# text/plain
+: <Figure size 720x720 with 4 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/b3bcc20aa5ee2c7db70b61562e18a41bbd8a2293.png]]
+:END:
+
+
+*** Boxplots of differential changes
+
+    #+BEGIN_SRC ipython :tangle analysis_from_wb.py :session :ipyfile '((:name "pairings_timings_boxplots" :filename "obipy-resources/pairings_timingsr_boxplots.png" :caption "Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes" :attr_html ":width 850px" :attsr_latex ":width 15cm")) :exports results
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    %matplotlib inline
+
+    fig, ax = plt.subplots(1,2, sharex=True, sharey =True, figsize=(15,5))
+    top = DE_cross_time_pairings.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    top_extracted = top.loc[get_locs(top, 50, include_small=False)]
+    sns.boxplot(data=top_extracted, x='sample', y='log2FoldChange', ax=ax[0])
+
+
+    bot = DE_cross_time_pairings.groupby(['sample', 'gene']).mean().reset_index().set_index('gene')
+    bot_extracted = bot.loc[get_locs(bot, 50, include_large=False)]
+    sns.boxplot(data=bot_extracted, x='sample', y='log2FoldChange', ax=ax[1])
+
+
+    #+END_SRC
+
+    #+RESULTS:
+    :RESULTS:
+    # Out [24]:
+
+
+    # text/plain
+    : <Figure size 1080x360 with 2 Axes>
+
+    # image/png
+    #+attr_html: :width 850px
+    #+caption: Boxplots of differential expressions from 50 largest (left) and 50 lowest (right) DE genes
+    #+name: pairings_timings_boxplots
+    [[file:obipy-resources/pairings_timingsr_boxplots.png]]
+    :END:
+
+*** Lineplots of changes between samples for genes of interest
+#+BEGIN_SRC ipython :session :exports results
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  import numpy as np
+  %matplotlib inline
+
+
+  def get_linedata(time_pair_df, n=5, include_large=True, include_small=True):
+      top = time_pair_df.groupby(
+          ['sample', 'gene']).mean().reset_index().set_index('gene')
+      locs = get_locs(top, n, include_large=include_large,
+                      include_small=include_small)
+      tc = counts.loc[locs]
+      tc = tc.T.reset_index()
+      tc['sample'] = tc['index'].apply(lambda x: str(x).rsplit('_', 1)[0])
+      tc = tc.set_index('index')
+      tc = tc.reset_index().melt(id_vars=['index', 'sample'])
+      tc.rename(columns={'index': 'id'}, inplace=True)
+      tc['time'] = tc['sample'].apply(lambda x: str(x).rsplit('_', 1)[-1])
+      tc['treatment'] = tc['id'].apply(lambda x: str(x).split('_')[1])
+      tc['geno'] = tc['id'].apply(lambda x: str(x).split('_')[0])
+      tc['sample'] = tc['sample'].apply(lambda x: str(x)[:5])
+      return tc
+
+
+  def generate_plots_method_2(df):
+      for s in df['sample'].unique():
+          tdf = get_linedata(df[df['sample'] == s], include_small=False, include_large=True)
+          fig, axes = plt.subplots(
+              2, len(tdf['variable'].unique()), figsize=(20,10))
+          j = -1
+          for v in tdf['variable'].unique():
+              i = 1
+              j = j+1
+
+              sns.lineplot(data=tdf[tdf['variable']==v], x='time', y='value', err_style="bars",
+                           hue='geno', style="treatment", ax=axes[i, j], legend=False)
+              axes[i, j].set_title(v)
+
+          tdf = get_linedata(df[df['sample'] == s], include_small=True, include_large=False)
+          j = -1
+          for  v in tdf['variable'].unique():
+              i = 0
+              j = j+1
+              if j+1 == len(tdf['variable'].unique()):
+                  sns.lineplot(data=tdf[tdf['variable']==v], x='time', y='value', err_style="bars",
+                               hue='geno', style="treatment", ax=axes[i, j])
+              else:
+                  sns.lineplot(data=tdf[tdf['variable']==v], x='time', y='value', err_style="bars",
+                               hue='geno', style="treatment", ax=axes[i, j], legend=False)
+              axes[i, j].set_title(v)
+
+          fig.suptitle("Largest upreg (top row) and downreg (bottom row) DE genes for sample{0}".format(s))
+  generate_plots_method_2(DE_cross_time_pairings)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [279]:
+# text/plain
+: <Figure size 1440x720 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/6eaa3cec89bd95c2d331c8225791ae85dc358a4d.png]]
+
+# text/plain
+: <Figure size 1440x720 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/d8eb75aab6d13c1d005f917f5d4167d0624708d9.png]]
+
+# text/plain
+: <Figure size 1440x720 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/e14b2a50c52c0c53091783c9b195bc9f8f652ad3.png]]
+
+# text/plain
+: <Figure size 1440x720 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/3a9ebe21758d975b29d5e81f6a4505b9b6a2d5b7.png]]
+
+# text/plain
+: <Figure size 1440x720 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/9e0357b87776e45d8f87168fe006bce0f2131213.png]]
+
+# text/plain
+: <Figure size 1440x720 with 10 Axes>
+
+# image/png
+[[file:obipy-resources/9cd72325f5feb94da5a4a2bf9cf66bfba3128720/b9adbbd55a75970a69346e600582d8b4d37d37dc.png]]
+:END:
+
+
+*** Checking up and down data's largest
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+  n = 5
+  df = DE_cross_time_pairings
+  s = list(df['sample'].unique())[0]
+  #tdf =  get_linedata(df[df['sample'] == s], include_small=True, include_large=False)
+  #tdf.head(10)
+
+  df = df[df['sample'] == s]
+  top = df.groupby(
+      ['sample', 'gene']).mean().reset_index().set_index('gene')
+  locs = get_locs(top, n, include_large=True,
+                  include_small=False)
+  top=top.loc[locs]
+  bot = df.groupby(
+      ['sample', 'gene']).mean().reset_index().set_index('gene')
+  locs = get_locs(bot, n, include_large=False,
+                  include_small=True)
+  bot=bot.loc[locs]
+  top_and_bot = pd.concat([top, bot])
+  filter_cols = [c for c in counts if (c.startswith(s) or c.startswith(s.replace('05h', '6h')))]
+  pd.merge(top_and_bot, counts[filter_cols], left_index=True, right_index=True)
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [1]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-1-2b5e0942c9be> in <module>
+      1 n = 5
+----> 2 df = DE_cross_time_pairings
+      3 s = list(df['sample'].unique())[0]
+      4 #tdf =  get_linedata(df[df['sample'] == s], include_small=True, include_large=False)
+      5 #tdf.head(10)
+
+NameError: name 'DE_cross_time_pairings' is not defined
+:END:

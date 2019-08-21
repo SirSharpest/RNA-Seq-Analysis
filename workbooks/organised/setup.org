@@ -1,0 +1,297 @@
+* General helper functions
+
+** Making nice tables
+
+#+BEGIN_SRC ipython :session
+  import tabulate
+  import IPython
+
+  class OrgFormatter(IPython.core.formatters.BaseFormatter):
+      format_type = IPython.core.formatters.Unicode('text/org')
+      print_method = IPython.core.formatters.ObjectName('_repr_org_')
+
+  def pd_dataframe_to_org(df):
+      return tabulate.tabulate(df, headers='keys', tablefmt='orgtbl', showindex='always')
+
+  ip = get_ipython()
+  ip.display_formatter.formatters['text/org'] = OrgFormatter()
+
+  f = ip.display_formatter.formatters['text/org']
+  f.for_type_by_name('pandas.core.frame', 'DataFrame', pd_dataframe_to_org)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [1]:
+:END:
+
+
+** Excel reader and loading count data
+#+BEGIN_SRC ipython :session :display text/org :tangle recursive_feature.py
+  import pandas as pd
+  import warnings
+  from os.path import expanduser
+  warnings.filterwarnings('ignore')
+
+
+  def read_xl(fn="/Users/nathan/PHD/Transcripts/Data/diff_from_col0:False_onlyDiff:False.xlsx", unique=True):
+      xl = pd.ExcelFile(fn)
+      sheet_names = xl.sheet_names
+      dfs = []
+      for s in sheet_names:
+          d = xl.parse(s)
+          if unique:
+              d['sample'] = s.split("|")[0].replace(" ", "")
+          else:
+              d['sample'] = s
+          dfs.append(d)
+
+      DE = pd.concat(dfs)
+      DE = DE.rename_axis('gene').sort_values(by=['gene', 'log2FoldChange'],
+                                              ascending=[False, False])
+      return DE
+
+  counts = pd.read_csv(
+      "{0}/PHD/Transcripts/Data/norml_count_data.csv".format(expanduser('~/'),index_col=0))
+  counts[[c for c in counts.columns if 'cer_c' in c]].head(5)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [2]:
+# text/org
+|    |   cer_c_05h_a37 |   cer_c_05h_b38 |   cer_c_05h_c39 |   cer_c_6h_a85 |   cer_c_6h_b86 |   cer_c_6h_c87 |
+|----+-----------------+-----------------+-----------------+----------------+----------------+----------------|
+|  0 |         7.65333 |         7.73449 |         7.5679  |        7.63575 |        7.62055 |        7.81064 |
+|  1 |         7.93999 |         7.79909 |         7.79347 |        7.95616 |        7.924   |        7.88399 |
+|  2 |         7.27285 |         7.09544 |         7.00389 |        6.88372 |        6.72014 |        6.58998 |
+|  3 |         9.16837 |         9.09566 |         9.13567 |        9.05724 |        9.0856  |        9.21304 |
+|  4 |         9.825   |         9.80514 |         9.76124 |        9.82781 |        9.91565 |        9.77211 |
+:END:
+
+** Gprofiler function
+#+BEGIN_SRC ipython :session :display text/org
+  from gprofiler import GProfiler
+
+  def get_gene_names(geneList):
+
+      gp = GProfiler(return_dataframe=True)
+      df = gp.convert(organism='athaliana',
+                 query=geneList)[['incoming', 'name', 'description']]
+      df['description'] = df.apply(lambda x: x['description'].split('[')[0].split(';')[0], axis=1)
+      return df
+  get_gene_names(list(counts.head(5).index))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [7]:
+# text/org
+|    | incoming   | name   | description                                    |
+|----+------------+--------+------------------------------------------------|
+|  0 | AT1G01010  | NAC001 | NAC domain-containing protein 1                |
+|  1 | AT1G01020  | ARV1   | ARV1 family protein                            |
+|  2 | AT1G01030  | NGA3   | B3 domain-containing transcription factor NGA3 |
+|  3 | AT1G01040  | DCL1   | Dicer-like 1                                   |
+|  4 | AT1G01050  | PPA1   | Soluble inorganic pyrophosphatase 1            |
+:END:
+
+
+** Misc plotting functions
+
+#+BEGIN_SRC ipython :session
+  def get_locs(DE, n, include_large=True, include_small=True):
+      samples = DE['sample'].unique()
+      locs = []
+      for idx, s in enumerate(samples):
+          if include_large:
+              l1 = DE[DE['sample'] == s][['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange',
+                                                                                                 ascending=False).head(n).index.values
+              locs.extend(l1)
+          if include_small:
+              l2 = DE[DE['sample'] == s][['log2FoldChange']].groupby(['gene']).sum().sort_values(by='log2FoldChange',
+                                                                                                 ascending=True).head(n).index.values
+              locs.extend(l2)
+      locs = np.array(locs)
+      return locs
+
+
+  def make_clustermap_df_n_samples(DE, description='description', n=20, include_large=True, include_small=True):
+      locs = get_locs(DE, n, include_large=include_large, include_small=include_small)
+      top = DE.loc[locs]
+      top = top.groupby(['sample', 'gene']).mean(
+      ).reset_index().set_index('gene')
+      top = top.pivot(columns='sample', values='log2FoldChange')
+      top['gene name'] = list(get_gene_names(
+          list(top.index.values))[description])
+      # top = top.set_index('gene name')
+      return top
+
+
+  def get_two_clustermaps_data(df, n):
+      top = make_clustermap_df_n_samples(df, n=n, include_small=False)
+      bot = make_clustermap_df_n_samples(df, n=n, include_large=False)
+      return (top, bot)
+
+  def make_two_clustermaps(df, n=50):
+      top, bot = get_two_clustermaps_data(df, n)
+      gt = sns.clustermap(top, cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(15,15))
+      gb = sns.clustermap(bot, cmap='bwr', vmin=-10, vmax=10, yticklabels=True, figsize=(15,15))
+      return (top, bot, gt, gb)
+
+
+  def make_clustermap_table(df, n=50):
+      top = make_clustermap_df_n_samples(df, n=n, include_small=False)
+      bot = make_clustermap_df_n_samples(df, n=n, include_large=False)
+      return pd.concat([top, bot])
+
+
+
+  def get_linedata(time_pair_df, n=5, include_large=True, include_small=True):
+      top = time_pair_df.groupby(
+          ['sample', 'gene']).mean().reset_index().set_index('gene')
+      locs = get_locs(top, n, include_large=include_large,
+                      include_small=include_small)
+      tc = counts.loc[locs]
+      tc = tc.T.reset_index()
+      tc['sample'] = tc['index'].apply(lambda x: str(x).rsplit('_', 1)[0])
+      tc = tc.set_index('index')
+      tc = tc.reset_index().melt(id_vars=['index', 'sample'])
+      tc.rename(columns={'index': 'id'}, inplace=True)
+      tc['time'] = tc['sample'].apply(lambda x: str(x).rsplit('_', 1)[-1])
+      tc['treatment'] = tc['id'].apply(lambda x: str(x).split('_')[1])
+      tc['geno'] = tc['id'].apply(lambda x: str(x).split('_')[0])
+      tc['sample'] = tc['sample'].apply(lambda x: str(x)[:5])
+      return tc
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [4]:
+:END:
+
+* Count Data
+
+** Count data feature ranking
+
+So it's worth noting that all expression profiles look similar, so choosing from 20k+ genes for being a key trait is not going to work.
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "histo" :filename "obipy-resources/histo.png" :caption "Histogram of samples expression profile" :attr_html ":width 450px" :attsr_latex ":width 15cm"))
+  import pandas as pd
+  import matplotlib.pyplot as plt
+  import seaborn as sns
+  sns.set()
+  from os.path import expanduser
+  usr = expanduser('~/')
+  counts = pd.read_csv(
+      f"{usr}/PHD/Transcripts/Data/norml_count_data.csv", index_col=0)
+
+  filter_cols = [c for c in counts.columns if (
+      c.startswith('col_w_6h') or c.startswith('col_c_6h'))]
+
+  col_counts = counts[filter_cols]
+
+  col_w_counts = col_counts[[c for c in col_counts.columns if '_w_' in c]]
+  col_c_counts = col_counts[[c for c in col_counts.columns if '_c_' in c]]
+
+  fig, ax = plt.subplots(1,3, sharex=True, sharey=True, figsize=(15,5))
+  axes = iter(ax)
+  for c,w in zip(col_c_counts.columns, col_w_counts.columns):
+      a = next(axes)
+      a.hist(col_c_counts[c], alpha=0.3)
+      a.hist(col_w_counts[w], alpha=0.3)
+      a.set_title(w.replace('_w_','_'))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [5]:
+:END:
+
+
+*** Specifically grouped genes to test with random forest
+**** Grouped by counts
+     /N.B. doesn't work well/
+
+#+BEGIN_SRC ipython :session
+  import jenkspy
+  from sklearn.ensemble import RandomForestClassifier
+  from sklearn.model_selection import train_test_split
+  import numpy as np
+  import time
+
+  col0 = counts[[c for c in counts.columns if c.startswith('col_w_05h')]].mean(axis=1).sort_values()
+  col0A = np.array(col0)
+  breaks = jenkspy.jenks_breaks(col0A, nb_class=20)
+
+  col0_index = pd.Index(col0)
+
+  indices = []
+  for b in breaks:
+      r = col0_index.get_loc(b)
+      if isinstance(r, slice):
+          r = r.stop
+      indices.append(r)
+
+  group_locs = [df.index for df in np.split(col0, indices)]
+
+  cols = {}
+  for c in counts.columns:
+      avg_vals = []
+      for g in group_locs:
+          avg_vals.append(np.mean(counts[c].loc[g]))
+      cols[c] = avg_vals
+  refined_counts = pd.DataFrame(cols)
+  refined_counts = refined_counts.set_index(pd.Index(["group {0}".format(i) for i in refined_counts.index]))
+
+
+
+  subset = refined_counts[[c for c in refined_counts.columns if (c.startswith('col_w_05h') or c.startswith('col_c_05h')) ]]
+  data = refined_counts.T
+  data = data.reset_index()
+  data['index'] = data['index'].apply(lambda x: x.rsplit('_',1)[0])
+  data = data.set_index('index')
+  feat_labels = data.columns
+
+  t_start = time.time()
+  X_train, X_test, y_train, y_test = train_test_split(data.values.T, feat_labels, test_size=0.33, random_state=42)
+  forest = RandomForestClassifier(n_estimators=10000, random_state=0, n_jobs=-1)
+  forest.fit(X_train, y_train)
+  t_end = time.time()
+  importances = forest.feature_importances_
+  indices = np.argsort(importances)[::-1]
+
+  for feature in sorted(zip(feat_labels, forest.feature_importances_), key=lambda x: x[1]):
+      print(feature, )
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [6]:
+# output
+('group 19', 0.02673065440188904)
+('group 0', 0.026805531708766744)
+('group 8', 0.02693006569866829)
+('group 7', 0.026945590365085717)
+('group 11', 0.0273549621065065)
+('group 14', 0.027445354116411903)
+('group 13', 0.027541784964519728)
+('group 12', 0.0277207993593499)
+('group 5', 0.02775004237869988)
+('group 15', 0.02779604871488358)
+('group 3', 0.027869968213346162)
+('group 17', 0.0279730082624969)
+('group 6', 0.028066443188964892)
+('group 21', 0.028163391058461162)
+('group 2', 0.0281666759612335)
+('group 10', 0.02826043573185192)
+('group 20', 0.02829118692473585)
+('group 4', 0.028328336739638103)
+('group 16', 0.028503011380151832)
+('group 1', 0.0287560048630577)
+('group 9', 0.028834542073436394)
+('group 18', 0.028910475534047003)
+
+:END:

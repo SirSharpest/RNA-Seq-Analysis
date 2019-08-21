@@ -1,0 +1,172 @@
+* Vector plots
+** Read in data
+#+BEGIN_SRC ipython :session
+DE_pairings_05hr = read_xl('{0}/PHD/Transcripts/Data/pairings_05hr.xlsx'.format(expanduser('~/'), unique=False))
+DE_pairings_6hr = read_xl('{0}/PHD/Transcripts/Data/pairings_6hr.xlsx'.format(expanduser('~/'), unique=False))
+DE_cross_time_pairings = read_xl('{0}/PHD/Transcripts/Data/cross_time_pairings.xlsx'.format(expanduser('~/'), unique=False))
+counts = pd.read_csv('{0}/PHD/Transcripts/Data/norml_count_data.csv'.format(expanduser('~/'), index_col=0)).set_index('Unnamed: 0')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [8]:
+:END:
+
+
+** Plot map
+*** Function + Example Plot
+#+BEGIN_SRC ipython :session
+  from matplotlib.lines import Line2D
+  from adjustText import adjust_text
+
+
+  def make_vectormap(col, lym, cerk, genename='', figsize=(5, 5), width=0.005, label=False, labels=None, threshold=5, axis_spacing=1.0, repel=1):
+      fig, ax = plt.subplots(1, figsize=figsize)
+      origin = [0], [0]  # origin point
+      colors = iter(['r', 'g', 'b'])
+
+      for geno in [col, lym, cerk]:
+          Q = ax.quiver(*origin, geno[:, 0], geno[:, 1], color=next(colors),
+                        scale_units='xy', angles='xy', scale=1, width=width)
+
+      custom_lines = [Line2D([0], [0], color='r', lw=4),
+                      Line2D([0], [0], color='g', lw=4),
+                      Line2D([0], [0], color='b', lw=4)]
+      ax.legend(custom_lines, ['Col0', r'$lym2-1$', r'$cerk1$'])
+      ax.set_xlim(min(col[:, 0].min(), lym[:, 0].min(), cerk[:, 0].min())*axis_spacing, max(
+          col[:, 0].max(), lym[:, 0].max(), cerk[:, 0].max())*axis_spacing )
+      ax.set_ylim(min(col[:, 1].min(), lym[:, 1].min(), cerk[:, 1].min())*axis_spacing, max(
+          col[:, 1].max(), lym[:, 1].max(), cerk[:, 1].max())*axis_spacing)
+      if label:
+          for geno in [col,lym,cerk]:
+              texts = []
+              for x, y, idx in zip(geno[:, 0], geno[:, 1], labels):
+                  if abs(x-y) > threshold:
+                      texts.append(ax.text(x, y, idx))
+              adjust_text(texts, arrowprops=dict(arrowstyle="->",color='k', alpha=0.5),lim=1000, expand_text=(repel, repel), expand_points=(repel, repel), ax=ax)
+
+      fig.tight_layout()
+      ax.set_title(genename)
+      return (fig, ax)
+
+
+  sns.set()  # This is done to set the white background
+  col = np.array([[5, 3]])
+  lym = np.array([[-2, -6]])
+  cer = np.array([[1, 8]])
+  fig, ax = make_vectormap(col, lym, cer, genename='AT00000', label=True, labels=['A','B','C'], threshold=3)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [9]:
+# text/plain
+: <Figure size 360x360 with 1 Axes>
+
+# image/png
+[[file:obipy-resources/a08d271f6e736a3006c584d84c71f317c06d9732/a3b76a1ba781e679cf18ac22121e1ebc640e8701.png]]
+:END:
+
+
+*** Real data
+
+
+**** Function to get counts data for point
+#+BEGIN_SRC ipython :session
+
+# TODO Fix this so that it can take any DF, formally!
+  def get_corsp_counts(time_pair_df, locs, n=5, include_large=True, include_small=True, filter_time=False):
+      top = time_pair_df.groupby(
+            ['sample', 'gene']).mean().reset_index().set_index('gene')
+      tc = counts.loc[locs]
+      tc = tc.T.reset_index()
+      tc['sample'] = tc['index'].apply(lambda x: str(x).rsplit('_', 1)[0])
+      tc = tc.set_index('index')
+      tc = tc.reset_index().melt(id_vars=['index', 'sample'])
+      tc.rename(columns={'index': 'id'}, inplace=True)
+      tc['time'] = tc['sample'].apply(lambda x: str(x).rsplit('_', 1)[-1])
+      if filter_time is not False:
+          tc = tc[tc['time'] == filter_time]
+      tc['treatment'] = tc['id'].apply(lambda x: str(x).split('_')[1])
+      tc['geno'] = tc['id'].apply(lambda x: str(x).split('_')[0])
+      tc['sample'] = tc['sample'].apply(lambda x: str(x)[:5])
+      return tc
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [10]:
+:END:
+
+**** Get data
+
+
+
+#+BEGIN_SRC ipython :session
+  n_genes = 5
+  top_05, bot_05 =  (g.index.values for g in get_two_clustermaps_data(DE_pairings_05hr, n_genes))
+  top_6, bot_6 =  (g.index.values for g in get_two_clustermaps_data(DE_pairings_6hr, n_genes))
+  top = list(top_05) + list(top_6)
+  bot= list(bot_05) + list(bot_6)
+
+  geno_data = {}
+  gene_names = []
+
+  col_g = set(DE_pairings_05hr[(DE_pairings_05hr['padj'] < 0.05)&(DE_pairings_05hr['sample'].str.contains('col'))].index.values)
+  lym_g = set(DE_pairings_05hr[(DE_pairings_05hr['padj'] < 0.05)&(DE_pairings_05hr['sample'].str.contains('lym'))].index.values)
+  genes = set(col_g.difference(lym_g) | lym_g.difference(col_g) )
+
+
+  for geno in DE_pairings_05hr['sample'].unique():
+      for t in  genes :  #top + bot:
+          try:
+              t0 = DE_pairings_05hr[DE_pairings_05hr['sample'] == geno].loc[t]['log2FoldChange']
+          except:
+              t0 = 0
+          try:
+              t1 = DE_pairings_6hr[DE_pairings_6hr['sample'] == geno.replace('05h', '6h')].loc[t]['log2FoldChange']
+          except:
+              t1 = 0
+          t0 = np.around(t0, 2)
+          t1 = np.around(t1, 2)
+          gene_names.append(t)
+          try:
+              geno_data[geno].append([t0, t1])
+          except Exception:
+              geno_data[geno] = [[t0,t1]]
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [72]:
+:END:
+
+**** Plot data
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "top50genes" :filename "obipy-resources/top50genes.png" :caption "Top 50 up/down regulated genes at both 05h and 6h" :attr_html ":width 350px" :attr_latex ":width 15cm")) :exports results
+  col = np.array(geno_data['col_c_05h'])
+  lym = np.array(geno_data['lym_c_05h'])
+  cer = np.array(geno_data['cer_c_05h'])
+  fig, ax = make_vectormap(col, lym, cer, figsize=(10,10), width=0.002)#, label=True, labels=gene_names, threshold=5.5, repel=2.5)
+  _ = ax.set_xlabel(r'05hr')
+  _ = ax.set_ylabel(r'6hr')
+  ax.plot([-6,20], [-6,20], c='k', linestyle='--', label='x=y')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [73]:
+# text/plain
+: [<matplotlib.lines.Line2D at 0x7fd0530182b0>]
+
+# text/plain
+: <Figure size 720x720 with 1 Axes>
+
+# image/png
+#+attr_html: :width 350px
+#+attr_latex: :width 15cm
+#+caption: Top 50 up/down regulated genes at both 05h and 6h
+#+name: top50genes
+[[file:obipy-resources/top50genes.png]]
+:END:

@@ -1,0 +1,3 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{DE\PYGZus{}pairings\PYGZus{}6hr} \PYG{o}{=} \PYG{n}{read\PYGZus{}xl}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}/Users/hughesn/PHD/Transcripts/Data/pairings\PYGZus{}6hr.xlsx\PYGZsq{}}\PYG{p}{)}
+\end{Verbatim}

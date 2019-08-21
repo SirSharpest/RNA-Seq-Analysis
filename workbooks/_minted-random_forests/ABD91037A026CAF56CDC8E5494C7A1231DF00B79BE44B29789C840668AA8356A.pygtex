@@ -1,0 +1,12 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} Feature Extraction with RFE}
+\PYG{n}{X} \PYG{o}{=} \PYG{n}{df}\PYG{o}{.}\PYG{n}{values}
+\PYG{n}{y} \PYG{o}{=} \PYG{p}{[}\PYG{n}{y}\PYG{o}{.}\PYG{n}{rsplit}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZus{}\PYGZsq{}}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{k}{for} \PYG{n}{y} \PYG{o+ow}{in} \PYG{n}{df}\PYG{o}{.}\PYG{n}{reset\PYGZus{}index}\PYG{p}{()[}\PYG{l+s+s1}{\PYGZsq{}index\PYGZsq{}}\PYG{p}{]]}
+\PYG{c+c1}{\PYGZsh{} feature extraction}
+\PYG{n}{model} \PYG{o}{=} \PYG{n}{LogisticRegression}\PYG{p}{()}
+\PYG{n}{rfe} \PYG{o}{=} \PYG{n}{RFE}\PYG{p}{(}\PYG{n}{model}\PYG{p}{,} \PYG{n}{n\PYGZus{}features\PYGZus{}to\PYGZus{}select}\PYG{o}{=}\PYG{l+m+mi}{25}\PYG{p}{)}
+\PYG{n}{fit} \PYG{o}{=} \PYG{n}{rfe}\PYG{o}{.}\PYG{n}{fit}\PYG{p}{(}\PYG{n}{X}\PYG{p}{,} \PYG{n}{y}\PYG{p}{)}
+\PYG{k}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Num Features: \PYGZob{}0\PYGZcb{}\PYGZdq{}}\PYG{o}{.}\PYG{n}{format}\PYG{p}{(}\PYG{n}{fit}\PYG{o}{.}\PYG{n}{n\PYGZus{}features\PYGZus{}}\PYG{p}{))}
+\PYG{k}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Selected Features: \PYGZob{}0\PYGZcb{}\PYGZdq{}}\PYG{o}{.}\PYG{n}{format}\PYG{p}{(}\PYG{n}{fit}\PYG{o}{.}\PYG{n}{support\PYGZus{}}\PYG{p}{))}
+\PYG{k}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Feature Ranking: \PYGZob{}0\PYGZcb{}\PYGZdq{}}\PYG{o}{.}\PYG{n}{format}\PYG{p}{(}\PYG{n}{fit}\PYG{o}{.}\PYG{n}{ranking\PYGZus{}}\PYG{p}{))}
+\end{Verbatim}

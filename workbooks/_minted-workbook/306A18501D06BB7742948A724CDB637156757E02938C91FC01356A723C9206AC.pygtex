@@ -1,0 +1,11 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{gprofiler} \PYG{k+kn}{import} \PYG{n}{GProfiler}
+
+\PYG{k}{def} \PYG{n+nf}{get\PYGZus{}gene\PYGZus{}names}\PYG{p}{(}\PYG{n}{geneList}\PYG{p}{):}
+
+    \PYG{n}{gp} \PYG{o}{=} \PYG{n}{GProfiler}\PYG{p}{(}\PYG{n}{return\PYGZus{}dataframe}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{gp}\PYG{o}{.}\PYG{n}{convert}\PYG{p}{(}\PYG{n}{organism}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}athaliana\PYGZsq{}}\PYG{p}{,}
+               \PYG{n}{query}\PYG{o}{=}\PYG{n}{geneList}\PYG{p}{)[[}\PYG{l+s+s1}{\PYGZsq{}incoming\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}name\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}description\PYGZsq{}}\PYG{p}{]]}
+
+\PYG{n}{get\PYGZus{}gene\PYGZus{}names}\PYG{p}{(}\PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{DE}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{)}\PYG{o}{.}\PYG{n}{index}\PYG{p}{))}
+\end{Verbatim}

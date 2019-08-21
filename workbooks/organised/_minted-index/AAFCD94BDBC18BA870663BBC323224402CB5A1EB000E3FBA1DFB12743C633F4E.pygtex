@@ -1,0 +1,5 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{fig}\PYG{p}{,} \PYG{n}{ax} \PYG{o}{=} \PYG{n}{plt}\PYG{o}{.}\PYG{n}{subplots}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{20}\PYG{p}{,}\PYG{l+m+mi}{20}\PYG{p}{))}
+\PYG{n}{sns}\PYG{o}{.}\PYG{n}{barplot}\PYG{p}{(}\PYG{n}{data}\PYG{o}{=}\PYG{n}{res\PYGZus{}df}\PYG{o}{.}\PYG{n}{reset\PYGZus{}index}\PYG{p}{(),} \PYG{n}{y}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}description\PYGZsq{}}\PYG{p}{,} \PYG{n}{x}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}importance\PYGZsq{}}\PYG{p}{,} \PYG{n}{ax}\PYG{o}{=}\PYG{n}{ax}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{tight\PYGZus{}layout}\PYG{p}{()}
+\end{Verbatim}

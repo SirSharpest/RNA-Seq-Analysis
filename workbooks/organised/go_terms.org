@@ -1,0 +1,1306 @@
+* GO Term analysis
+
+** Chitin-Water col treat
+
+#+BEGIN_SRC ipython :session :async t
+DE_pairings_05hr = read_xl('{0}/PHD/Transcripts/Data/pairings_05hr.xlsx'.format(expanduser('~/')), unique=False)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [61]:
+:END:
+
+#+BEGIN_SRC ipython :session :async t
+  all_genes = list(set(DE_pairings_05hr.index.values))
+  genes_in_col_c_05h = list(set(
+      DE_pairings_05hr[
+          DE_pairings_05hr['sample'].str.contains('col')].index.values))
+
+  genes_in_col_c_05h_DE = list(set(
+      DE_pairings_05hr[
+          (DE_pairings_05hr['sample'].str.contains('col')) & ( DE_pairings_05hr['padj'] <0.05)].index.values))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [74]:
+:END:
+
+#+BEGIN_SRC ipython :session :async t
+  # Setup libs
+  from goatools.anno.genetogo_reader import Gene2GoReader
+  from goatools.obo_parser import GODag
+  from goatools.base import download_ncbi_associations
+  from goatools.base import download_go_basic_obo
+
+  obo_fname = download_go_basic_obo()
+  fin_gene2go = download_ncbi_associations()
+  obodag = GODag("go-basic.obo")
+
+  # Read NCBI's gene2go. Store annotations in a list of namedtuples
+  objanno = Gene2GoReader(fin_gene2go, taxids=[3702])
+  ns2assoc = objanno.get_ns2assc()
+
+  for nspc, id2gos in ns2assoc.items():
+      print("{NS} {N:,} annotated arabidopsis genes".format(NS=nspc, N=len(id2gos)))
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [75]:
+# output
+  EXISTS: go-basic.obo
+  EXISTS: gene2go
+go-basic.obo: fmt(1.2) rel(2019-06-10) 47,442 GO Terms
+HMS:0:00:03.412609 192,328 annotations READ: gene2go
+1 taxids stored: 3702
+CC 25,149 annotated arabidopsis genes
+MF 17,339 annotated arabidopsis genes
+BP 17,679 annotated arabidopsis genes
+
+:END:
+
+#+BEGIN_SRC ipython :session :async t
+from goatools.goea.go_enrichment_ns import GOEnrichmentStudyNS
+import mygene
+mg = mygene.MyGeneInfo()
+gof = mg.getgenes(genes_in_col_c_05h, fields='_id')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [76]:
+# output
+querying 1-1000...done.
+querying 1001-2000...done.
+querying 2001-3000...done.
+querying 3001-4000...done.
+querying 4001-5000...done.
+querying 5001-6000...done.
+querying 6001-7000...done.
+querying 7001-8000...done.
+querying 8001-9000...done.
+querying 9001-10000...done.
+querying 10001-11000...done.
+querying 11001-12000...done.
+querying 12001-13000...done.
+querying 13001-14000...done.
+querying 14001-15000...done.
+querying 15001-16000...done.
+querying 16001-17000...done.
+querying 17001-18000...done.
+querying 18001-19000...done.
+querying 19001-20000...done.
+querying 20001-21000...done.
+querying 21001-22000...done.
+querying 22001-23000...done.
+querying 23001-23248...done.
+
+:END:
+
+
+
+#+BEGIN_SRC ipython :session :async t
+genes_in_study = [int(g['_id']) for g in gof if g['_id'].isdigit()]
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [77]:
+:END:
+
+#+BEGIN_SRC ipython :session :async t
+goeaobj = GOEnrichmentStudyNS(
+        genes_in_study, # List of genes found
+        ns2assoc, # geneid/GO associations
+        obodag, # Ontologies
+        propagate_counts = False,
+        alpha = 0.05, # default significance cut-off
+        methods = ['fdr_bh']) # defult multipletest correction method
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [78]:
+# output
+
+Load BP Gene Ontology Analysis ...
+fisher module not installed.  Falling back on scipy.stats.fisher_exact
+ 67% 14,465 of 21,729 population items found in association
+
+Load CC Gene Ontology Analysis ...
+fisher module not installed.  Falling back on scipy.stats.fisher_exact
+ 94% 20,339 of 21,729 population items found in association
+
+Load MF Gene Ontology Analysis ...
+fisher module not installed.  Falling back on scipy.stats.fisher_exact
+ 67% 14,562 of 21,729 population items found in association
+
+:END:
+
+#+BEGIN_SRC ipython :session :async t
+DE_gof = mg.getgenes(genes_in_col_c_05h_DE, fields='_id')
+DE_genes_ids = [int(g['_id']) for g in DE_gof if g['_id'].isdigit()]
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [102]:
+# output
+querying 1-1000...done.
+querying 1001-2000...done.
+querying 2001-3000...done.
+querying 3001-3798...done.
+
+:END:
+
+#+BEGIN_SRC ipython :session :async t
+res_col = goeaobj.run_study(DE_genes_ids)
+res_col_sig = [r for r in res_col if r.p_fdr_bh < 0.05]
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [103]:
+# output
+
+Run BP Gene Ontology Analysis: current study set of 3613 IDs ...
+ 72%  2,538 of  3,549 study items found in association
+ 98%  3,549 of  3,613 study items found in population(27206)
+Calculating 3,759 uncorrected p-values using fisher_scipy_stats
+   3,759 GO terms are associated with 16,734 of 27,206 population items
+   1,607 GO terms are associated with  2,538 of  3,602 study items
+  METHOD fdr_bh:
+      67 GO terms found significant (< 0.05=alpha) ( 65 enriched +   2 purified): statsmodels fdr_bh
+   1,428 study items associated with significant GO IDs (enriched)
+       7 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 3613 IDs ...
+ 93%  3,311 of  3,549 study items found in association
+ 98%  3,549 of  3,613 study items found in population(27206)
+Calculating 776 uncorrected p-values using fisher_scipy_stats
+     776 GO terms are associated with 24,391 of 27,206 population items
+     283 GO terms are associated with  3,311 of  3,602 study items
+  METHOD fdr_bh:
+      15 GO terms found significant (< 0.05=alpha) (  7 enriched +   8 purified): statsmodels fdr_bh
+   2,704 study items associated with significant GO IDs (enriched)
+     469 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 3613 IDs ...
+ 69%  2,463 of  3,549 study items found in association
+ 98%  3,549 of  3,613 study items found in population(27206)
+Calculating 2,606 uncorrected p-values using fisher_scipy_stats
+   2,606 GO terms are associated with 16,584 of 27,206 population items
+     932 GO terms are associated with  2,463 of  3,602 study items
+  METHOD fdr_bh:
+      20 GO terms found significant (< 0.05=alpha) ( 20 enriched +   0 purified): statsmodels fdr_bh
+   1,318 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+
+:END:
+
+*** Checking key words in significant genes
+
+#+BEGIN_SRC ipython :session :async t
+import collections as cx
+go_names = [r.name for r in res_col_sig]
+word2counts = cx.Counter([word for name in go_names for word in name.split()])
+print(word2counts)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [104]:
+# output
+Counter({'response': 35, 'to': 28, 'of': 17, 'defense': 11, 'protein': 11, 'regulation': 11, 'binding': 11, 'activity': 9, 'signaling': 8, 'pathway': 7, 'kinase': 7, 'acid': 6, 'cell': 4, 'negative': 4, 'biosynthetic': 4, 'process': 4, 'chloroplast': 4, 'bacterium': 3, 'salicylic': 3, 'receptor': 3, 'incompatible': 3, 'interaction': 3, 'mediated': 3, 'systemic': 3, 'resistance': 3, 'transcription': 3, 'membrane': 3, 'thylakoid': 3, 'serine/threonine': 3, 'chitin': 2, 'phosphorylation': 2, 'signal': 2, 'transduction': 2, 'oomycetes': 2, 'stress': 2, 'jasmonic': 2, 'abscisic': 2, 'transmembrane': 2, 'transcription,': 2, 'DNA-templated': 2, 'innate': 2, 'immune': 2, 'molecule': 2, 'origin': 2, 'cellular': 2, 'death': 2, 'recognition': 2, 'by': 2, 'in': 2, 'wall': 2, 'auxin': 2, 'exocytosis': 2, 'other': 2, 'organism': 2, 'leaf': 2, 'senescence': 2, 'acquired': 2, 'positive': 2, 'complex': 2, 'DNA': 2, 'ion': 2, 'autophosphorylation': 1, 'wounding': 1, 'plant-type': 1, 'hypersensitive': 1, 'ethylene-activated': 1, 'ubiquitination': 1, 'salt': 1, 'fungus': 1, 'tyrosine': 1, 'bacterial': 1, 'hypoxia': 1, 'acid-activated': 1, 'bacterium,': 1, 'response,': 1, 'water': 1, 'deprivation': 1, 'fungus,': 1, 'pollen': 1, 'fungal': 1, 'cold': 1, 'ethylene': 1, 'callose': 1, 'deposition': 1, 'oxidative': 1, 'karrikin': 1, 'vesicle': 1, 'docking': 1, 'involved': 1, 'camalexin': 1, 'pectin': 1, 'induced': 1, 'indole': 1, 'glucosinolate': 1, 'resistance,': 1, 'programmed': 1, 'ozone': 1, 'insect': 1, 'pattern': 1, 'autoubiquitination': 1, 'pathway,': 1, 'gene-dependent': 1, 'virus': 1, 'Gram-negative': 1, 'intracellular': 1, 'killing': 1, 'cells': 1, 'RNA': 1, 'polymerase': 1, 'II': 1, 'plasma': 1, 'integral': 1, 'component': 1, 'nucleus': 1, 'cytoplasm': 1, 'exocyst': 1, 'plasmodesma': 1, 'envelope': 1, 'stroma': 1, 'mitochondrion': 1, 'proteasome': 1, 'mitochondrial': 1, 'respiratory': 1, 'chain': 1, 'I': 1, 'ATP': 1, 'ADP': 1, 'sequence-specific': 1, 'calmodulin': 1, 'carbohydrate': 1, 'DNA-binding': 1, 'factor': 1, 'calcium': 1, 'ubiquitin-protein': 1, 'transferase': 1, 'calmodulin-dependent': 1, 'cAMP': 1, 'cGMP': 1, 'regulatory': 1, 'region': 1, 'calcium-dependent': 1, 'FAD': 1, 'channel': 1})
+
+:END:
+
+#+BEGIN_SRC ipython :session :async t
+keywords = ['response', 'activity', 'kinase', 'cellular', 'fungus', 'salicylic', 'cytosolic', 'regulation', 'signaling', 'defense']
+
+sig_words = cx.defaultdict(set)
+# Loop through manually curated words of interest
+for word in keywords:
+    # Check each significant GOEA result for the word of interest
+    for rec in res_col_sig:
+        if word in rec.name:
+            sig_words[word].add(rec.GO)
+# Sort word2gos to have the same order as words in freq_seen
+sig_words = cx.OrderedDict([(w, sig_words[w]) for w in keywords])
+print(sig_words)
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [105]:
+# output
+OrderedDict([('response', {'GO:0042742', 'GO:0010200', 'GO:0006952', 'GO:0009753', 'GO:0052544', 'GO:0045088', 'GO:0009814', 'GO:0009723', 'GO:0009626', 'GO:0009751', 'GO:0002229', 'GO:0009625', 'GO:0009409', 'GO:0009620', 'GO:0009737', 'GO:0009414', 'GO:0006979', 'GO:0009733', 'GO:0031348', 'GO:0002238', 'GO:0009617', 'GO:0045087', 'GO:0009651', 'GO:0050829', 'GO:0071456', 'GO:0002239', 'GO:0002237', 'GO:0051707', 'GO:0009870', 'GO:0009611', 'GO:0009816', 'GO:0080167', 'GO:0051607', 'GO:0071323', 'GO:0010193', 'GO:0009817'}), ('activity', {'GO:0009931', 'GO:0004672', 'GO:0004674', 'GO:0004675', 'GO:0016301', 'GO:0003700', 'GO:0004683', 'GO:0005216', 'GO:0004842'}), ('kinase', {'GO:0009931', 'GO:0007169', 'GO:0004672', 'GO:0004674', 'GO:0004675', 'GO:0016301', 'GO:0004683'}), ('cellular', {'GO:0071456', 'GO:0071323', 'GO:0035556'}), ('fungus', {'GO:0009620', 'GO:0009817'}), ('salicylic', {'GO:0009862', 'GO:0080142', 'GO:0009751'}), ('cytosolic', set()), ('regulation', {'GO:0045944', 'GO:0010929', 'GO:0010112', 'GO:0043069', 'GO:0031348', 'GO:2000022', 'GO:0045892', 'GO:1900056', 'GO:0006355', 'GO:0045088', 'GO:0080142'}), ('signaling', {'GO:0009873', 'GO:0007169', 'GO:0010929', 'GO:0009738', 'GO:0009870', 'GO:0009862', 'GO:2000022', 'GO:0002221'}), ('defense', {'GO:0050829', 'GO:0042742', 'GO:0002229', 'GO:0009870', 'GO:0051607', 'GO:0031348', 'GO:0009816', 'GO:0006952', 'GO:0052544', 'GO:0009817', 'GO:0009814'})])
+
+:END:
+
+#+BEGIN_SRC ipython :session :async t
+from goatools.godag_plot import plot_goid2goobj
+
+goid2goobj_all = {nt.GO:nt.goterm for nt in res_col_sig}
+
+for word, gos in sig_words.items():
+    goid2goobj = {go:goid2goobj_all[go] for go in gos}
+    plot_goid2goobj(
+        "word_{WORD}.png".format(WORD=word),
+        goid2goobj, # source GOs to plot and their GOTerm object
+        study_items=15, # Max number of gene symbols to print in each GO term
+        id2symbol=ns2assoc, # Contains GeneID-to-Symbol from Step 1
+        goea_results=res_col_sig, # pvals used for GO Term coloring
+        dpi=150)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [106]:
+# output
+   36 usr 128 GOs  WROTE: word_response.png
+    9 usr  28 GOs  WROTE: word_activity.png
+    7 usr  26 GOs  WROTE: word_kinase.png
+    3 usr  34 GOs  WROTE: word_cellular.png
+    2 usr  17 GOs  WROTE: word_fungus.png
+    3 usr  31 GOs  WROTE: word_salicylic.png
+    0 usr   0 GOs  WROTE: word_cytosolic.png
+   11 usr  96 GOs  WROTE: word_regulation.png
+    8 usr  52 GOs  WROTE: word_signaling.png
+   11 usr  74 GOs  WROTE: word_defense.png
+
+:END:
+
+*** Count GO terms
+
+#+BEGIN_SRC ipython :session :async t
+  go_names = [r.name for r in res_col_sig for n in range(r.study_count)]
+  word2counts = cx.Counter(go_names)
+  word2counts.most_common(10)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [107]:
+# text/plain
+: [('nucleus', 1478),
+:  ('integral component of membrane', 756),
+:  ('plasma membrane', 734),
+:  ('cytoplasm', 649),
+:  ('protein binding', 565),
+:  ('ATP binding', 440),
+:  ('mitochondrion', 395),
+:  ('kinase activity', 324),
+:  ('DNA-binding transcription factor activity', 300),
+:  ('regulation of transcription, DNA-templated', 299)]
+:END:
+
+
+#+BEGIN_SRC ipython :session :async t
+
+  fig, ax = plt.subplots(1, figsize=(5,15))
+
+  df = pd.DataFrame.from_dict(word2counts, orient='index').reset_index().rename(columns={'index':'GO', 0:'counts'})
+
+  df = df.sort_values(by='counts')
+  ax.barh(df['GO'], df['counts'])
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [108]:
+# text/plain
+: <BarContainer object of 100 artists>
+
+# text/plain
+: <Figure size 360x1080 with 1 Axes>
+
+# image/png
+[[file:obipy-resources/554e0e0e8a473738fef670c960cb4592d2272322/801f4760fc2fd81e89bbbc5a90393f453764bd0f.png]]
+:END:
+
+**** Fold defence related terms
+#+BEGIN_SRC ipython :session :async t
+
+  go_names = [r.name for r in res_col_sig for n in range(r.study_count)]
+
+  defence_kws = ['resistance', 'salicylic', 'chitin', 'abscisic',
+                 'fungal', 'jasmonic', 'defense', 'wounding',
+                 'oomycetes', 'fungus', 'immune', 'bacterial']
+
+
+  defence = list(filter(lambda x: any(kw in x for kw in defence_kws), go_names))
+
+
+  def rev_logic(x): return False if x else True
+
+
+  others = list(filter(lambda x: rev_logic(
+      any(kw in x for kw in defence_kws)), go_names))
+
+
+  fig, axes = plt.subplots(2,1, figsize=(5, 20), sharex=True)
+
+  for ax, d in zip(axes, [defence, others]):
+      data = cx.Counter(d)
+      x = range(len(data))
+      y = list(dict(data).values())
+      y.sort()
+      ax.barh(x, y)
+      _ = ax.set_yticks(range(len(data)))
+      _ = ax.set_yticklabels(list(dict(data).keys()))
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [109]:
+# text/plain
+: <Figure size 360x1440 with 2 Axes>
+
+# image/png
+[[file:obipy-resources/554e0e0e8a473738fef670c960cb4592d2272322/811e44dde712dde96ebcbacfd2e340f68b2a78d8.png]]
+:END:
+
+
+** Cross compare treatments
+
+*** (re)Setup
+#+BEGIN_SRC ipython :session :async t
+  from goatools.base import download_go_basic_obo
+  from goatools.base import download_ncbi_associations
+  from goatools.obo_parser import GODag
+  from goatools.anno.genetogo_reader import Gene2GoReader
+  import mygene
+  from goatools.goea.go_enrichment_ns import GOEnrichmentStudyNS
+
+  pval = 0.05
+  DE_pairings_05hr = read_xl('{0}/PHD/Transcripts/Data/pairings_05hr.xlsx'.format(expanduser('~/'), unique=False))
+
+  all_genes = list(set(DE_pairings_05hr.index.values))
+  genes_in_col_c_05h = list(set(
+      DE_pairings_05hr[
+          DE_pairings_05hr['sample'].str.contains('col')].index.values))
+
+  genes_in_col_c_05h_DE = list(set(
+      DE_pairings_05hr[
+          (DE_pairings_05hr['sample'].str.contains('col')) & (DE_pairings_05hr['padj'] < pval)].index.values))
+
+  genes_in_lym_c_05h_DE = list(set(
+      DE_pairings_05hr[
+          (DE_pairings_05hr['sample'].str.contains('lym')) & (DE_pairings_05hr['padj'] < pval)].index.values))
+
+  genes_in_cer_c_05h_DE = list(set(
+      DE_pairings_05hr[
+          (DE_pairings_05hr['sample'].str.contains('cer')) & (DE_pairings_05hr['padj'] < pval)].index.values))
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [87]:
+:END:
+
+#+BEGIN_SRC ipython :session :async t
+import os, sys
+
+class HiddenPrints:
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [88]:
+:END:
+
+
+
+#+BEGIN_SRC ipython :session :async t
+  obo_fname = download_go_basic_obo()
+  fin_gene2go = download_ncbi_associations()
+  obodag = GODag("go-basic.obo")
+
+  # Read NCBI's gene2go. Store annotations in a list of namedtuples
+  with open("all_genes.txt") as file:
+      all_AT_genes = list(set([line.strip()[:-2] for line in file]))
+  objanno = Gene2GoReader(fin_gene2go, taxids=[3702])
+  ns2assoc = objanno.get_ns2assc()
+  mg = mygene.MyGeneInfo()
+  gof = mg.getgenes(all_AT_genes, fields='_id')
+  genes_in_study = [int(g['_id']) for g in gof if ('_id' in g and  g['_id'].isdigit()) ]
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [89]:
+# output
+  EXISTS: go-basic.obo
+  EXISTS: gene2go
+go-basic.obo: fmt(1.2) rel(2019-06-10) 47,442 GO Terms
+HMS:0:00:03.592710 192,328 annotations READ: gene2go
+1 taxids stored: 3702
+querying 1-1000...done.
+querying 1001-2000...done.
+querying 2001-3000...done.
+querying 3001-4000...done.
+querying 4001-5000...done.
+querying 5001-6000...done.
+querying 6001-7000...done.
+querying 7001-8000...done.
+querying 8001-9000...done.
+querying 9001-10000...done.
+querying 10001-11000...done.
+querying 11001-12000...done.
+querying 12001-13000...done.
+querying 13001-14000...done.
+querying 14001-15000...done.
+querying 15001-16000...done.
+querying 16001-17000...done.
+querying 17001-18000...done.
+querying 18001-19000...done.
+querying 19001-20000...done.
+querying 20001-21000...done.
+querying 21001-22000...done.
+querying 22001-23000...done.
+querying 23001-24000...done.
+querying 24001-25000...done.
+querying 25001-26000...done.
+querying 26001-27000...done.
+querying 27001-28000...done.
+querying 28001-29000...done.
+querying 29001-30000...done.
+querying 30001-31000...done.
+querying 31001-32000...done.
+querying 32001-33000...done.
+querying 33001-33603...done.
+
+:END:
+
+
+#+BEGIN_SRC ipython :session :async t
+  goeaobj = GOEnrichmentStudyNS(
+      genes_in_study,  # List of genes found
+      ns2assoc,  # geneid/GO associations
+      obodag,  # Ontologies
+      propagate_counts=False,
+      Alpha=0.05,  # default significance cut-off
+      methods=['fdr_bh'])  # defult multipletest correction method
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [90]:
+# output
+
+Load BP Gene Ontology Analysis ...
+fisher module not installed.  Falling back on scipy.stats.fisher_exact
+ 62% 16,897 of 27,206 population items found in association
+
+Load CC Gene Ontology Analysis ...
+fisher module not installed.  Falling back on scipy.stats.fisher_exact
+ 91% 24,787 of 27,206 population items found in association
+
+Load MF Gene Ontology Analysis ...
+fisher module not installed.  Falling back on scipy.stats.fisher_exact
+ 62% 16,814 of 27,206 population items found in association
+
+:END:
+
+
+*** Analysis of other genotypes
+
+#+BEGIN_SRC ipython :session :async t
+  import collections as cx
+
+  def get_GO_terms(DE_df, geno, goeaobj, sig_level=0.05):
+      with HiddenPrints():
+          DE_gof = mg.getgenes(DE_df, fields='_id')
+          DE_genes_ids = [int(g['_id']) for g in DE_gof if g['_id'].isdigit()]
+          res_col = goeaobj.run_study(DE_genes_ids)
+          names_to_go = {k:v for k,v in zip([n.name for n in res_col], [n.GO for n in res_col])}
+          names_to_significance = {k:v for k,v in zip([n.name for n in res_col], [n.p_fdr_bh for n in res_col])}
+          res_col_sig = res_col
+          go_names = [r.name for r in res_col_sig for n in range(r.study_count)]
+          defence_kws = ['resistance', 'salicylic', 'chitin', 'abscisic',
+                         'fungal', 'jasmonic', 'defense', 'wounding',
+                         'oomycetes', 'fungus', 'immune', 'bacterial', 'plasmodesma']
+
+          defence = list(filter(lambda x: any(kw in x for kw in defence_kws), go_names))
+          def rev_logic(x): return False if x else True
+          others = list(filter(lambda x: rev_logic(
+              any(kw in x for kw in defence_kws)), go_names))
+
+          defs = pd.DataFrame([cx.Counter(defence)]).T
+          non_defs = pd.DataFrame([cx.Counter(others)]).T
+
+          defs['defence'] = True
+          non_defs['defence'] = False
+
+          df = pd.concat([defs, non_defs])
+          df = df.reset_index().rename(columns={'index':'GO', 0:'count'})
+
+          df['GO_Record'] = df['GO'].apply(lambda x: names_to_go[x])
+          df['fdr'] = df['GO'].apply(lambda x: names_to_significance[x])
+          df['geno'] = geno
+      return (df, res_col)
+
+
+  print('+++ Doing Col +++')
+  col, col_geob = get_GO_terms(genes_in_col_c_05h_DE, 'col', goeaobj)
+  print('+++ Doing Lym +++')
+  lym, lym_geob = get_GO_terms(genes_in_lym_c_05h_DE, 'lym', goeaobj)
+  print('+++ Doing Cerk +++')
+  cer, cer_geob = get_GO_terms(genes_in_cer_c_05h_DE, 'cer', goeaobj)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [91]:
+# output
++++ Doing Col +++
+ 72%  2,538 of  3,549 study items found in association
+ 98%  3,549 of  3,613 study items found in population(27206)
+Calculating 3,759 uncorrected p-values using fisher_scipy_stats
+   3,759 GO terms are associated with 16,734 of 27,206 population items
+   1,607 GO terms are associated with  2,538 of  3,602 study items
+  METHOD fdr_bh:
+      67 GO terms found significant (< 0.05=alpha) ( 65 enriched +   2 purified): statsmodels fdr_bh
+   1,428 study items associated with significant GO IDs (enriched)
+       7 study items associated with significant GO IDs (purified)
+ 93%  3,311 of  3,549 study items found in association
+ 98%  3,549 of  3,613 study items found in population(27206)
+Calculating 776 uncorrected p-values using fisher_scipy_stats
+     776 GO terms are associated with 24,391 of 27,206 population items
+     283 GO terms are associated with  3,311 of  3,602 study items
+  METHOD fdr_bh:
+      15 GO terms found significant (< 0.05=alpha) (  7 enriched +   8 purified): statsmodels fdr_bh
+   2,704 study items associated with significant GO IDs (enriched)
+     469 study items associated with significant GO IDs (purified)
+ 69%  2,463 of  3,549 study items found in association
+ 98%  3,549 of  3,613 study items found in population(27206)
+Calculating 2,606 uncorrected p-values using fisher_scipy_stats
+   2,606 GO terms are associated with 16,584 of 27,206 population items
+     932 GO terms are associated with  2,463 of  3,602 study items
+  METHOD fdr_bh:
+      20 GO terms found significant (< 0.05=alpha) ( 20 enriched +   0 purified): statsmodels fdr_bh
+   1,318 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
++++ Doing Lym +++
+ 72%  3,595 of  5,004 study items found in association
+ 97%  5,004 of  5,147 study items found in population(27206)
+Calculating 3,759 uncorrected p-values using fisher_scipy_stats
+   3,759 GO terms are associated with 16,734 of 27,206 population items
+   1,954 GO terms are associated with  3,595 of  5,071 study items
+  METHOD fdr_bh:
+      75 GO terms found significant (< 0.05=alpha) ( 73 enriched +   2 purified): statsmodels fdr_bh
+   2,048 study items associated with significant GO IDs (enriched)
+      14 study items associated with significant GO IDs (purified)
+ 94%  4,702 of  5,004 study items found in association
+ 97%  5,004 of  5,147 study items found in population(27206)
+Calculating 776 uncorrected p-values using fisher_scipy_stats
+     776 GO terms are associated with 24,391 of 27,206 population items
+     376 GO terms are associated with  4,702 of  5,071 study items
+  METHOD fdr_bh:
+      23 GO terms found significant (< 0.05=alpha) ( 22 enriched +   1 purified): statsmodels fdr_bh
+   3,990 study items associated with significant GO IDs (enriched)
+     591 study items associated with significant GO IDs (purified)
+ 71%  3,553 of  5,004 study items found in association
+ 97%  5,004 of  5,147 study items found in population(27206)
+Calculating 2,606 uncorrected p-values using fisher_scipy_stats
+   2,606 GO terms are associated with 16,584 of 27,206 population items
+   1,180 GO terms are associated with  3,553 of  5,071 study items
+  METHOD fdr_bh:
+      28 GO terms found significant (< 0.05=alpha) ( 26 enriched +   2 purified): statsmodels fdr_bh
+   2,030 study items associated with significant GO IDs (enriched)
+       7 study items associated with significant GO IDs (purified)
++++ Doing Cerk +++
+ 75%      3 of      4 study items found in association
+100%      4 of      4 study items found in population(27206)
+Calculating 3,759 uncorrected p-values using fisher_scipy_stats
+   3,759 GO terms are associated with 16,734 of 27,206 population items
+      13 GO terms are associated with      3 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+100%      4 of      4 study items found in association
+100%      4 of      4 study items found in population(27206)
+Calculating 776 uncorrected p-values using fisher_scipy_stats
+     776 GO terms are associated with 24,391 of 27,206 population items
+       6 GO terms are associated with      4 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+ 50%      2 of      4 study items found in association
+100%      4 of      4 study items found in population(27206)
+Calculating 2,606 uncorrected p-values using fisher_scipy_stats
+   2,606 GO terms are associated with 16,584 of 27,206 population items
+       6 GO terms are associated with      2 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+
+:END:
+
+
+*** Look at cerk mutant
+
+#+BEGIN_SRC ipython :session :async t
+  flatten = lambda l: [item for sublist in l for item in sublist]
+  list_of_ids = list(set(flatten([g.pop_items for g in interest])))
+
+  # Uncomment, but takes a while
+  #list_of_TAIR_genes = mg.getgenes(list_of_ids, 'TAIR')
+  TAIR_TAIR=[]
+  for g in list_of_TAIR_genes:
+      try:
+          TAIR_TAIR.append(g['TAIR'])
+      except:
+          TAIR_TAIR.append('N/A')
+
+  ids2tair = {k:v for k,v in zip(list_of_ids, TAIR_TAIR)}
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [92]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-92-42a237942af8> in <module>
+      1 flatten = lambda l: [item for sublist in l for item in sublist]
+----> 2 list_of_ids = list(set(flatten([g.pop_items for g in interest])))
+      3
+      4 # Uncomment, but takes a while
+      5 #list_of_TAIR_genes = mg.getgenes(list_of_ids, 'TAIR')
+
+NameError: name 'interest' is not defined
+:END:
+
+**** CERK mutant specific
+#+BEGIN_SRC ipython :session
+  from goatools.godag_plot import plot_gos, plot_results, plot_goid2goobj
+  interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_cer_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if g.study_count > 0]
+  from os import mkdir
+  from os.path import isdir
+
+  if not isdir('./GO/CERK/'):
+      mkdir('./GO/CERK/')
+
+  for r in interest:
+      if r.enrichment == 'p':
+          plot_results("./GO/CERK/purified_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+      else:
+          plot_results("./GO/CERK/enriched_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+  plot_results('./GO/CERK/output{NS}.png',  interest, study_items=6,items_p_line=3, id2symbol=ids2tair )
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [62]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-62-cbad6680aee4> in <module>
+      1 from goatools.godag_plot import plot_gos, plot_results, plot_goid2goobj
+----> 2 interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_cer_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if g.study_count > 0]
+      3 from os import mkdir
+      4 from os.path import isdir
+      5
+
+NameError: name 'goeaobj' is not defined
+:END:
+
+*** LYM
+#+BEGIN_SRC ipython :session :async t
+  from goatools.godag_plot import plot_gos, plot_results, plot_goid2goobj
+  interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_lym_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if (g.study_count > 0 and g.p_fdr_bh < 0.05 )]
+  from os import mkdir
+  from os.path import isdir
+
+  if not isdir('./GO/LYM/'):
+      mkdir('./GO/LYM/')
+
+  for r in interest:
+      if r.enrichment == 'p':
+          plot_results("./GO/LYM/purified_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+      else:
+          plot_results("./GO/LYM/enriched_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+  plot_results('./GO/LYM/output{NS}.png',  interest, study_items=6,items_p_line=3, id2symbol=ids2tair )
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [93]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-93-433490e77394> in <module>
+     11         plot_results("./GO/LYM/purified_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+     12     else:
+---> 13         plot_results("./GO/LYM/enriched_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+     14 plot_results('./GO/LYM/output{NS}.png',  interest, study_items=6,items_p_line=3, id2symbol=ids2tair )
+
+NameError: name 'ids2tair' is not defined
+:END:
+
+*** COL-0
+#+BEGIN_SRC ipython :session :async t
+  from goatools.godag_plot import plot_gos, plot_results, plot_goid2goobj
+  interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_col_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if (g.study_count > 0 and g.p_fdr_bh < 0.05 )]
+  from os import mkdir
+  from os.path import isdir
+
+  if not isdir('./GO/COL0/'):
+      mkdir('./GO/COL0/')
+
+  for r in interest:
+      if r.enrichment == 'p':
+          plot_results("./GO/COL0/purified_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+      else:
+          plot_results("./GO/COL0/enriched_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+  plot_results('./GO/COL0/output{NS}.png',  interest, study_items=6,items_p_line=3, id2symbol=ids2tair )
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [94]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-94-31745104a3b1> in <module>
+     11         plot_results("./GO/COL0/purified_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+     12     else:
+---> 13         plot_results("./GO/COL0/enriched_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+     14 plot_results('./GO/COL0/output{NS}.png',  interest, study_items=6,items_p_line=3, id2symbol=ids2tair )
+
+NameError: name 'ids2tair' is not defined
+:END:
+
+
+**** LYM-COL0
+#+BEGIN_SRC ipython :session :async t
+  from goatools.godag_plot import plot_gos, plot_results, plot_goid2goobj
+
+  LYM_sub_COL = set(genes_in_lym_c_05h_DE) - set(genes_in_col_c_05h_DE)
+
+  interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(LYM_sub_COL, fields='_id') if g['_id'].isdigit()]) if (g.study_count > 0 and g.p_fdr_bh < 0.05 )]
+  from os import mkdir
+  from os.path import isdir
+
+  if not isdir('./GO/LYM_Sub_COL/'):
+      mkdir('./GO/LYM_Sub_COL/')
+
+  for r in interest:
+      if r.enrichment == 'p':
+          plot_results("./GO/LYM_Sub_COL/purified_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+      else:
+          plot_results("./GO/LYM_Sub_COL/enriched_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+  plot_results('./GO/LYM_Sub_COL/output{NS}.png',  interest, study_items=6,items_p_line=3, id2symbol=ids2tair )
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [95]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-95-dfac0044fba9> in <module>
+     14         plot_results("./GO/LYM_Sub_COL/purified_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+     15     else:
+---> 16         plot_results("./GO/LYM_Sub_COL/enriched_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+     17 plot_results('./GO/LYM_Sub_COL/output{NS}.png',  interest, study_items=6,items_p_line=3, id2symbol=ids2tair )
+
+NameError: name 'ids2tair' is not defined
+:END:
+
+***** LYM-COL -exclude overlapping GOs
+#+BEGIN_SRC ipython :session :async t
+  from goatools.godag_plot import plot_gos, plot_results, plot_goid2goobj
+  from os import mkdir
+  from os.path import isdir
+
+
+  lym_interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_lym_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if (g.study_count > 0 and g.p_fdr_bh < 0.05 )]
+  col_interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_col_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if (g.study_count > 0 and g.p_fdr_bh < 0.05 )]
+
+  if not isdir('./GO/lym_unique_GO/'):
+      mkdir('./GO/lym_unique_GO/')
+
+
+  interest = [x for x in filter(lambda x:False if x.GO in [g.GO for g in col_interest] else True, lym_interest)]
+  for r in interest:
+      if r.enrichment == 'p':
+          plot_results("./GO/lym_unique_GO/purified_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+      else:
+          plot_results("./GO/lym_unique_GO/enriched_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+  plot_results('./GO/lym_unique_GO/output{NS}.png',  interest, study_items=6,items_p_line=3, id2symbol=ids2tair )
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [96]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-96-b5086a02d285> in <module>
+     16         plot_results("./GO/lym_unique_GO/purified_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+     17     else:
+---> 18         plot_results("./GO/lym_unique_GO/enriched_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+     19 plot_results('./GO/lym_unique_GO/output{NS}.png',  interest, study_items=6,items_p_line=3, id2symbol=ids2tair )
+
+NameError: name 'ids2tair' is not defined
+:END:
+
+***** COL_exclusive Gos
+
+
+#+BEGIN_SRC ipython :session
+  if not isdir('./GO/col_unique_GO/'):
+      mkdir('./GO/col_unique_GO/')
+
+
+  interest = [x for x in filter(lambda x:False if x.GO in [g.GO for g in lym_interest] else True, col_interest)]
+
+  for r in interest:
+      if r.enrichment == 'p':
+          plot_results("./GO/col_unique_GO/purified_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+      else:
+          plot_results("./GO/col_unique_GO/enriched_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+  plot_results('./GO/col_unique_GO/output{NS}.png',  interest, study_items=6,items_p_line=3, id2symbol=ids2tair )
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [63]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-63-478d330f66e2> in <module>
+----> 1 if not isdir('./GO/col_unique_GO/'):
+      2     mkdir('./GO/col_unique_GO/')
+      3
+      4
+      5 interest = [x for x in filter(lambda x:False if x.GO in [g.GO for g in lym_interest] else True, col_interest)]
+
+NameError: name 'isdir' is not defined
+:END:
+
+***** Col lym shared, looking at similarities
+
+#+BEGIN_SRC ipython :session
+  lym_interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_lym_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if (g.study_count > 0 and g.p_fdr_bh < 0.05 )]
+  col_interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_col_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if (g.study_count > 0 and g.p_fdr_bh < 0.05 )]
+
+  if not isdir('./GO/lym_unique_GO/'):
+      mkdir('./GO/lym_unique_GO/')
+
+
+  interest = [x for x in filter(lambda x:False if x.GO in [g.GO for g in col_interest] else True, lym_interest)]
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [64]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-64-b4c4416e5bfe> in <module>
+----> 1 lym_interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_lym_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if (g.study_count > 0 and g.p_fdr_bh < 0.05 )]
+      2 col_interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_col_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if (g.study_count > 0 and g.p_fdr_bh < 0.05 )]
+      3
+      4 if not isdir('./GO/lym_unique_GO/'):
+      5     mkdir('./GO/lym_unique_GO/')
+
+NameError: name 'goeaobj' is not defined
+:END:
+
+
+
+
+*** Col + lym
+
+#+BEGIN_SRC ipython :session :async t
+data = pd.concat([col, lym, cer]).sort_values(by='GO')
+data.to_csv('05hr_GO.csv')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [97]:
+:END:
+
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results :async t
+  lookup = data.pivot('GO', columns='geno', values='count').apply(
+      lambda x: (x['col'] - x['lym'])/ (x['col'] + x['lym']) * 100, axis=1)
+
+  data['% change'] = data['GO'].apply(lambda x: lookup[x])
+
+  data= data.reset_index(drop=True)
+  data.head(10)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [98]:
+# text/org
+|    | GO                                                   |   count | defence   | GO_Record   |      fdr | geno   |   % change |
+|----+------------------------------------------------------+---------+-----------+-------------+----------+--------+------------|
+|  0 | 'de novo' GDP-L-fucose biosynthetic process          |       1 | False     | GO:0042351  | 1        | lym    |     0      |
+|  1 | 'de novo' GDP-L-fucose biosynthetic process          |       1 | False     | GO:0042351  | 1        | col    |     0      |
+|  2 | 'de novo' IMP biosynthetic process                   |       6 | False     | GO:0006189  | 0.434943 | lym    |   -71.4286 |
+|  3 | 'de novo' IMP biosynthetic process                   |       1 | False     | GO:0006189  | 1        | col    |   -71.4286 |
+|  4 | 'de novo' UMP biosynthetic process                   |       2 | False     | GO:0044205  | 1        | lym    |   nan      |
+|  5 | 'de novo' cotranslational protein folding            |       1 | False     | GO:0051083  | 1        | lym    |   nan      |
+|  6 | 'de novo' protein folding                            |       3 | False     | GO:0006458  | 0.919405 | lym    |   nan      |
+|  7 | 'de novo' pyrimidine nucleobase biosynthetic process |       1 | False     | GO:0006207  | 1        | lym    |   nan      |
+|  8 | (+)-abscisic acid 8'-hydroxylase activity            |       2 | True      | GO:0010295  | 1        | col    |     0      |
+|  9 | (+)-abscisic acid 8'-hydroxylase activity            |       2 | True      | GO:0010295  | 1        | lym    |     0      |
+:END:
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "goes" :filename "obipy-resources/goes.png" :caption "go terms"   :attr_html ":width 300px")) :exports results
+  sns.set(font_scale=0.6)
+  fig, ax = plt.subplots(1, figsize=(10,20), dpi=200)
+  data = pd.concat([col, lym, cer]).sort_values(by='GO')
+  data = data[data['fdr'] < 0.05]
+
+  #data[ 'difference'] = data.apply(lambda x: x[']  , axis=1)
+  # data = data.sort_values(by='count')
+  # sns.barplot(data = data, x='count', y='GO', hue='geno', ax=ax)
+  # ax.set(xscale="log")
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [65]:
+# output
+  File "<ipython-input-65-e5816ccc72f2>", line 6
+    data['difference'] = data.apply(lambda x: x[']  , axis=1)
+                                                             ^
+SyntaxError: EOL while scanning string literal
+
+:END:
+
+
+#+BEGIN_SRC ipython :session :async t
+sns.set(font_scale=2)
+fig, ax = plt.subplots(1,2, figsize=(20, 10))
+
+N=len(data[data['defence'] == True])
+
+sns.barplot(data=data[data['defence'] == True].iloc[:N//2].sort_values(by='geno'), y='GO', x='count', hue='geno', ax=ax[0])
+sns.barplot(data=data[data['defence'] == True].iloc[N//2:].sort_values(by='geno'), y='GO', x='count', hue='geno', ax=ax[1])
+#fig.suptitle('05hr chitin/water treatments')
+fig.tight_layout()
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [99]:
+# output
+/Users/nathan/anaconda3/envs/playground/lib/python3.6/site-packages/matplotlib/tight_layout.py:199: UserWarning: Tight layout not applied. tight_layout cannot make axes width small enough to accommodate all axes decorations
+  warnings.warn('Tight layout not applied. '
+
+# text/plain
+: <Figure size 1440x720 with 2 Axes>
+
+# image/png
+[[file:obipy-resources/554e0e0e8a473738fef670c960cb4592d2272322/5130afe2c9d0b088491e87f319e7b26088215e34.png]]
+:END:
+
+#+BEGIN_SRC ipython :session :display text/org :exports results :async t
+data_pivot = data.pivot('GO', columns='geno', values='count')
+differences = pd.DataFrame(data_pivot.fillna(0).apply(lambda x: x['col'] - x['lym'], axis=1))
+melted = data_pivot.reset_index().melt(id_vars=['GO']).fillna(0)
+melted = melted.sort_values(by=['GO', 'geno' ]).reset_index()
+melted.head(10)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [100]:
+# text/org
+|    |   index | GO                                          | geno   |   value |
+|----+---------+---------------------------------------------+--------+---------|
+|  0 |       0 | 'de novo' GDP-L-fucose biosynthetic process | cer    |       0 |
+|  1 |    3795 | 'de novo' GDP-L-fucose biosynthetic process | col    |       1 |
+|  2 |    7590 | 'de novo' GDP-L-fucose biosynthetic process | lym    |       1 |
+|  3 |       1 | 'de novo' IMP biosynthetic process          | cer    |       0 |
+|  4 |    3796 | 'de novo' IMP biosynthetic process          | col    |       1 |
+|  5 |    7591 | 'de novo' IMP biosynthetic process          | lym    |       6 |
+|  6 |       2 | 'de novo' UMP biosynthetic process          | cer    |       0 |
+|  7 |    3797 | 'de novo' UMP biosynthetic process          | col    |       0 |
+|  8 |    7592 | 'de novo' UMP biosynthetic process          | lym    |       2 |
+|  9 |       3 | 'de novo' cotranslational protein folding   | cer    |       0 |
+:END:
+
+
+
+
+
+** LYM-DESEQ compares
+
+*** (re)Setup
+#+BEGIN_SRC ipython :session :async t
+  from goatools.base import download_go_basic_obo
+  from goatools.base import download_ncbi_associations
+  from goatools.obo_parser import GODag
+  from goatools.anno.genetogo_reader import Gene2GoReader
+  import mygene
+  from goatools.goea.go_enrichment_ns import GOEnrichmentStudyNS
+
+  pval = 0.05
+  DE_lym_pairings_05hr = read_xl('{0}/PHD/Transcripts/Data/pairings_to_lym_05hr.xlsx'.format(expanduser('~/'), unique=False))
+
+  all_lym_genes = list(set(DE_lym_pairings_05hr.index.values))
+  genes_in_col_lym_w_05h = list(set(
+      DE_lym_pairings_05hr[
+          DE_lym_pairings_05hr['sample'].str.contains('col_w')].index.values))
+
+  genes_in_col_lym_c_05h = list(set(
+      DE_lym_pairings_05hr[
+          DE_lym_pairings_05hr['sample'].str.contains('col_c')].index.values))
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [101]:
+:END:
+
+#+BEGIN_SRC ipython :session
+
+  def make_id2tair(interest):
+      flatten = lambda l: [item for sublist in l for item in sublist]
+      list_of_ids = list(set(flatten([g.pop_items for g in interest])))
+
+      # Uncomment, but takes a while
+      list_of_TAIR_genes = mg.getgenes(list_of_ids, 'TAIR')
+      TAIR_TAIR=[]
+      for g in list_of_TAIR_genes:
+          try:
+              TAIR_TAIR.append(g['TAIR'])
+          except:
+              TAIR_TAIR.append('N/A')
+
+      return {k:v for k,v in zip(list_of_ids, TAIR_TAIR)}
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [66]:
+:END:
+
+#+END_SRC
+
+**** TODO Is there a GO difference in Water to water of LYM and Col
+
+#+BEGIN_SRC ipython :session
+  from goatools.godag_plot import plot_gos, plot_results, plot_goid2goobj
+  from os import mkdir
+  from os.path import isdir
+
+  interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_cer_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if g.study_count > 0]
+
+
+  if not isdir('./GO/CERK/'):
+      mkdir('./GO/CERK/')
+
+  for r in interest:
+      if r.enrichment == 'p':
+          plot_results("./GO/CERK/purified_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+      else:
+          plot_results("./GO/CERK/enriched_{0}.png".format(r.name.replace('/', '&')), [r], study_items=6,items_p_line=3, id2symbol=ids2tair)
+  plot_results('./GO/CERK/output{NS}.png',  interest, study_items=6,items_p_line=3, id2symbol=ids2tair )
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [67]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-67-51d96419b4b8> in <module>
+      3 from os.path import isdir
+      4
+----> 5 interest=[g for g in goeaobj.run_study([int(g['_id']) for g in mg.getgenes(genes_in_cer_c_05h_DE, fields='_id') if g['_id'].isdigit()]) if g.study_count > 0]
+      6
+      7
+
+NameError: name 'goeaobj' is not defined
+:END:
+
+
+
+
+
+
+
+** DCTNT-TINFO
+
+
+
+#+BEGIN_SRC ipython :session
+from goatools.base import get_godag
+godag = get_godag("go-basic.obo")
+
+# Choose a deep leaf-level GO ID associated with "bacteria"
+DESC = 'plasmodesma'            # GO Term name contains this
+NSPC = 'cellular_component'  # Desired namespace
+
+# Create a chooser function which returns True or False
+def chooser(goterm):
+    """Choose a leaf-level GO term based on its name"""
+    b_match = DESC in goterm.name
+    # True if GO term is leaf-level (has no children)
+    b_leaf = not goterm.children
+    # True if GO term is in 'cellular_component' namespace (nspc)
+    b_nspc = goterm.namespace == NSPC
+    return b_match and b_leaf and b_nspc
+
+# Get GO terms with desired name in desired GO DAG branch
+go_ids_selected = set(o.item_id for o in godag.values() if chooser(o))
+
+print('{N} {desc} GO terms'.format(N=len(go_ids_selected), desc=DESC))
+
+
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [68]:
+# output
+  EXISTS: go-basic.obo
+go-basic.obo: fmt(1.2) rel(2019-06-10) 47,442 GO Terms
+7 plasmodesma GO terms
+
+:END:
+
+#+BEGIN_SRC ipython :session
+from goatools.gosubdag.gosubdag import GoSubDag
+gosubdag = GoSubDag(go_ids_selected, godag)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [69]:
+# output
+INITIALIZING GoSubDag:   7 sources in  27 GOs rcnt(True). 0 alt GO IDs
+             GoSubDag: namedtuple fields: NS level depth GO alt GO_name dcnt D1 id
+             GoSubDag: relationships: set()
+
+:END:
+
+#+BEGIN_SRC ipython :session
+go_id, go_term = max(gosubdag.go2obj.items(), key=lambda t: t[1].depth)
+
+# Print GO ID, using print format in gosubdag
+print(go_id, go_term.name)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [70]:
+# output
+GO:0009511 plasmodesmatal endoplasmic reticulum
+
+:END:
+
+#+BEGIN_SRC ipython :session
+go_ids_chosen = go_term.get_all_parents()
+print('{N} ancestors for {GO} "{name}"'.format(
+    N=len(go_ids_chosen), GO=go_term.item_id, name=go_term.name))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [71]:
+# output
+14 ancestors for GO:0009511 "plasmodesmatal endoplasmic reticulum"
+
+:END:
+
+#+BEGIN_SRC ipython :session
+# Add the deep GO ID to its list of ancestors for printing
+go_ids_chosen.add(go_id)
+nts = [gosubdag.go2nt[go] for go in go_ids_chosen]
+
+
+fmt_str = '{I:2}) {NS} {GO:10} {dcnt:11}        D{depth:02}  {GO_name}'
+
+# Print selected GO information
+print('IDX NS GO ID      Descendants Count Depth Name')
+print('--- -- ---------- ----------------- ----- --------------------')
+for idx, nt_go in enumerate(sorted(nts, key=lambda nt: nt.depth), 1):
+    print(fmt_str.format(I=idx, **nt_go._asdict()))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [72]:
+# output
+IDX NS GO ID      Descendants Count Depth Name
+--- -- ---------- ----------------- ----- --------------------
+ 1) CC GO:0005575        4212        D00  cellular_component
+ 2) CC GO:0044425         904        D01  membrane part
+ 3) CC GO:0044464        3335        D01  cell part
+ 4) CC GO:0043226         386        D01  organelle
+ 5) CC GO:0044422        1634        D01  organelle part
+ 6) CC GO:0043227         219        D02  membrane-bounded organelle
+ 7) CC GO:0044459         469        D02  plasma membrane part
+ 8) CC GO:0044424        2384        D02  intracellular part
+ 9) CC GO:0044446        1471        D03  intracellular organelle part
+10) CC GO:0043229         333        D03  intracellular organelle
+11) CC GO:0044444        1270        D03  cytoplasmic part
+12) CC GO:0043231         111        D04  intracellular membrane-bounded organelle
+13) CC GO:0044432         102        D04  endoplasmic reticulum part
+14) CC GO:0005783           5        D05  endoplasmic reticulum
+15) CC GO:0009511           0        D06  plasmodesmatal endoplasmic reticulum
+
+:END:
+
+#+BEGIN_SRC ipython :session
+
+rec = obodag.query_term("GO:0005783")
+obodag.draw_lineage([rec])
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [73]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-73-5f3d62c586df> in <module>
+      1
+----> 2 rec = obodag.query_term("GO:0005783")
+      3 obodag.draw_lineage([rec])
+
+NameError: name 'obodag' is not defined
+:END:
+
+#+CAPTION: Lineage for 0005783
+#+ATTR_HTML: :width 500px
+#+ATTR_LATEX: :width 10cm
+#+NAME: fig:Lineage for 0005783
+[[./GO_lineage.png]]

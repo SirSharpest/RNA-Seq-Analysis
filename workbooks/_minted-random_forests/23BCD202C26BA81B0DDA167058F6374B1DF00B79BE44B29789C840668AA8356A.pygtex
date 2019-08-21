@@ -1,0 +1,17 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{tabulate}
+\PYG{k+kn}{import} \PYG{n+nn}{IPython}
+
+\PYG{k}{class} \PYG{n+nc}{OrgFormatter}\PYG{p}{(}\PYG{n}{IPython}\PYG{o}{.}\PYG{n}{core}\PYG{o}{.}\PYG{n}{formatters}\PYG{o}{.}\PYG{n}{BaseFormatter}\PYG{p}{):}
+    \PYG{n}{format\PYGZus{}type} \PYG{o}{=} \PYG{n}{IPython}\PYG{o}{.}\PYG{n}{core}\PYG{o}{.}\PYG{n}{formatters}\PYG{o}{.}\PYG{n}{Unicode}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}text/org\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{print\PYGZus{}method} \PYG{o}{=} \PYG{n}{IPython}\PYG{o}{.}\PYG{n}{core}\PYG{o}{.}\PYG{n}{formatters}\PYG{o}{.}\PYG{n}{ObjectName}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZus{}repr\PYGZus{}org\PYGZus{}\PYGZsq{}}\PYG{p}{)}
+
+\PYG{k}{def} \PYG{n+nf}{pd\PYGZus{}dataframe\PYGZus{}to\PYGZus{}org}\PYG{p}{(}\PYG{n}{df}\PYG{p}{):}
+    \PYG{k}{return} \PYG{n}{tabulate}\PYG{o}{.}\PYG{n}{tabulate}\PYG{p}{(}\PYG{n}{df}\PYG{p}{,} \PYG{n}{headers}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}keys\PYGZsq{}}\PYG{p}{,} \PYG{n}{tablefmt}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}orgtbl\PYGZsq{}}\PYG{p}{,} \PYG{n}{showindex}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}always\PYGZsq{}}\PYG{p}{)}
+
+\PYG{n}{ip} \PYG{o}{=} \PYG{n}{get\PYGZus{}ipython}\PYG{p}{()}
+\PYG{n}{ip}\PYG{o}{.}\PYG{n}{display\PYGZus{}formatter}\PYG{o}{.}\PYG{n}{formatters}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}text/org\PYGZsq{}}\PYG{p}{]} \PYG{o}{=} \PYG{n}{OrgFormatter}\PYG{p}{()}
+
+\PYG{n}{f} \PYG{o}{=} \PYG{n}{ip}\PYG{o}{.}\PYG{n}{display\PYGZus{}formatter}\PYG{o}{.}\PYG{n}{formatters}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}text/org\PYGZsq{}}\PYG{p}{]}
+\PYG{n}{f}\PYG{o}{.}\PYG{n}{for\PYGZus{}type\PYGZus{}by\PYGZus{}name}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}pandas.core.frame\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}DataFrame\PYGZsq{}}\PYG{p}{,} \PYG{n}{pd\PYGZus{}dataframe\PYGZus{}to\PYGZus{}org}\PYG{p}{)}
+\end{Verbatim}

@@ -1,0 +1,383 @@
+* Grouping genes by trends
+
+This is my current experimental modelling. Here we are trying to group genes by trends. i.e. genes which when normalised and have a similar curve across time (or treatment) will be grouped together
+
+
+** Fit a model to each gene to a linear model,as an example
+
+Here is an example, although post-analysing this idea makes me think that it needs a lot more data to become useful. Given 2 or even 3 data points and we may as well just take a regression and minimise $SSE$
+
+*** Calculate AIC
+#+BEGIN_SRC ipython :session
+  import numpy as np
+  import matplotlib.pyplot as plt
+  def sse(y, y_hat):
+      y = y.flatten()
+      y_hat = y_hat.flatten()
+      return np.sum((y - y_hat)**2)
+
+  def aic(y, y_hat, k=1):
+      y = y.flatten()
+      y_hat = y_hat.flatten()
+      n = len(y)
+      ss = sse(y, y_hat)
+      return 2*k + n * np.log(ss)
+
+  def bic(y, y_hat, k=1):
+      n = len(y)
+      ss = sse(y, y_hat)
+      return n*np.log(ss/n) + k*np.log(n)
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [12]:
+:END:
+
+*** Define model comparisons
+#+BEGIN_SRC ipython :session
+   from sklearn.linear_model import LinearRegression
+   import numpy as np
+
+   def fold(a, b):
+       c = np.empty((a.flatten().size + b.flatten().size), dtype=a.flatten().dtype)
+       c[0::2] = a.flatten()
+       c[1::2] = b.flatten()
+       return c
+
+   def stretch(a): return a.reshape(len(a), 1)
+
+   def generate_estimations_for_profile_compare(a, b):
+       a = a.astype('float64')
+       b = b.astype('float64')
+       a *= 1.0/a.max().astype('float64')
+       b *= 1.0/b.max().astype('float64')
+
+       c = fold(a, b)
+       c *= 1.0/c.max()
+       t_a = np.arange(len(a.flatten()))
+       t_c = fold(t_a, t_a)
+
+       model_a = LinearRegression().fit(stretch(t_a), stretch(a))
+       model_b = LinearRegression().fit(stretch(t_a), stretch(b))
+       model_c = LinearRegression().fit(stretch(t_c), stretch(c))
+
+       y_hat_a = model_a.predict(stretch(t_a))
+       y_hat_b = model_b.predict(stretch(t_a))
+       y_hat_c = model_c.predict(stretch(t_c))
+
+       return (y_hat_a, y_hat_b, y_hat_c, t_a, t_c, c, a,b)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [13]:
+:END:
+
+
+*** Run a test model
+
+ #+BEGIN_SRC ipython :session
+
+   g1 = np.array([[0], [5], [12]])
+   g2 = np.array([[10], [5], [10]])
+
+
+   def plot_models(a,b):
+       y_hat_a, y_hat_b, y_hat_c, t_a, t_c, c, a, b = generate_estimations_for_profile_compare(a,b)
+
+       fig, ax = plt.subplots(1)
+       ax.scatter(t_a, a, label='a')
+       ax.scatter(t_a, b,  label='b')
+
+       ax.plot(t_a, y_hat_a, label='Model a')
+       ax.plot(t_a, y_hat_b, label='Model b')
+       ax.plot(t_c, y_hat_c, label='Model a+b')
+
+       fig.legend(loc=4)
+       fig.tight_layout()
+   import seaborn as sns; sns.set()
+   plot_models(g1,g2)
+ #+END_SRC
+
+ #+RESULTS:
+ :RESULTS:
+ # Out [14]:
+ # text/plain
+ : <Figure size 432x288 with 1 Axes>
+
+ # image/png
+ [[file:obipy-resources/5fc11102f94298d2a7a06d4981c06e2955e50973/c679f8f03ba32623ee16eb769cdfe8c5f4657b34.png]]
+ :END:
+
+
+*** Function to test any two genes for similarity using these models
+#+BEGIN_SRC ipython :session
+  def is_one_model_best(a, b, print_scores=False):
+      y_hat_a, y_hat_b, y_hat_c, y_a, y_c, c, a, b = generate_estimations_for_profile_compare(
+          a, b)
+
+      def aic_1var(y, y_hat): return 2 + len(y.flatten()) * \
+          np.log(np.sum((y.flatten() - y_hat.flatten())**2 ))
+
+      def aic_2var(y1, y1_hat, y2, y2_hat): return 2*2 + len(y1.flatten()) + len(y2.flatten()) * \
+          np.log(np.sum([(y1.flatten() - y1_hat.flatten())**2 ,(y2.flatten() - y2_hat.flatten())**2]))
+
+      aic_ab = aic_2var(y_a, y_hat_a, y_a, y_hat_b)
+      aic_c = aic_1var(y_c, y_hat_c)
+
+      if print_scores:
+          print('SSE A+B:', aic_ab)
+          print('SSE C:  ', aic_c)
+      if aic_c < aic_ab:
+          return True
+      return False
+
+  is_one_model_best(g1, g2, print_scores=True)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [15]:
+# output
+SSE A+B: 10.688028082861809
+SSE C:   8.538195369834968
+
+# text/plain
+: True
+:END:
+
+**** Test obviously dissimilar genes for difference
+ #+BEGIN_SRC ipython :session
+   g3 = np.array([0, 10, 15])
+   g4 = np.array([15, 5, 0])
+
+   print(is_one_model_best(g3,g4,print_scores=True))
+   plot_models(g3,g4)
+
+ #+END_SRC
+
+ #+RESULTS:
+ :RESULTS:
+ # Out [16]:
+ # output
+ SSE A+B: 12.623941387101468
+ SSE C:   12.228488553430552
+ True
+
+ # text/plain
+ : <Figure size 432x288 with 1 Axes>
+
+ # image/png
+ [[file:obipy-resources/5fc11102f94298d2a7a06d4981c06e2955e50973/dfe5788778c9253fdaf62a35d5baac3925904c4d.png]]
+ :END:
+
+
+** Fit model through Naive Bayes
+
+
+The scaling mechanism works as such:
+
+\begin{equation}
+A_0 \dots A_j = \frac{A_i}{A_0}
+\end{equation}
+
+Where A is scaled to be representative to its change from point 0 to point i.
+
+*** Define model comparisons
+#+BEGIN_SRC ipython :session :tangle gene_grouping.py
+  from sklearn.naive_bayes import GaussianNB
+  from sklearn.gaussian_process import GaussianProcessRegressor
+
+  import numpy as np
+
+  def fold(a, b):
+      c = np.empty((a.flatten().size + b.flatten().size), dtype=a.flatten().dtype)
+      c[0::2] = a.flatten()
+      c[1::2] = b.flatten()
+      return c
+
+  def stretch(a): return a.reshape(len(a), 1)
+
+
+  def scaler_for_genes(a):
+      b = a/a[0]
+      return b
+
+  def generate_estimations_for_profile_compare(a, b):
+      a = a.astype('float64').flatten()
+      b = b.astype('float64').flatten()
+      a = scaler_for_genes(a)
+      b = scaler_for_genes(b)
+
+      c = fold(a, b)
+      t_a = np.arange(len(a.flatten()))
+      t_c = fold(t_a, t_a)
+
+
+      model_a = GaussianProcessRegressor().fit(stretch(t_a), stretch(a) )
+      model_b = GaussianProcessRegressor().fit(stretch(t_a), stretch(b))
+      model_c = GaussianProcessRegressor().fit(stretch(t_c), stretch(c))
+
+      y_hat_a = model_a.predict(stretch(t_a))
+      y_hat_b = model_b.predict(stretch(t_a))
+      y_hat_c = model_c.predict(stretch(t_c))
+
+      return (y_hat_a, y_hat_b, y_hat_c, t_a, t_c, c, a, b)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [17]:
+:END:
+
+*** Run a test model
+
+ #+BEGIN_SRC ipython :session
+
+   g1 = np.array([[0.1], [3], [12]])
+   g2 = np.array([[10], [25], [125]])
+   g3 = np.array([0.1, 10, 15])
+   g4 = np.array([15, 5, 0])
+   y_hat_a, y_hat_b, y_hat_c, t_a, t_c, c, a, b = generate_estimations_for_profile_compare(g1,g2)
+
+
+   def plot_models(a,b):
+       y_hat_a, y_hat_b, y_hat_c, t_a, t_c, c, a, b = generate_estimations_for_profile_compare(a,b)
+
+       fig, ax = plt.subplots(1)
+       ax.scatter(t_a, a, label='a')
+       ax.scatter(t_a, b,  label='b')
+
+       ax.plot(t_a, y_hat_a, label='Model a', linestyle='--')
+       ax.plot(t_a, y_hat_b, label='Model b', linestyle='--')
+       ax.plot(t_c, y_hat_c, label='Model a+b', linestyle='--')
+
+       fig.legend(loc=4)
+       fig.tight_layout()
+
+   plot_models(g1,g3)
+ #+END_SRC
+
+ #+RESULTS:
+ :RESULTS:
+ # Out [21]:
+ # text/plain
+ : <Figure size 432x288 with 1 Axes>
+
+ # image/png
+ [[file:obipy-resources/5fc11102f94298d2a7a06d4981c06e2955e50973/326f228698bcff25df4ef2ae7f9908394daa87f1.png]]
+ :END:
+
+*** Function to test any two genes for similarity using these models
+#+BEGIN_SRC ipython :session :tangle gene_grouping.py
+  def is_one_model_best(a, b, print_scores=False):
+      y_hat_a, y_hat_b, y_hat_c, y_a, y_c, c, a, b = generate_estimations_for_profile_compare(
+          a, b)
+
+      def aic_1var(y, y_hat): return 2 + len(y.flatten()) * \
+          np.log(np.sum((y.flatten() - y_hat.flatten())**2 ))
+
+      def aic_2var(y1, y1_hat, y2, y2_hat): return 2*2 + len(y1.flatten()) + len(y2.flatten()) * \
+          np.log(np.sum([(y1.flatten() - y1_hat.flatten())**2 ,(y2.flatten() - y2_hat.flatten())**2]))
+
+      aic_ab = aic_2var(a, y_hat_a, b, y_hat_b)
+      aic_c = aic_1var(c, y_hat_c)
+
+      if print_scores:
+          print('SSE A+B:', aic_ab)
+          print('SSE C:  ', aic_c)
+      if aic_c < aic_ab:
+          return True
+      return False
+
+  is_one_model_best(g1, g3, print_scores=True)
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [19]:
+# output
+SSE A+B: -98.04067038630899
+SSE C:   49.83479609585227
+
+# text/plain
+: False
+:END:
+
+** Implementing a robust system
+
+
+#+BEGIN_SRC ipython :session :async :tangle gene_grouping.py
+
+  np.random.seed(42)
+  groups = { }
+  matches = { }
+  genes = {"gene_{0}".format(k): v+0.1 for k,v in enumerate(np.around(np.random.rand(100,3),1))}
+  for g in genes.values():
+      g[0] = 0.1
+  #genes['test_g'] = genes['gene_0']
+
+  for g1,x1 in genes.items():
+      for g2,x2 in genes.items():
+          if g1 == g2:
+              continue
+          if is_one_model_best(x1, x2):
+
+              if g1 in matches or g2 in matches:
+                  if g1 in matches:
+                      if g2 in matches[g1]:
+                          continue
+                      matches[g1].append(g2)
+                      print("{0} and {1} are a match".format(g1,g2))
+                  if g2 in matches:
+                      if g1 in matches[g2]:
+                          continue
+                      matches[g2].append(g1)
+                      print("{0} and {1} are a match".format(g1,g2))
+              else:
+                  matches[g1] = [g2]
+                  print("{0} and {1} are a match".format(g1,g2))
+
+  genes_as_lists = []
+
+  for k,v in matches.items():
+      genes_as_lists.append(v)
+      genes_as_lists[-1].append(k)
+  idx = 0
+  for k, v in matches.items():
+      if idx > 4:
+          break
+      idx = idx+1
+      plot_models(genes[k],genes[v[0]])
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [20]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-20-1a65b4a0fc7a> in <module>
+     39         break
+     40     idx = idx+1
+---> 41     plot_models(genes[k],genes[v[0]])
+     42
+
+<ipython-input-18-339b22cc7f50> in plot_models(a, b)
+     11
+     12     fig, ax = plt.subplots(1)
+---> 13     ax.scatter(y_a, a, label='a')
+     14     ax.scatter(y_a, b,  label='b')
+     15
+
+NameError: name 'y_a' is not defined
+# text/plain
+: <Figure size 432x288 with 1 Axes>
+
+# image/png
+[[file:obipy-resources/5fc11102f94298d2a7a06d4981c06e2955e50973/b0c693ef3aefc6185599041e218bc9a16648c339.png]]
+:END:

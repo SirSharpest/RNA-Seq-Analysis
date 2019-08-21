@@ -1,0 +1,13 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{sklearn.feature\PYGZus{}selection} \PYG{k+kn}{import} \PYG{n}{RFE}\PYG{p}{,} \PYG{n}{RFECV}
+\PYG{k+kn}{from} \PYG{n+nn}{sklearn.linear\PYGZus{}model} \PYG{k+kn}{import} \PYG{n}{LogisticRegression}
+
+\PYG{c+c1}{\PYGZsh{} load data}
+\PYG{n}{DE\PYGZus{}pairings\PYGZus{}05hr} \PYG{o}{=} \PYG{n}{read\PYGZus{}xl}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}/Users/hughesn/PHD/Transcripts/Data/pairings\PYGZus{}05hr.xlsx\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{sig} \PYG{o}{=} \PYG{n}{DE\PYGZus{}pairings\PYGZus{}05hr}\PYG{p}{[}\PYG{n}{DE\PYGZus{}pairings\PYGZus{}05hr}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}padj\PYGZsq{}}\PYG{p}{]} \PYG{o}{\PYGZlt{}} \PYG{l+m+mf}{0.05}\PYG{p}{]}
+\PYG{n}{sig} \PYG{o}{=} \PYG{n}{sig}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}log2FoldChange\PYGZsq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{sort\PYGZus{}values}\PYG{p}{()}
+\PYG{n}{locs} \PYG{o}{=} \PYG{n}{sig}\PYG{o}{.}\PYG{n}{index}
+\PYG{n}{df} \PYG{o}{=} \PYG{n}{counts}\PYG{o}{.}\PYG{n}{loc}\PYG{p}{[}\PYG{n}{locs}\PYG{p}{][[}\PYG{n}{c} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{counts}\PYG{o}{.}\PYG{n}{columns} \PYG{k}{if} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZus{}05h\PYGZsq{}} \PYG{o+ow}{in} \PYG{n}{c} \PYG{o+ow}{and} \PYG{l+s+s1}{\PYGZsq{}cer\PYGZsq{}} \PYG{o+ow}{in} \PYG{n}{c}\PYG{p}{)]]}\PYG{o}{.}\PYG{n}{T}
+\PYG{n}{df} \PYG{o}{=} \PYG{n}{df}\PYG{o}{.}\PYG{n}{loc}\PYG{p}{[:,}\PYG{o}{\PYGZti{}}\PYG{n}{df}\PYG{o}{.}\PYG{n}{columns}\PYG{o}{.}\PYG{n}{duplicated}\PYG{p}{()]}
+\PYG{n}{df} \PYG{o}{=} \PYG{n}{df}\PYG{p}{[[}\PYG{n}{c} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n+nb}{set}\PYG{p}{(}\PYG{n}{df}\PYG{o}{.}\PYG{n}{columns}\PYG{o}{.}\PYG{n}{values}\PYG{p}{)]]}
+\end{Verbatim}

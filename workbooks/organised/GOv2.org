@@ -1,0 +1,1604 @@
+* Setup Seq Data
+#+BEGIN_SRC ipython :session
+  from goatools.base import download_go_basic_obo
+  from goatools.base import download_ncbi_associations
+  from goatools.obo_parser import GODag
+  from goatools.anno.genetogo_reader import Gene2GoReader
+  import mygene
+  from goatools.goea.go_enrichment_ns import GOEnrichmentStudyNS
+
+  pval = 0.05
+  DE_pairings_05hr = read_xl('{0}/PHD/Transcripts/Data/pairings_05hr.xlsx'.format(expanduser('~/'), unique=False))
+
+  genes_in_col_c_05h = list(set(
+      DE_pairings_05hr[
+          DE_pairings_05hr['sample'].str.contains('col')].index.values))
+
+  genes_in_col_c_05h_DE = list(set(
+      DE_pairings_05hr[
+          (DE_pairings_05hr['sample'].str.contains('col')) & (DE_pairings_05hr['padj'] < pval)].index.values))
+
+  genes_in_lym_c_05h_DE = list(set(
+      DE_pairings_05hr[
+          (DE_pairings_05hr['sample'].str.contains('lym')) & (DE_pairings_05hr['padj'] < pval)].index.values))
+
+  genes_in_cer_c_05h_DE = list(set(
+      DE_pairings_05hr[
+          (DE_pairings_05hr['sample'].str.contains('cer')) & (DE_pairings_05hr['padj'] < pval)].index.values))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [74]:
+:END:
+** Load 6hr
+#+BEGIN_SRC ipython :session
+  pval = 0.05
+  DE_pairings_6hr = read_xl('{0}/PHD/Transcripts/Data/pairings_6hr.xlsx'.format(expanduser('~/'), unique=False))
+
+  genes_in_col_c_6h = list(set(
+      DE_pairings_6hr[
+          DE_pairings_6hr['sample'].str.contains('col')].index.values))
+
+  genes_in_col_c_6h_DE = list(set(
+      DE_pairings_6hr[
+          (DE_pairings_6hr['sample'].str.contains('col')) & (DE_pairings_6hr['padj'] < pval)].index.values))
+
+  genes_in_lym_c_6h_DE = list(set(
+      DE_pairings_6hr[
+          (DE_pairings_6hr['sample'].str.contains('lym')) & (DE_pairings_6hr['padj'] < pval)].index.values))
+
+  genes_in_cer_c_6h_DE = list(set(
+      DE_pairings_6hr[
+          (DE_pairings_6hr['sample'].str.contains('cer')) & (DE_pairings_6hr['padj'] < pval)].index.values))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [216]:
+:END:
+
+
+* Analysis functions
+
+
+#+BEGIN_SRC ipython :session
+  import collections as cx
+
+  defence_kws = ['resistance', 'salicylic', 'chitin', 'abscisic',
+                 'fungal', 'jasmonic', 'defense', 'wounding',
+                 'oomycetes', 'fungus', 'immune', 'bacterial', 'plasmodesma']
+
+
+
+  def get_GO_terms(DEGs, geno, goeaobj, sig_level=0.05):
+      DE_genes_ids = [int(AT2ID[g]) for g in DEGs if g in AT2ID]
+      res_col = goeaobj.run_study(DE_genes_ids)
+      names_to_go = {k:v for k,v in zip([n.name for n in res_col], [n.GO for n in res_col])}
+      names_to_significance = {k:v for k,v in zip([n.name for n in res_col], [n.p_fdr_bh for n in res_col])}
+      names_to_significance_uncorrected = {k:v for k,v in zip([n.name for n in res_col], [n.p_uncorrected for n in res_col])}
+      names_to_ratio_in_study = {k:v for k,v in zip([n.name for n in res_col], [n.ratio_in_study for n in res_col])}
+      names_to_ratio_in_pop = {k:v for k,v in zip([n.name for n in res_col], [n.ratio_in_pop for n in res_col])}
+      res_col_sig = res_col
+      go_names = [r.name for r in res_col_sig for n in range(r.study_count)]
+
+      defence = list(filter(lambda x: any(kw in x for kw in defence_kws), go_names))
+      def rev_logic(x): return False if x else True
+      others = list(filter(lambda x: rev_logic(
+          any(kw in x for kw in defence_kws)), go_names))
+
+      defs = pd.DataFrame([cx.Counter(defence)]).T
+      non_defs = pd.DataFrame([cx.Counter(others)]).T
+
+      defs['defence'] = True
+      non_defs['defence'] = False
+
+      df = pd.concat([defs, non_defs])
+      df = df.reset_index().rename(columns={'index':'GO', 0:'count'})
+
+      df['GO_Record'] = df['GO'].apply(lambda x: names_to_go[x])
+      df['fdr'] = df['GO'].apply(lambda x: names_to_significance[x])
+      df['pval'] = df['GO'].apply(lambda x: names_to_significance_uncorrected[x])
+      df['ratio_in_study'] = df['GO'].apply(lambda x: names_to_ratio_in_study[x])
+      df['ratio_in_pop'] = df['GO'].apply(lambda x: names_to_ratio_in_pop[x])
+      df['geno'] = geno
+      return (df, res_col)
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [285]:
+:END:
+
+
+
+* Replicate table from supplemental files in cite:thiemeEndogenousArabidopsisMessenger2015
+
+#+BEGIN_SRC ipython :session
+  obo_fname = download_go_basic_obo()
+  fin_gene2go = download_ncbi_associations()
+  obodag = GODag("go-basic.obo")
+  # Read NCBI's gene2go. Store annotations in a list of namedtuples
+  objanno = Gene2GoReader(fin_gene2go, taxids=[3702])
+  ns2assoc = objanno.get_ns2assc()
+
+  for nspc, id2gos in ns2assoc.items():
+      print("{NS} {N:,} annotated arabidopsis genes".format(NS=nspc, N=len(id2gos)))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [211]:
+# output
+  EXISTS: go-basic.obo
+  EXISTS: gene2go
+go-basic.obo: fmt(1.2) rel(2019-06-10) 47,442 GO Terms
+HMS:0:00:02.989926 192,328 annotations READ: gene2go
+1 taxids stored: 3702
+CC 25,149 annotated arabidopsis genes
+MF 17,339 annotated arabidopsis genes
+BP 17,679 annotated arabidopsis genes
+
+:END:
+
+#+BEGIN_SRC ipython :session
+  from goatools.goea.go_enrichment_ns import GOEnrichmentStudyNS
+  import mygene
+
+  unique = lambda x: list(set(x))
+
+  with open("all_genes.txt") as file:
+      all_genes = list(set([line.strip()[:-2] for line in file]))
+  mg = mygene.MyGeneInfo()
+
+  genes_at_05hr = unique(DE_pairings_05hr.index.values)
+  genes_at_6hr = unique(DE_pairings_6hr.index.values)
+
+  gof_all = mg.getgenes(all_genes, fields='_id')
+  gof_05hr = mg.getgenes(genes_at_05hr, fields='_id')
+  gof_6hr = mg.getgenes(genes_at_6hr, fields='_id')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [212]:
+# output
+querying 1-1000...done.
+querying 1001-2000...done.
+querying 2001-3000...done.
+querying 3001-4000...done.
+querying 4001-5000...done.
+querying 5001-6000...done.
+querying 6001-7000...done.
+querying 7001-8000...done.
+querying 8001-9000...done.
+querying 9001-10000...done.
+querying 10001-11000...done.
+querying 11001-12000...done.
+querying 12001-13000...done.
+querying 13001-14000...done.
+querying 14001-15000...done.
+querying 15001-16000...done.
+querying 16001-17000...done.
+querying 17001-18000...done.
+querying 18001-19000...done.
+querying 19001-20000...done.
+querying 20001-21000...done.
+querying 21001-22000...done.
+querying 22001-23000...done.
+querying 23001-24000...done.
+querying 24001-25000...done.
+querying 25001-26000...done.
+querying 26001-27000...done.
+querying 27001-28000...done.
+querying 28001-29000...done.
+querying 29001-30000...done.
+querying 30001-31000...done.
+querying 31001-32000...done.
+querying 32001-33000...done.
+querying 33001-33603...done.
+querying 1-1000...done.
+querying 1001-2000...done.
+querying 2001-3000...done.
+querying 3001-4000...done.
+querying 4001-5000...done.
+querying 5001-6000...done.
+querying 6001-7000...done.
+querying 7001-8000...done.
+querying 8001-9000...done.
+querying 9001-10000...done.
+querying 10001-11000...done.
+querying 11001-12000...done.
+querying 12001-13000...done.
+querying 13001-14000...done.
+querying 14001-15000...done.
+querying 15001-16000...done.
+querying 16001-17000...done.
+querying 17001-18000...done.
+querying 18001-19000...done.
+querying 19001-20000...done.
+querying 20001-21000...done.
+querying 21001-22000...done.
+querying 22001-23000...done.
+querying 23001-23248...done.
+querying 1-1000...done.
+querying 1001-2000...done.
+querying 2001-3000...done.
+querying 3001-4000...done.
+querying 4001-5000...done.
+querying 5001-6000...done.
+querying 6001-7000...done.
+querying 7001-8000...done.
+querying 8001-9000...done.
+querying 9001-10000...done.
+querying 10001-11000...done.
+querying 11001-12000...done.
+querying 12001-13000...done.
+querying 13001-14000...done.
+querying 14001-15000...done.
+querying 15001-16000...done.
+querying 16001-17000...done.
+querying 17001-18000...done.
+querying 18001-19000...done.
+querying 19001-20000...done.
+querying 20001-21000...done.
+querying 21001-22000...done.
+querying 22001-23000...done.
+querying 23001-23248...done.
+
+:END:
+
+#+BEGIN_SRC ipython :session
+  gof_n = [g for g in gof_all if '_id' in g] + [g for g in gof_05hr if '_id' in g] + [g for g in gof_6hr if '_id' in g]
+  AT2ID_05hr = {g['query']:g['_id'] for g in [g for g in gof_05hr if '_id' in g] if ('_id' in g and g['_id'].isdigit())}
+  AT2ID_6hr = {g['query']:g['_id'] for g in [g for g in gof_6hr if '_id' in g] if ('_id' in g and g['_id'].isdigit())}
+  AT2ID = {g['query']:g['_id'] for g in gof_n if ('_id' in g and g['_id'].isdigit())}
+  ID2AT = {v:k for k,v in AT2ID.items()}
+  ID2AT_05hr = {v:k for k,v in AT2ID_05hr.items()}
+  ID2AT_6hr = {v:k for k,v in AT2ID_6hr.items()}
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [213]:
+:END:
+
+#+BEGIN_SRC ipython :session
+
+
+  # Make three separate models to test and generate data against
+
+  genes_in_study_all = [int(k) for k in ID2AT.keys() if k.isdigit()]
+  genes_in_study_05hr = [int(k) for k in ID2AT_05hr.keys() if k.isdigit()]
+  genes_in_study_6hr = [int(k) for k in ID2AT_6hr.keys() if k.isdigit()]
+  objanno = Gene2GoReader(fin_gene2go, taxids=[3702])
+  ns2assoc = objanno.get_ns2assc()
+
+  make_study = lambda x: GOEnrichmentStudyNS(
+      x,  # List of genes found
+      ns2assoc,  # geneid/GO associations
+      obodag,  # Ontologies
+      propagate_counts=False,
+      alpha=0.05,  # default significance cut-off
+      methods=['fdr_bh'])  # defult multipletest correction method
+
+
+  print('Making study 1...')
+  geob_all = make_study(genes_in_study_all)
+
+  print('Making study 2...')
+  geob_05hr = make_study(genes_in_studdy_05hr)
+
+  print('Making study 3...')
+  geob_6hr = make_study(genes_in_study_6hr)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [219]:
+# output
+HMS:0:00:02.635589 192,328 annotations READ: gene2go
+1 taxids stored: 3702
+Making study 1...
+
+Load BP Gene Ontology Analysis ...
+ 62% 16,686 of 26,808 population items found in association
+
+Load CC Gene Ontology Analysis ...
+ 91% 24,523 of 26,808 population items found in association
+
+Load MF Gene Ontology Analysis ...
+ 62% 16,525 of 26,808 population items found in association
+Making study 2...
+
+Load BP Gene Ontology Analysis ...
+ 67% 14,290 of 21,434 population items found in association
+
+Load CC Gene Ontology Analysis ...
+ 94% 20,053 of 21,434 population items found in association
+
+Load MF Gene Ontology Analysis ...
+ 67% 14,321 of 21,434 population items found in association
+Making study 3...
+
+Load BP Gene Ontology Analysis ...
+ 67% 14,288 of 21,431 population items found in association
+
+Load CC Gene Ontology Analysis ...
+ 94% 20,051 of 21,431 population items found in association
+
+Load MF Gene Ontology Analysis ...
+ 67% 14,319 of 21,431 population items found in association
+
+:END:
+
+#+BEGIN_SRC ipython :session
+
+  print('+++ Doing Col +++')
+  col_05hr, col_geob_05hr = get_GO_terms(genes_in_col_c_05h_DE, 'col', geob_05hr)
+  print('+++ Doing Lym +++')
+  lym_05hr, lym_geob_05hr = get_GO_terms(genes_in_lym_c_05h_DE, 'lym', geob_05hr)
+  print('+++ Doing Cerk +++')
+  cer_05hr, cer_geob_05hr = get_GO_terms(genes_in_cer_c_05h_DE, 'cer', geob_05hr)
+
+  print('+++ Doing Col +++')
+  col_6hr, col_geob_6hr = get_GO_terms(genes_in_col_c_6h_DE, 'col', geob_6hr)
+  print('+++ Doing Lym +++')
+  lym_6hr, lym_geob_6hr = get_GO_terms(genes_in_lym_c_6h_DE, 'lym', geob_6hr)
+  print('+++ Doing Cerk +++')
+  cer_6hr, cer_geob_6hr = get_GO_terms(genes_in_cer_c_6h_DE, 'cer', geob_6hr)
+
+  print('+++ Doing Col +++')
+  col_all, col_geob_all = get_GO_terms(genes_in_col_c_05h_DE, 'col', geob_all)
+  print('+++ Doing Lym +++')
+  lym_all, lym_geob_all = get_GO_terms(genes_in_lym_c_05h_DE, 'lym', geob_all)
+  print('+++ Doing Cerk +++')
+  cer_all, cer_geob_all = get_GO_terms(genes_in_cer_c_05h_DE, 'cer', geob_all)
+
+
+  print('+++ Doing Col +++')
+  col_all_6h, col_geob_all_6h = get_GO_terms(genes_in_col_c_6h_DE, 'col', geob_all)
+  print('+++ Doing Lym +++')
+  lym_all_6h, lym_geob_all_6h = get_GO_terms(genes_in_lym_c_6h_DE, 'lym', geob_all)
+  print('+++ Doing Cerk +++')
+  cer_all_6h, cer_geob_all_6h = get_GO_terms(genes_in_cer_c_6h_DE, 'cer', geob_all)
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [286]:
+# output
++++ Doing Col +++
+
+Run BP Gene Ontology Analysis: current study set of 3587 IDs ...
+ 70%  2,526 of  3,584 study items found in association
+100%  3,584 of  3,587 study items found in population(21434)
+Calculating 3,705 uncorrected p-values using fisher
+   3,705 GO terms are associated with 14,290 of 21,434 population items
+   1,605 GO terms are associated with  2,526 of  3,585 study items
+  METHOD fdr_bh:
+      42 GO terms found significant (< 0.05=alpha) ( 40 enriched +   2 purified): statsmodels fdr_bh
+   1,284 study items associated with significant GO IDs (enriched)
+      25 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 3587 IDs ...
+ 93%  3,328 of  3,584 study items found in association
+100%  3,584 of  3,587 study items found in population(21434)
+Calculating 765 uncorrected p-values using fisher
+     765 GO terms are associated with 20,053 of 21,434 population items
+     283 GO terms are associated with  3,328 of  3,585 study items
+  METHOD fdr_bh:
+      18 GO terms found significant (< 0.05=alpha) (  4 enriched +  14 purified): statsmodels fdr_bh
+   1,387 study items associated with significant GO IDs (enriched)
+   1,195 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 3587 IDs ...
+ 68%  2,449 of  3,584 study items found in association
+100%  3,584 of  3,587 study items found in population(21434)
+Calculating 2,550 uncorrected p-values using fisher
+   2,550 GO terms are associated with 14,321 of 21,434 population items
+     932 GO terms are associated with  2,449 of  3,585 study items
+  METHOD fdr_bh:
+      19 GO terms found significant (< 0.05=alpha) ( 18 enriched +   1 purified): statsmodels fdr_bh
+   1,057 study items associated with significant GO IDs (enriched)
+      29 study items associated with significant GO IDs (purified)
++++ Doing Lym +++
+
+Run BP Gene Ontology Analysis: current study set of 5058 IDs ...
+ 71%  3,568 of  5,035 study items found in association
+100%  5,035 of  5,058 study items found in population(21434)
+Calculating 3,705 uncorrected p-values using fisher
+   3,705 GO terms are associated with 14,290 of 21,434 population items
+   1,954 GO terms are associated with  3,568 of  5,039 study items
+  METHOD fdr_bh:
+      55 GO terms found significant (< 0.05=alpha) ( 52 enriched +   3 purified): statsmodels fdr_bh
+   1,848 study items associated with significant GO IDs (enriched)
+      46 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 5058 IDs ...
+ 94%  4,710 of  5,035 study items found in association
+100%  5,035 of  5,058 study items found in population(21434)
+Calculating 765 uncorrected p-values using fisher
+     765 GO terms are associated with 20,053 of 21,434 population items
+     376 GO terms are associated with  4,710 of  5,039 study items
+  METHOD fdr_bh:
+      28 GO terms found significant (< 0.05=alpha) ( 16 enriched +  12 purified): statsmodels fdr_bh
+   3,018 study items associated with significant GO IDs (enriched)
+   1,495 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 5058 IDs ...
+ 70%  3,522 of  5,035 study items found in association
+100%  5,035 of  5,058 study items found in population(21434)
+Calculating 2,550 uncorrected p-values using fisher
+   2,550 GO terms are associated with 14,321 of 21,434 population items
+   1,180 GO terms are associated with  3,522 of  5,039 study items
+  METHOD fdr_bh:
+      18 GO terms found significant (< 0.05=alpha) ( 18 enriched +   0 purified): statsmodels fdr_bh
+   1,314 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
++++ Doing Cerk +++
+
+Run BP Gene Ontology Analysis: current study set of 4 IDs ...
+ 75%      3 of      4 study items found in association
+100%      4 of      4 study items found in population(21434)
+Calculating 3,705 uncorrected p-values using fisher
+   3,705 GO terms are associated with 14,290 of 21,434 population items
+      13 GO terms are associated with      3 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 4 IDs ...
+100%      4 of      4 study items found in association
+100%      4 of      4 study items found in population(21434)
+Calculating 765 uncorrected p-values using fisher
+     765 GO terms are associated with 20,053 of 21,434 population items
+       6 GO terms are associated with      4 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 4 IDs ...
+ 50%      2 of      4 study items found in association
+100%      4 of      4 study items found in population(21434)
+Calculating 2,550 uncorrected p-values using fisher
+   2,550 GO terms are associated with 14,321 of 21,434 population items
+       6 GO terms are associated with      2 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
++++ Doing Col +++
+
+Run BP Gene Ontology Analysis: current study set of 2555 IDs ...
+ 78%  1,980 of  2,545 study items found in association
+100%  2,545 of  2,555 study items found in population(21431)
+Calculating 3,705 uncorrected p-values using fisher
+   3,705 GO terms are associated with 14,288 of 21,431 population items
+   1,563 GO terms are associated with  1,980 of  2,545 study items
+  METHOD fdr_bh:
+      63 GO terms found significant (< 0.05=alpha) ( 60 enriched +   3 purified): statsmodels fdr_bh
+   1,064 study items associated with significant GO IDs (enriched)
+     117 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 2555 IDs ...
+ 96%  2,439 of  2,545 study items found in association
+100%  2,545 of  2,555 study items found in population(21431)
+Calculating 765 uncorrected p-values using fisher
+     765 GO terms are associated with 20,051 of 21,431 population items
+     316 GO terms are associated with  2,439 of  2,545 study items
+  METHOD fdr_bh:
+      44 GO terms found significant (< 0.05=alpha) ( 43 enriched +   1 purified): statsmodels fdr_bh
+   2,000 study items associated with significant GO IDs (enriched)
+     704 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 2555 IDs ...
+ 78%  1,992 of  2,545 study items found in association
+100%  2,545 of  2,555 study items found in population(21431)
+Calculating 2,550 uncorrected p-values using fisher
+   2,550 GO terms are associated with 14,319 of 21,431 population items
+   1,097 GO terms are associated with  1,992 of  2,545 study items
+  METHOD fdr_bh:
+      28 GO terms found significant (< 0.05=alpha) ( 26 enriched +   2 purified): statsmodels fdr_bh
+     783 study items associated with significant GO IDs (enriched)
+     150 study items associated with significant GO IDs (purified)
++++ Doing Lym +++
+
+Run BP Gene Ontology Analysis: current study set of 1384 IDs ...
+ 77%  1,061 of  1,383 study items found in association
+100%  1,383 of  1,384 study items found in population(21431)
+Calculating 3,705 uncorrected p-values using fisher
+   3,705 GO terms are associated with 14,288 of 21,431 population items
+   1,089 GO terms are associated with  1,061 of  1,383 study items
+  METHOD fdr_bh:
+      47 GO terms found significant (< 0.05=alpha) ( 46 enriched +   1 purified): statsmodels fdr_bh
+     534 study items associated with significant GO IDs (enriched)
+      54 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 1384 IDs ...
+ 96%  1,325 of  1,383 study items found in association
+100%  1,383 of  1,384 study items found in population(21431)
+Calculating 765 uncorrected p-values using fisher
+     765 GO terms are associated with 20,051 of 21,431 population items
+     204 GO terms are associated with  1,325 of  1,383 study items
+  METHOD fdr_bh:
+      29 GO terms found significant (< 0.05=alpha) ( 28 enriched +   1 purified): statsmodels fdr_bh
+     940 study items associated with significant GO IDs (enriched)
+     347 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 1384 IDs ...
+ 77%  1,068 of  1,383 study items found in association
+100%  1,383 of  1,384 study items found in population(21431)
+Calculating 2,550 uncorrected p-values using fisher
+   2,550 GO terms are associated with 14,319 of 21,431 population items
+     758 GO terms are associated with  1,068 of  1,383 study items
+  METHOD fdr_bh:
+      23 GO terms found significant (< 0.05=alpha) ( 21 enriched +   2 purified): statsmodels fdr_bh
+     226 study items associated with significant GO IDs (enriched)
+      72 study items associated with significant GO IDs (purified)
++++ Doing Cerk +++
+
+Run BP Gene Ontology Analysis: current study set of 0 IDs ...
+
+Run CC Gene Ontology Analysis: current study set of 0 IDs ...
+
+Run MF Gene Ontology Analysis: current study set of 0 IDs ...
++++ Doing Col +++
+
+Run BP Gene Ontology Analysis: current study set of 3587 IDs ...
+ 70%  2,527 of  3,585 study items found in association
+100%  3,585 of  3,587 study items found in population(26808)
+Calculating 3,758 uncorrected p-values using fisher
+   3,758 GO terms are associated with 16,686 of 26,808 population items
+   1,605 GO terms are associated with  2,527 of  3,585 study items
+  METHOD fdr_bh:
+      67 GO terms found significant (< 0.05=alpha) ( 64 enriched +   3 purified): statsmodels fdr_bh
+   1,421 study items associated with significant GO IDs (enriched)
+      32 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 3587 IDs ...
+ 93%  3,329 of  3,585 study items found in association
+100%  3,585 of  3,587 study items found in population(26808)
+Calculating 776 uncorrected p-values using fisher
+     776 GO terms are associated with 24,523 of 26,808 population items
+     283 GO terms are associated with  3,329 of  3,585 study items
+  METHOD fdr_bh:
+      15 GO terms found significant (< 0.05=alpha) (  7 enriched +   8 purified): statsmodels fdr_bh
+   2,699 study items associated with significant GO IDs (enriched)
+     482 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 3587 IDs ...
+ 68%  2,449 of  3,585 study items found in association
+100%  3,585 of  3,587 study items found in population(26808)
+Calculating 2,606 uncorrected p-values using fisher
+   2,606 GO terms are associated with 16,525 of 26,808 population items
+     932 GO terms are associated with  2,449 of  3,585 study items
+  METHOD fdr_bh:
+      20 GO terms found significant (< 0.05=alpha) ( 20 enriched +   0 purified): statsmodels fdr_bh
+   1,317 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
++++ Doing Lym +++
+
+Run BP Gene Ontology Analysis: current study set of 5058 IDs ...
+ 71%  3,570 of  5,039 study items found in association
+100%  5,039 of  5,058 study items found in population(26808)
+Calculating 3,758 uncorrected p-values using fisher
+   3,758 GO terms are associated with 16,686 of 26,808 population items
+   1,954 GO terms are associated with  3,570 of  5,039 study items
+  METHOD fdr_bh:
+      74 GO terms found significant (< 0.05=alpha) ( 72 enriched +   2 purified): statsmodels fdr_bh
+   2,018 study items associated with significant GO IDs (enriched)
+      14 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 5058 IDs ...
+ 94%  4,714 of  5,039 study items found in association
+100%  5,039 of  5,058 study items found in population(26808)
+Calculating 776 uncorrected p-values using fisher
+     776 GO terms are associated with 24,523 of 26,808 population items
+     376 GO terms are associated with  4,714 of  5,039 study items
+  METHOD fdr_bh:
+      21 GO terms found significant (< 0.05=alpha) ( 18 enriched +   3 purified): statsmodels fdr_bh
+   2,892 study items associated with significant GO IDs (enriched)
+     682 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 5058 IDs ...
+ 70%  3,524 of  5,039 study items found in association
+100%  5,039 of  5,058 study items found in population(26808)
+Calculating 2,606 uncorrected p-values using fisher
+   2,606 GO terms are associated with 16,525 of 26,808 population items
+   1,180 GO terms are associated with  3,524 of  5,039 study items
+  METHOD fdr_bh:
+      27 GO terms found significant (< 0.05=alpha) ( 25 enriched +   2 purified): statsmodels fdr_bh
+   1,888 study items associated with significant GO IDs (enriched)
+       7 study items associated with significant GO IDs (purified)
++++ Doing Cerk +++
+
+Run BP Gene Ontology Analysis: current study set of 4 IDs ...
+ 75%      3 of      4 study items found in association
+100%      4 of      4 study items found in population(26808)
+Calculating 3,758 uncorrected p-values using fisher
+   3,758 GO terms are associated with 16,686 of 26,808 population items
+      13 GO terms are associated with      3 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 4 IDs ...
+100%      4 of      4 study items found in association
+100%      4 of      4 study items found in population(26808)
+Calculating 776 uncorrected p-values using fisher
+     776 GO terms are associated with 24,523 of 26,808 population items
+       6 GO terms are associated with      4 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 4 IDs ...
+ 50%      2 of      4 study items found in association
+100%      4 of      4 study items found in population(26808)
+Calculating 2,606 uncorrected p-values using fisher
+   2,606 GO terms are associated with 16,525 of 26,808 population items
+       6 GO terms are associated with      2 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
++++ Doing Col +++
+
+Run BP Gene Ontology Analysis: current study set of 2555 IDs ...
+ 78%  1,980 of  2,545 study items found in association
+100%  2,545 of  2,555 study items found in population(26808)
+Calculating 3,758 uncorrected p-values using fisher
+   3,758 GO terms are associated with 16,686 of 26,808 population items
+   1,563 GO terms are associated with  1,980 of  2,545 study items
+  METHOD fdr_bh:
+      86 GO terms found significant (< 0.05=alpha) ( 83 enriched +   3 purified): statsmodels fdr_bh
+   1,137 study items associated with significant GO IDs (enriched)
+     120 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 2555 IDs ...
+ 96%  2,439 of  2,545 study items found in association
+100%  2,545 of  2,555 study items found in population(26808)
+Calculating 776 uncorrected p-values using fisher
+     776 GO terms are associated with 24,523 of 26,808 population items
+     316 GO terms are associated with  2,439 of  2,545 study items
+  METHOD fdr_bh:
+      48 GO terms found significant (< 0.05=alpha) ( 47 enriched +   1 purified): statsmodels fdr_bh
+   2,087 study items associated with significant GO IDs (enriched)
+     704 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 2555 IDs ...
+ 78%  1,992 of  2,545 study items found in association
+100%  2,545 of  2,555 study items found in population(26808)
+Calculating 2,606 uncorrected p-values using fisher
+   2,606 GO terms are associated with 16,525 of 26,808 population items
+   1,097 GO terms are associated with  1,992 of  2,545 study items
+  METHOD fdr_bh:
+      36 GO terms found significant (< 0.05=alpha) ( 33 enriched +   3 purified): statsmodels fdr_bh
+   1,081 study items associated with significant GO IDs (enriched)
+     165 study items associated with significant GO IDs (purified)
++++ Doing Lym +++
+
+Run BP Gene Ontology Analysis: current study set of 1384 IDs ...
+ 77%  1,061 of  1,383 study items found in association
+100%  1,383 of  1,384 study items found in population(26808)
+Calculating 3,758 uncorrected p-values using fisher
+   3,758 GO terms are associated with 16,686 of 26,808 population items
+   1,089 GO terms are associated with  1,061 of  1,383 study items
+  METHOD fdr_bh:
+      56 GO terms found significant (< 0.05=alpha) ( 55 enriched +   1 purified): statsmodels fdr_bh
+     551 study items associated with significant GO IDs (enriched)
+      54 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 1384 IDs ...
+ 96%  1,325 of  1,383 study items found in association
+100%  1,383 of  1,384 study items found in population(26808)
+Calculating 776 uncorrected p-values using fisher
+     776 GO terms are associated with 24,523 of 26,808 population items
+     204 GO terms are associated with  1,325 of  1,383 study items
+  METHOD fdr_bh:
+      40 GO terms found significant (< 0.05=alpha) ( 39 enriched +   1 purified): statsmodels fdr_bh
+   1,097 study items associated with significant GO IDs (enriched)
+     347 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 1384 IDs ...
+ 77%  1,068 of  1,383 study items found in association
+100%  1,383 of  1,384 study items found in population(26808)
+Calculating 2,606 uncorrected p-values using fisher
+   2,606 GO terms are associated with 16,525 of 26,808 population items
+     758 GO terms are associated with  1,068 of  1,383 study items
+  METHOD fdr_bh:
+      29 GO terms found significant (< 0.05=alpha) ( 27 enriched +   2 purified): statsmodels fdr_bh
+     470 study items associated with significant GO IDs (enriched)
+      72 study items associated with significant GO IDs (purified)
++++ Doing Cerk +++
+
+Run BP Gene Ontology Analysis: current study set of 0 IDs ...
+
+Run CC Gene Ontology Analysis: current study set of 0 IDs ...
+
+Run MF Gene Ontology Analysis: current study set of 0 IDs ...
+
+:END:
+
+** Write
+#+BEGIN_SRC ipython :session
+  writer = pd.ExcelWriter('./GO_Tables.xlsx')
+
+
+  for tbl_all, tbl_05hr, tbl_6hr, tbl_6hr_all, sheetname in zip([col_all, lym_all, cer_all], [col_05hr, lym_05hr, cer_05hr], [col_05hr, lym_05hr, cer_05hr], [col_all_6h, lym_all_6h, cer_all_6h], ['col', 'lym', 'cerk']):
+
+      tbl_all=tbl_all.set_index('GO_Record')
+      tbl_05hr=tbl_05hr.set_index('GO_Record')
+      tbl_6hr=tbl_6hr.set_index('GO_Record')
+      tbl_6hr_all = tbl_6hr_all.set_index('GO_Record')
+
+      tbl_all=tbl_all.drop(['geno', 'defence'], axis=1)
+      tbl_05hr=tbl_05hr.drop(['geno', 'defence', 'GO'], axis=1)
+      tbl_6hr=tbl_6hr.drop(['geno', 'defence', 'GO'], axis=1)
+      tbl_6hr_all=tbl_6hr_all.drop(['geno', 'defence','GO'], axis=1)
+
+
+      tbl_all[' '] = ''
+      tbl_05hr[' '] = ''
+      tbl_6hr_all[' '] = ''
+
+
+      tbl_all.join(tbl_05hr, rsuffix=' ').join(tbl_6hr_all, rsuffix=' ').join(tbl_6hr, rsuffix=' ').to_excel(writer, sheet_name=f'{sheetname}')
+  writer.save()
+  writer.close()
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [287]:
+:END:
+
+
+
+
+
+
+* Difference in Col/lym
+
+#+BEGIN_SRC ipython :session
+
+
+
+#+END_SRC
+
+
+
+* Setup GO
+
+#+BEGIN_SRC ipython :session
+
+  obo_fname = download_go_basic_obo()
+  fin_gene2go = download_ncbi_associations()
+  obodag = GODag("go-basic.obo")
+  # Read NCBI's gene2go. Store annotations in a list of namedtuples
+  objanno = Gene2GoReader(fin_gene2go, taxids=[3702])
+  ns2assoc = objanno.get_ns2assc()
+
+  for nspc, id2gos in ns2assoc.items():
+      print("{NS} {N:,} annotated arabidopsis genes".format(NS=nspc, N=len(id2gos)))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [9]:
+# output
+  EXISTS: go-basic.obo
+  EXISTS: gene2go
+go-basic.obo: fmt(1.2) rel(2019-06-10) 47,442 GO Terms
+HMS:0:00:02.997726 192,328 annotations READ: gene2go
+1 taxids stored: 3702
+BP 17,679 annotated arabidopsis genes
+CC 25,149 annotated arabidopsis genes
+MF 17,339 annotated arabidopsis genes
+
+:END:
+
+#+BEGIN_SRC ipython :session
+  from goatools.goea.go_enrichment_ns import GOEnrichmentStudyNS
+  import mygene
+
+  with open("all_genes.txt") as file:
+      all_genes = list(set([line.strip()[:-2] for line in file]))
+
+  mg = mygene.MyGeneInfo()
+  gof = mg.getgenes(all_genes, fields='_id')
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [10]:
+# output
+querying 1-1000...done.
+querying 1001-2000...done.
+querying 2001-3000...done.
+querying 3001-4000...done.
+querying 4001-5000...done.
+querying 5001-6000...done.
+querying 6001-7000...done.
+querying 7001-8000...done.
+querying 8001-9000...done.
+querying 9001-10000...done.
+querying 10001-11000...done.
+querying 11001-12000...done.
+querying 12001-13000...done.
+querying 13001-14000...done.
+querying 14001-15000...done.
+querying 15001-16000...done.
+querying 16001-17000...done.
+querying 17001-18000...done.
+querying 18001-19000...done.
+querying 19001-20000...done.
+querying 20001-21000...done.
+querying 21001-22000...done.
+querying 22001-23000...done.
+querying 23001-24000...done.
+querying 24001-25000...done.
+querying 25001-26000...done.
+querying 26001-27000...done.
+querying 27001-28000...done.
+querying 28001-29000...done.
+querying 29001-30000...done.
+querying 30001-31000...done.
+querying 31001-32000...done.
+querying 32001-33000...done.
+querying 33001-33603...done.
+
+:END:
+
+#+BEGIN_SRC ipython :session
+  gof_n = [g for g in gof if '_id' in g]
+  AT2ID = {g['query']:g['_id'] for g in gof_n if ('_id' in g and g['_id'].isdigit())}
+  ID2AT = {v:k for k,v in AT2ID.items()}
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [11]:
+:END:
+
+#+BEGIN_SRC ipython :session
+#genes_in_study = [int(g['_id']) for g in gof if g['_id'].isdigit()]
+genes_in_study = [int( k) for k in ID2AT.keys() if k.isdigit()]
+objanno = Gene2GoReader(fin_gene2go, taxids=[3702])
+ns2assoc = objanno.get_ns2assc()
+goeaobj = GOEnrichmentStudyNS(
+        genes_in_study, # List of genes found
+        ns2assoc, # geneid/GO associations
+        obodag, # Ontologies
+        propagate_counts = False,
+        alpha = 0.05, # default significance cut-off
+        methods = ['fdr_bh']) # defult multipletest correction method
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [12]:
+# output
+HMS:0:00:03.611634 192,328 annotations READ: gene2go
+1 taxids stored: 3702
+
+Load BP Gene Ontology Analysis ...
+ 63% 16,688 of 26,485 population items found in association
+
+Load CC Gene Ontology Analysis ...
+ 92% 24,288 of 26,485 population items found in association
+
+Load MF Gene Ontology Analysis ...
+ 62% 16,527 of 26,485 population items found in association
+
+:END:
+
+
+* Analysis of 3 genotypes vs their water controls
+
+#+BEGIN_SRC ipython :session
+  print('+++ Doing Col +++')
+  col, col_geob = get_GO_terms(genes_in_col_c_05h_DE, 'col', goeaobj)
+  print('+++ Doing Lym +++')
+  lym, lym_geob = get_GO_terms(genes_in_lym_c_05h_DE, 'lym', goeaobj)
+  print('+++ Doing Cerk +++')
+  cer, cer_geob = get_GO_terms(genes_in_cer_c_05h_DE, 'cer', goeaobj)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [14]:
+# output
++++ Doing Col +++
+
+Run BP Gene Ontology Analysis: current study set of 3534 IDs ...
+ 72%  2,528 of  3,532 study items found in association
+100%  3,532 of  3,534 study items found in population(26485)
+Calculating 3,758 uncorrected p-values using fisher
+   3,758 GO terms are associated with 16,688 of 26,485 population items
+   1,605 GO terms are associated with  2,528 of  3,532 study items
+  METHOD fdr_bh:
+      68 GO terms found significant (< 0.05=alpha) ( 65 enriched +   3 purified): statsmodels fdr_bh
+   1,427 study items associated with significant GO IDs (enriched)
+      32 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 3534 IDs ...
+ 93%  3,294 of  3,532 study items found in association
+100%  3,532 of  3,534 study items found in population(26485)
+Calculating 776 uncorrected p-values using fisher
+     776 GO terms are associated with 24,288 of 26,485 population items
+     283 GO terms are associated with  3,294 of  3,532 study items
+  METHOD fdr_bh:
+      15 GO terms found significant (< 0.05=alpha) (  7 enriched +   8 purified): statsmodels fdr_bh
+   2,691 study items associated with significant GO IDs (enriched)
+     467 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 3534 IDs ...
+ 69%  2,450 of  3,532 study items found in association
+100%  3,532 of  3,534 study items found in population(26485)
+Calculating 2,606 uncorrected p-values using fisher
+   2,606 GO terms are associated with 16,527 of 26,485 population items
+     932 GO terms are associated with  2,450 of  3,532 study items
+  METHOD fdr_bh:
+      20 GO terms found significant (< 0.05=alpha) ( 20 enriched +   0 purified): statsmodels fdr_bh
+   1,317 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
++++ Doing Lym +++
+
+Run BP Gene Ontology Analysis: current study set of 4991 IDs ...
+ 72%  3,569 of  4,969 study items found in association
+100%  4,969 of  4,991 study items found in population(26485)
+Calculating 3,758 uncorrected p-values using fisher
+   3,758 GO terms are associated with 16,688 of 26,485 population items
+   1,954 GO terms are associated with  3,569 of  4,969 study items
+  METHOD fdr_bh:
+      74 GO terms found significant (< 0.05=alpha) ( 72 enriched +   2 purified): statsmodels fdr_bh
+   2,018 study items associated with significant GO IDs (enriched)
+      14 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 4991 IDs ...
+ 94%  4,667 of  4,969 study items found in association
+100%  4,969 of  4,991 study items found in population(26485)
+Calculating 776 uncorrected p-values using fisher
+     776 GO terms are associated with 24,288 of 26,485 population items
+     376 GO terms are associated with  4,667 of  4,969 study items
+  METHOD fdr_bh:
+      21 GO terms found significant (< 0.05=alpha) ( 18 enriched +   3 purified): statsmodels fdr_bh
+   2,892 study items associated with significant GO IDs (enriched)
+     659 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 4991 IDs ...
+ 71%  3,523 of  4,969 study items found in association
+100%  4,969 of  4,991 study items found in population(26485)
+Calculating 2,606 uncorrected p-values using fisher
+   2,606 GO terms are associated with 16,527 of 26,485 population items
+   1,180 GO terms are associated with  3,523 of  4,969 study items
+  METHOD fdr_bh:
+      27 GO terms found significant (< 0.05=alpha) ( 25 enriched +   2 purified): statsmodels fdr_bh
+   1,889 study items associated with significant GO IDs (enriched)
+       7 study items associated with significant GO IDs (purified)
++++ Doing Cerk +++
+
+Run BP Gene Ontology Analysis: current study set of 4 IDs ...
+ 75%      3 of      4 study items found in association
+100%      4 of      4 study items found in population(26485)
+Calculating 3,758 uncorrected p-values using fisher
+   3,758 GO terms are associated with 16,688 of 26,485 population items
+      13 GO terms are associated with      3 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 4 IDs ...
+100%      4 of      4 study items found in association
+100%      4 of      4 study items found in population(26485)
+Calculating 776 uncorrected p-values using fisher
+     776 GO terms are associated with 24,288 of 26,485 population items
+       6 GO terms are associated with      4 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 4 IDs ...
+ 50%      2 of      4 study items found in association
+100%      4 of      4 study items found in population(26485)
+Calculating 2,606 uncorrected p-values using fisher
+   2,606 GO terms are associated with 16,527 of 26,485 population items
+       6 GO terms are associated with      2 of      4 study items
+  METHOD fdr_bh:
+       0 GO terms found significant (< 0.05=alpha) (  0 enriched +   0 purified): statsmodels fdr_bh
+       0 study items associated with significant GO IDs (enriched)
+       0 study items associated with significant GO IDs (purified)
+
+:END:
+
+*** Do 6hrs too!
+#+BEGIN_SRC ipython :session
+  print('+++ Doing Col +++')
+  col6h, col_geob6h = get_GO_terms(genes_in_col_c_6h_DE, 'col', goeaobj)
+  print('+++ Doing Lym +++')
+  lym6h, lym_geob6h = get_GO_terms(genes_in_lym_c_6h_DE, 'lym', goeaobj)
+  print('+++ Doing Cerk +++')
+  cer6h, cer_geob6h = get_GO_terms(genes_in_cer_c_6h_DE, 'cer', goeaobj)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [15]:
+# output
++++ Doing Col +++
+
+Run BP Gene Ontology Analysis: current study set of 2533 IDs ...
+ 78%  1,982 of  2,525 study items found in association
+100%  2,525 of  2,533 study items found in population(26485)
+Calculating 3,758 uncorrected p-values using fisher
+   3,758 GO terms are associated with 16,688 of 26,485 population items
+   1,563 GO terms are associated with  1,982 of  2,525 study items
+  METHOD fdr_bh:
+      86 GO terms found significant (< 0.05=alpha) ( 83 enriched +   3 purified): statsmodels fdr_bh
+   1,139 study items associated with significant GO IDs (enriched)
+     120 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 2533 IDs ...
+ 96%  2,427 of  2,525 study items found in association
+100%  2,525 of  2,533 study items found in population(26485)
+Calculating 776 uncorrected p-values using fisher
+     776 GO terms are associated with 24,288 of 26,485 population items
+     316 GO terms are associated with  2,427 of  2,525 study items
+  METHOD fdr_bh:
+      48 GO terms found significant (< 0.05=alpha) ( 47 enriched +   1 purified): statsmodels fdr_bh
+   2,084 study items associated with significant GO IDs (enriched)
+     699 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 2533 IDs ...
+ 79%  1,994 of  2,525 study items found in association
+100%  2,525 of  2,533 study items found in population(26485)
+Calculating 2,606 uncorrected p-values using fisher
+   2,606 GO terms are associated with 16,527 of 26,485 population items
+   1,097 GO terms are associated with  1,994 of  2,525 study items
+  METHOD fdr_bh:
+      36 GO terms found significant (< 0.05=alpha) ( 33 enriched +   3 purified): statsmodels fdr_bh
+   1,083 study items associated with significant GO IDs (enriched)
+     165 study items associated with significant GO IDs (purified)
++++ Doing Lym +++
+
+Run BP Gene Ontology Analysis: current study set of 1368 IDs ...
+ 78%  1,061 of  1,367 study items found in association
+100%  1,367 of  1,368 study items found in population(26485)
+Calculating 3,758 uncorrected p-values using fisher
+   3,758 GO terms are associated with 16,688 of 26,485 population items
+   1,089 GO terms are associated with  1,061 of  1,367 study items
+  METHOD fdr_bh:
+      56 GO terms found significant (< 0.05=alpha) ( 55 enriched +   1 purified): statsmodels fdr_bh
+     551 study items associated with significant GO IDs (enriched)
+      54 study items associated with significant GO IDs (purified)
+
+Run CC Gene Ontology Analysis: current study set of 1368 IDs ...
+ 96%  1,313 of  1,367 study items found in association
+100%  1,367 of  1,368 study items found in population(26485)
+Calculating 776 uncorrected p-values using fisher
+     776 GO terms are associated with 24,288 of 26,485 population items
+     204 GO terms are associated with  1,313 of  1,367 study items
+  METHOD fdr_bh:
+      39 GO terms found significant (< 0.05=alpha) ( 38 enriched +   1 purified): statsmodels fdr_bh
+   1,092 study items associated with significant GO IDs (enriched)
+     343 study items associated with significant GO IDs (purified)
+
+Run MF Gene Ontology Analysis: current study set of 1368 IDs ...
+ 78%  1,068 of  1,367 study items found in association
+100%  1,367 of  1,368 study items found in population(26485)
+Calculating 2,606 uncorrected p-values using fisher
+   2,606 GO terms are associated with 16,527 of 26,485 population items
+     758 GO terms are associated with  1,068 of  1,367 study items
+  METHOD fdr_bh:
+      29 GO terms found significant (< 0.05=alpha) ( 27 enriched +   2 purified): statsmodels fdr_bh
+     470 study items associated with significant GO IDs (enriched)
+      72 study items associated with significant GO IDs (purified)
++++ Doing Cerk +++
+
+Run BP Gene Ontology Analysis: current study set of 0 IDs ...
+
+Run CC Gene Ontology Analysis: current study set of 0 IDs ...
+
+Run MF Gene Ontology Analysis: current study set of 0 IDs ...
+
+:END:
+
+
+** Shared interactions
+
+#+BEGIN_SRC ipython :session
+  interest = [g for g in cer_geob if g.study_count > 0]
+  col_GO = {g.GO:g for g in col_geob if g.study_count > 0}
+
+
+  genes_to_use = []
+  for r in interest:
+      try:
+          r = col_GO[r.GO]
+          genes_to_use.append(r)
+      except:
+          print(r.GO,   'Not found')
+          continue
+
+  plot_results("./GO/CERK_in_COL/all_4_from_cerk{NS}.png",
+               genes_to_use, study_items=6, items_p_line=3, id2symbol=ID2AT)
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [16]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-16-d03ac0fbb554> in <module>
+     12         continue
+     13
+---> 14 plot_results("./GO/CERK_in_COL/all_4_from_cerk{NS}.png",
+     15              genes_to_use, study_items=6, items_p_line=3, id2symbol=ID2AT)
+     16
+
+NameError: name 'plot_results' is not defined
+:END:
+
+
+** CERK
+
+#+BEGIN_SRC ipython :session
+  interest = [g for g in cer_geob if g.study_count > 0]
+  for r in interest:
+      if r.enrichment == 'p':
+          plot_results("./GO/CERK/purified_{0}.png".format(r.name.replace('/', '&')), [
+                       r], study_items=6, items_p_line=3, id2symbol=ID2AT)
+      else:
+          plot_results("./GO/CERK/enriched_{0}.png".format(r.name.replace('/', '&')), [
+                       r], study_items=6, items_p_line=3, id2symbol=ID2AT)
+
+  plot_results("./GO/CERK/{NS}.png", interest, study_items=6, items_p_line=3, id2symbol=ID2AT)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [17]:
+# output
+
+NameErrorTraceback (most recent call last)
+<ipython-input-17-74a55a01ed08> in <module>
+      5                      r], study_items=6, items_p_line=3, id2symbol=ID2AT)
+      6     else:
+----> 7         plot_results("./GO/CERK/enriched_{0}.png".format(r.name.replace('/', '&')), [
+      8                      r], study_items=6, items_p_line=3, id2symbol=ID2AT)
+      9
+
+NameError: name 'plot_results' is not defined
+:END:
+
+
+
+
+* Enrichment vs. purified
+
+#+BEGIN_SRC ipython :session
+    def make_GO_df(geob, genotype):
+        col_GO = {g.GO:g for g in geob if g.study_count > 0 and g.p_fdr_bh < pval}
+        counts = []
+        enrichment = []
+        names = []
+
+        for k,g in col_GO.items():
+            if g.enrichment == 'p':
+                counts.append(-g.study_count)
+            else:
+                counts.append(g.study_count)
+            enrichment.append(g.enrichment)
+            names.append(g.name)
+
+        df = pd.DataFrame({'names':names, 'counts':counts, 'enrichment':enrichment})
+        df['geno'] = genotype
+
+        return df
+
+
+  col_df = make_GO_df(col_geob, 'col')
+  lym_df = make_GO_df(lym_geob, 'lym')
+
+  col_df6h = make_GO_df(col_geob6h, 'col')
+  lym_df6h = make_GO_df(lym_geob6h, 'lym')
+
+  col_melt6h = col_df6h.melt(id_vars = ['names',  'enrichment', 'geno'], value_vars = ['counts'])
+  lym_melt6h = lym_df6h.melt(id_vars = ['names',  'enrichment', 'geno'], value_vars = ['counts'])
+  joined6h = pd.concat([col_melt6h, lym_melt6h])
+
+
+  #merged = col_df.merge(lym_df, left_on='names', right_on='names', suffixes=('_col', '_lym'))
+  col_melt = col_df.melt(id_vars = ['names',  'enrichment', 'geno'], value_vars = ['counts'])
+  lym_melt = lym_df.melt(id_vars = ['names',  'enrichment', 'geno'], value_vars = ['counts'])
+  joined = pd.concat([col_melt, lym_melt])
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [18]:
+:END:
+
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "real_go_terms_05hr_lym_col" :filename "obipy-resources/real_go_terms_05hr_lym_col.png" :caption "" :attr_html ":width 250px" :attr_latex ":width 15cm")) :exports results
+import seaborn as sns
+joined = joined.sort_values(by='names')
+fig, ax = plt.subplots(2,2, figsize=(20, 17), dpi=100)
+sns.set(font_scale=0.5)
+
+quart = len(joined)//4
+
+d1,d2 = joined.iloc[:quart].sort_values(by='geno'), joined.iloc[quart:(2*quart)-1].sort_values(by='geno')
+d3, d4 = joined.iloc[2+(2*quart):3*quart].sort_values(by='geno'), joined.iloc[3*quart:].sort_values(by='geno')
+
+sns.barplot(data=d1, x = 'value', y='names', hue='geno', ax=ax[0,0])
+sns.barplot(data=d2, x = 'value', y='names', hue='geno', ax=ax[1,0])
+sns.barplot(data=d3, x = 'value', y='names', hue='geno', ax=ax[0,1])
+sns.barplot(data=d4, x = 'value', y='names', hue='geno', ax=ax[1,1])
+
+
+fig.tight_layout()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [275]:
+# text/plain
+: <Figure size 2000x1700 with 4 Axes>
+
+# image/png
+#+attr_html: :width 250px
+#+attr_latex: :width 15cm
+#+caption:
+#+name: real_go_terms_05hr_lym_col
+[[file:obipy-resources/real_go_terms_05hr_lym_col.png]]
+:END:
+
+
+
+*** 6hrs bar plots
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "real_go_terms_6hr_lym_col" :filename "obipy-resources/real_go_terms_6hr_lym_col.png" :caption "" :attr_html ":width 250px" :attr_latex ":width 15cm")) :exports results
+import seaborn as sns
+joined6h = joined6h.sort_values(by='names')
+fig, ax = plt.subplots(2,2, figsize=(10, 17), dpi=300)
+sns.set(font_scale=0.5)
+
+quart = len(joined)//4
+
+d1,d2 = joined6h.iloc[:quart].sort_values(by='geno'), joined6h.iloc[quart:(2*quart)-1].sort_values(by='geno')
+d3, d4 = joined6h.iloc[2+(2*quart):3*quart].sort_values(by='geno'), joined6h.iloc[3*quart:].sort_values(by='geno')
+
+
+d4['names'] = d4['names'].apply(lambda x: ''.join(x.split(' ')[:6]) if len(x) > 100 else x)
+
+sns.barplot(data=d1, x = 'value', y='names', hue='geno', ax=ax[0,0])
+sns.barplot(data=d2, x = 'value', y='names', hue='geno', ax=ax[1,0])
+sns.barplot(data=d3, x = 'value', y='names', hue='geno', ax=ax[0,1])
+sns.barplot(data=d4, x = 'value', y='names', hue='geno', ax=ax[1,1])
+
+
+fig.tight_layout()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [20]:
+# text/plain
+: <Figure size 3000x5100 with 4 Axes>
+
+# image/png
+#+attr_html: :width 250px
+#+attr_latex: :width 15cm
+#+caption:
+#+name: real_go_terms_6hr_lym_col
+[[file:obipy-resources/real_go_terms_6hr_lym_col.png]]
+:END:
+
+
+* For Col + Lym where are GO's similar, but # of genes differ
+
+
+#+BEGIN_SRC ipython :session :display text/org :exports results
+
+
+  def count_enrichment(col_geob, lym_geob, pval=0.05, same=True):
+      col_GO = {g.GO:g for g in col_geob if g.study_count > 0 and g.p_fdr_bh < pval}
+      lym_GO = {g.GO:g for g in lym_geob if g.study_count > 0 and g.p_fdr_bh < pval}
+
+      no_filt_col_GO = {g.GO:g for g in col_geob if g.study_count > 0}
+      no_filt_lym_GO = {g.GO:g for g in lym_geob if g.study_count > 0}
+
+      col_lym_GO = {}
+
+      if same:
+          for go in col_GO.keys():
+              if go in lym_GO:
+                  col_lym_GO[go] = {'col': col_GO[go], 'lym' : lym_GO[go]}
+      else:
+          for go in list(set(set(list(col_GO.keys())) or set(list(lym_GO.keys())))):
+              try:
+                  if (col_GO[go].p_fdr_bh < pval or lym_GO[go].p_fdr_bh < pval):
+                      col_lym_GO[go]={'col': no_filt_col_GO[go], 'lym' : no_filt_lym_GO[go]}
+              except Exception as e:
+                  continue
+
+
+      go_gene_col_count = {}
+      go_gene_lym_count = {}
+      go_gene_enrichment = {}
+
+      def enrichment_lookup(col, lym):
+          if (col == 'e' and lym == 'e'):
+              return 'both enriched'
+          elif (col == 'p' and lym == 'e'):
+              return 'Col purified'
+          elif (col == 'p' and lym == 'p'):
+              return 'both purified'
+          elif (col == 'e' and lym == 'p'):
+              return 'lym purified'
+          else:
+              return '?'
+
+      print(len(col_lym_GO))
+      for v in col_lym_GO.values():
+          go_gene_col_count[v['col'].name] = len(v['col'].study_items)
+          go_gene_lym_count[v['lym'].name] = len(v['lym'].study_items)
+          go_gene_enrichment[v['col'].name] = enrichment_lookup(v['col'].enrichment, v['lym'].enrichment)
+
+
+
+      return  pd.DataFrame([pd.Series(go_gene_col_count, name='col'),
+                                pd.Series(go_gene_lym_count, name='lym'),
+                                pd.Series(go_gene_enrichment, name='enrichment')]).T
+
+
+  counts = count_enrichment(col_geob, lym_geob)
+  counts.head()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [21]:
+# output
+77
+
+# text/org
+|                                          |   col |   lym | enrichment    |
+|------------------------------------------+-------+-------+---------------|
+| cellular response to hypoxia             |    16 |    16 | both enriched |
+| response to molecule of bacterial origin |    16 |    19 | both enriched |
+| response to oomycetes                    |    13 |    16 | both enriched |
+| defense response to oomycetes            |    31 |    36 | both enriched |
+| plant-type hypersensitive response       |    37 |    43 | both enriched |
+:END:
+
+
+
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "0.05_lym_col" :filename "obipy-resources/0.05_lym_col.png" :caption "Lym and col genes at 0.05 fdr cutoff" :attr_html ":width 450px" :attr_latex ":width 15cm"))
+counts_df = count_enrichment(col_geob, lym_geob, pval=0.05)
+fig, ax = plt.subplots(1, figsize=(10,10))
+ax.set_yscale('log')
+ax.set_xscale('log')
+sns.scatterplot(data=counts_df, x='col', y='lym', ax=ax, hue='enrichment')
+ax.plot([0,1e4], [0, 1e4], c='r')
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+ax.plot([0,1e4], [0, 1e4], c='r', label=r'$x=y$')
+ax.set_xlim(xlim)
+ax.set_ylim(ylim)
+ax.legend()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [22]:
+# output
+77
+
+
+
+# text/plain
+: <Figure size 720x720 with 1 Axes>
+
+# image/png
+#+attr_html: :width 450px
+#+attr_latex: :width 15cm
+#+caption: Lym and col genes at 0.05 fdr cutoff
+#+name: 0.05_lym_col
+[[file:obipy-resources/0.05_lym_col.png]]
+:END:
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "1_lym_col" :filename "obipy-resources/1_lym_col.png" :caption "Lym and col genes at 1 fdr cutoff" :attr_html ":width 450px" :attr_latex ":width 15cm"))
+counts_df = count_enrichment(col_geob, lym_geob, pval=1)
+fig, ax = plt.subplots(1, figsize=(10,10))
+ax.set_yscale('log')
+ax.set_xscale('log')
+sns.scatterplot(data=counts_df, x='col', y='lym', ax=ax, hue='enrichment')
+ax.plot([0,1e4], [0, 1e4], c='r')
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+ax.plot([0,1e4], [0, 1e4], c='r', label=r'$x=y$')
+ax.set_xlim(xlim)
+ax.set_ylim(ylim)
+ax.legend()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [23]:
+# output
+784
+
+
+
+# text/plain
+: <Figure size 720x720 with 1 Axes>
+
+# image/png
+#+attr_html: :width 450px
+#+attr_latex: :width 15cm
+#+caption: Lym and col genes at 1 fdr cutoff
+#+name: 1_lym_col
+[[file:obipy-resources/1_lym_col.png]]
+:END:
+
+
+
+
+#+BEGIN_SRC ipython :session :ipyfile '((:name "enrichment" :filename "obipy-resources/enrichment.png" :caption "" :attr_html ":width 350px" :attr_latex ":width 15cm") (:name "enrichment1" :filename "obipy-resources/enrichment2.png" :caption "" :attr_html ":width 350px" :attr_latex ":width 15cm") (:name "enrichment3" :filename "obipy-resources/enrichment3.png" :caption "" :attr_html ":width 350px" :attr_latex ":width 15cm") (:name "enrichment" :filename "obipy-resources/enrichment4.png" :caption "" :attr_html ":width 350px" :attr_latex ":width 15cm"))
+  sns.set(font_scale=2)
+  counts_df = count_enrichment(col_geob, lym_geob, same=False, pval=1)
+
+  counts = iter([count_enrichment(col_geob, lym_geob, same=True, pval=1),
+                 count_enrichment(col_geob, lym_geob, same=False, pval=1),
+                 count_enrichment(col_geob, lym_geob, same=True, pval=0.05),
+                 count_enrichment(col_geob, lym_geob, same=False, pval=0.05)])
+
+  titles = iter(['pval < 1; similar GO-terms',
+                 'pval < 1; all GO-terms',
+                 'pval < 0.05; similar GO-terms',
+                 'pval < 0.05; all GO-terms'])
+
+  counter = iter([[0, 0], [1, 0], [0, 1], [1, 1]])
+
+
+  for i in range(4):
+      fig, ax = plt.subplots(1, figsize=(20,20), dpi=100)
+      data = next(counts).sort_values(by='enrichment', ascending=False)
+      data = data[data['col'] < 1000]
+      ax.set_yscale('log', basey=2)
+      ax.set_xscale('log', basex=2)
+
+      for cond in ['both purified', 'both enriched', 'Col purified', 'lym purified']:
+          try:
+              Xs = np.array(data[data['enrichment'] == cond]['col'])
+              Ys = np.array(data[data['enrichment'] == cond]['lym'])
+              ax.scatter(Xs,
+                         Ys,
+                         label=cond, s=(40 if 'both' in cond else 250),
+                         marker=('x' if 'both' in cond else 'o'))
+          except Exception as e:
+              continue
+
+          if 'Col' in cond or 'lym' in cond :
+              texts = []
+              for line in range(len(Xs)):
+                  diff = abs(Xs[line] - Ys[line])
+                  if diff < 10 :
+                      #print(diff)
+                      continue
+                  texts.append(ax.text(Xs[line], Ys[line],
+                                       data[data['enrichment'] == cond].reset_index(
+                                       ).iloc[line]['index']))
+              from adjustText import adjust_text
+              adjust_text(texts, arrowprops=dict(arrowstyle="-|>",
+                                                      color='r', alpha=0.5), ax=ax)
+
+
+      xlim = ax.get_xlim()
+      ylim = ax.get_ylim()
+
+      ax.plot([-(1e4), 1e4], [-(1e4), 1e4], c='r', label=r'$x=y$')
+      ax.plot([-(1e4), 1e4], [0, 0], c='k')
+      ax.plot([0, 0],[-(1e4), 1e4], c='k')
+      ax.set_xlim(xlim)
+      ax.legend()
+      ax.set_ylim(ylim)
+      ax.set_ylabel('lym GO gene #s')
+      ax.set_xlabel('col GO gene #s')
+      ax.set_title(next(titles))
+      print(i)
+
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [279]:
+# output
+2535
+784
+2535
+77
+101
+0
+1
+2
+3
+
+# text/plain
+: <Figure size 2000x2000 with 1 Axes>
+
+# image/png
+#+attr_html: :width 350px
+#+attr_latex: :width 15cm
+#+caption:
+#+name: enrichment
+[[file:obipy-resources/enrichment.png]]
+
+# text/plain
+: <Figure size 2000x2000 with 1 Axes>
+
+# image/png
+#+attr_html: :width 350px
+#+attr_latex: :width 15cm
+#+caption:
+#+name: enrichment1
+[[file:obipy-resources/enrichment2.png]]
+
+# text/plain
+: <Figure size 2000x2000 with 1 Axes>
+
+# image/png
+#+attr_html: :width 350px
+#+attr_latex: :width 15cm
+#+caption:
+#+name: enrichment3
+[[file:obipy-resources/enrichment3.png]]
+
+# text/plain
+: <Figure size 2000x2000 with 1 Axes>
+
+# image/png
+#+attr_html: :width 350px
+#+attr_latex: :width 15cm
+#+caption:
+#+name: enrichment
+[[file:obipy-resources/enrichment4.png]]
+:END:
+
+
+* Take Col+Lym combinations and do % GO for each
+
+#+BEGIN_SRC ipython :session
+data = count_enrichment(col_geob, lym_geob, same=False, pval=1)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out [281]:
+# output
+2535
+
+:END:

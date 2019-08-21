@@ -1,0 +1,3 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{DE\PYGZus{}pairings\PYGZus{}w\PYGZus{}05hr} \PYG{o}{=} \PYG{n}{read\PYGZus{}xl}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}/Users/hughesn/PHD/Transcripts/Data/pairings\PYGZus{}same\PYGZus{}treat\PYGZus{}05hr.xlsx\PYGZsq{}}\PYG{p}{,} \PYG{n}{unique}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+\end{Verbatim}
